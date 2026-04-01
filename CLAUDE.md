@@ -141,8 +141,12 @@
 ```
 Framework:  Next.js 14 (App Router)
 Language:   TypeScript
-Styling:    Tailwind CSS
+UI:         Material-UI (MUI) — primary framework
+            Tailwind CSS — secondary/legacy, some cases only
+DataGrid:   @mui/x-data-grid — ใช้สำหรับตาราง List ทุกหน้า
+Form:       React Hook Form + Zod
 Font:       Sarabun — weights 300, 400, 500, 600, 700
+Theme:      MUI ThemeProvider (src/lib/MuiThemeProvider.tsx)
 ```
 
 ## Design System
@@ -184,23 +188,96 @@ Content:   bg #F4F4F4
 
 ```
 /src
-  /app/(admin)/accounts/     → Master Account pages
-  /app/activate/             → Token verification
-  /components/layout/        → TopBar, Sidebar, SlidePanel
-  /components/ui/            → Button, Badge, Input, etc.
-  /lib/api.ts                → API calls
-  /lib/types.ts              → TypeScript types
-/docs
-  /CODING_PROMPT_F01.md             → field specs & rules
-  /F01_wireframe_v2_jigsaw_style.html → visual reference
+  /app/app/                    → Tenant pages (product, employee, settings, etc.)
+  /app/super-admin/            → Super Admin pages
+  /app/login/                  → Login pages
+  /components/common/          → Shared reusable components (MUI-based + legacy)
+  /components/TenantShell.tsx  → Main tenant layout wrapper
+  /components/screens/         → Legacy screen components
+  /lib/MuiThemeProvider.tsx    → MUI ThemeProvider (wrap root layout)
+  /lib/api.ts                  → API service layer (get, post, put, del)
+  /lib/types.ts                → Centralized TypeScript types
+  /lib/theme.ts                → Centralized color constants
+  /store/useStore.ts           → UI state management
+  /data/mock.ts                → Mock data for development
 ```
 
-## Reference Files (อ่านก่อนทุก Task)
+## Shared Component Library (`/src/components/common/`)
 
+**ห้ามสร้าง component ซ้ำ — ต้อง import จาก common ก่อนเสมอ:**
+
+```typescript
+import {
+  // MUI-based (preferred — ใช้สำหรับหน้าใหม่ทั้งหมด)
+  FormTextField,         // MUI TextField + react-hook-form
+  FormDialog,            // MUI Dialog wrapper
+  ActionButtons,         // Table action buttons (edit, delete, view, more)
+  createActions,         // Helper: createActions.edit(), .delete(), .view(), .more(), .custom()
+
+  // Form (react-hook-form integrated — ใช้ได้ทั้ง MUI และ legacy)
+  FormAutocomplete,      // Searchable dropdown (fixed options)
+  FormAutocompleteAdjust,// Searchable dropdown + create/manage (master data)
+  FormSwitch,            // Toggle switch
+  MultiLanguageInput,    // TH/EN/CN/JP tabs
+
+  // Feedback
+  useToast,              // showSuccess(), showError(), showWarning()
+
+  // Dialogs
+  ExistingUsedDialog,    // EXISTING_USED error dialog
+  useExistingUsedHandler,// Hook for EXISTING_USED error
+
+  // Legacy (Tailwind-based — backward compat)
+  Button, Badge, Modal, FormField, DataTable, Pagination,
+} from "@/components/common";
 ```
-/docs/CODING_PROMPT_F01.md               → field spec, validation, API, types
-/docs/F01_wireframe_v2_jigsaw_style.html → visual design reference
-```
+
+### Table List
+- **ใช้ MUI X DataGrid เสมอ** (`@mui/x-data-grid`) สำหรับหน้า List ทุกหน้า
+- ห้ามใช้ custom DataTable component สำหรับหน้าใหม่
+- ใช้ `GridColDef` สำหรับ define columns
+- ใช้ `checkboxSelection`, `disableRowSelectionOnClick`
+- Pagination ใช้ built-in ของ DataGrid
+
+### Action Buttons in Table
+- **ใช้ `ActionButtons` + `createActions` เสมอ** สำหรับ column จัดการ
+- Standard: `createActions.edit()`, `createActions.delete()`, `createActions.view()`
+- Custom: `createActions.custom(key, label, icon, onClick)`
+
+## Frontend Development Rules (บังคับ)
+
+### Form State
+- **ใช้ React Hook Form เท่านั้น** — ห้าม useState สำหรับ form data
+- ใช้ `useForm`, `control`, `handleSubmit` patterns
+- Validation ใช้ `zod` + `@hookform/resolvers`
+
+### Select Components
+- **FormAutocomplete**: สำหรับ fixed options (status, type, enum)
+- **FormAutocompleteAdjust**: สำหรับ master data (categories, UOM) — มี create new + manage link
+
+### Multi-language
+- ใช้ `MultiLanguageInput` สำหรับ fields ที่ต้อง save หลายภาษา (TH, EN, CN, JP)
+
+### Toast
+- ใช้ `useToast()` hook → `showSuccess()`, `showError()`, `showWarning()`
+- ห้าม import library เพิ่ม (react-hot-toast, react-toastify)
+
+### Active/Status Toggle
+- ใช้ `FormSwitch` component
+
+### Delete Protection
+- ทุก master data ต้องจัดการ EXISTING_USED error
+- ใช้ `ExistingUsedDialog` + `useExistingUsedHandler`
+
+### Page Structure
+- **List Page**: Header + Search/Filter + DataTable + Pagination
+- **Add/Edit (field <= 8)**: Modal
+- **Add/Edit (field > 8)**: Page แยก
+
+### API Integration
+- ใช้ `/src/lib/api.ts` — `api.get()`, `api.post()`, `api.put()`, `api.del()`
+- Master data dropdown ต้อง fetch จาก API (ไม่ mock)
+- ทุก action: Search, Filter, Paging, CRUD ต้อง integrate API
 
 ---
 

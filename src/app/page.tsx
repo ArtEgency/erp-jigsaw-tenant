@@ -59,6 +59,21 @@ export default function LandingPage() {
               <span className="text-white/30 text-lg group-hover:text-brand-primary transition-colors">→</span>
             </button>
           </div>
+
+          {/* Component Showcase */}
+          <button
+            onClick={() => router.push("/component-showcase")}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/30 transition-all group mt-4"
+          >
+            <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center text-2xl group-hover:bg-white/15 transition-colors">
+              🧩
+            </div>
+            <div className="text-left flex-1">
+              <p className="text-white font-semibold text-sm">Component ของระบบ</p>
+              <p className="text-white/40 text-xs mt-0.5">ดูตัวอย่าง MUI Components ทั้งหมด (Live Preview)</p>
+            </div>
+            <span className="text-white/30 text-lg group-hover:text-white/60 transition-colors">→</span>
+          </button>
         </div>
 
         <p className="text-white/20 text-xs mt-6">Jigsaw ERP v1.0 — Prototype</p>

@@ -17,7 +17,7 @@ export const MUTED = "#777777";
 export const HINT = "#AAAAAA";
 export const BORDER = "#E0E0E0";
 export const BORDER2 = "#CCCCCC";
-export const BG = "#F4F4F4";
+export const BG = "#F7F7F9";
 
 /* ── Status Colors ── */
 export const GREEN = "#3B6D11";

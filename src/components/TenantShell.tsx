@@ -30,7 +30,7 @@ interface Props {
 }
 
 /* ── Palette ── */
-import { TENANT_PRIMARY as OR, TENANT_LIGHT as OR_L, BORDER, TEXT, MUTED } from "@/lib/theme";
+import { TENANT_PRIMARY as OR, TENANT_LIGHT as OR_L, BORDER, TEXT, MUTED, BG } from "@/lib/theme";
 
 /* ═══════════════════════════════════════════════════════════════
    SVG Icons — line-style matching the Allder NOW reference
@@ -205,8 +205,9 @@ const BRANCHES: BranchOption[] = [
 
 /* ── Enabled modules (มีหน้าจอแล้ว) ── */
 const ENABLED_MODULES = new Set([
-  "hr", "settings",
+  "hr", "settings", "products",
   // sub-items that have real pages
+  "products-list",
   "hr-employee", "hr-role-list", "hr-assign-permission", "hr-permissions",
   "settings-business", "settings-business-info", "settings-business-branch",
   "settings-product", "settings-product-type", "settings-product-unit",
@@ -217,6 +218,7 @@ const ENABLED_MODULES = new Set([
 
 /* ── Route map ── */
 const MODULE_ROUTES: Record<string, string> = {
+  "products-list": "/app/product",
   "hr-employee": "/app/employee",
   "hr-role-list": "/app/role-permission",
   "hr-assign-permission": "/app/assign-permission",
@@ -548,7 +550,7 @@ export default function TenantShell({ children, breadcrumb, activeModule, onModu
   const totalScreens = screenIndex.reduce((sum, g) => sum + g.items.length, 0);
 
   return (
-    <div className="min-h-screen flex" style={{ background: "#F4F4F4", fontFamily: "'Sarabun', sans-serif" }}>
+    <div className="min-h-screen flex" style={{ background: BG, fontFamily: "'Sarabun', sans-serif" }}>
 
       {/* ══════ LEFT SIDEBAR ══════ */}
       <div className="w-[52px] shrink-0 flex flex-col items-center py-3 gap-1 z-50" style={{ background: "#FFFFFF", borderRight: `1px solid ${BORDER}` }}>

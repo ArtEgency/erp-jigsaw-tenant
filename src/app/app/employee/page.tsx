@@ -1,22 +1,90 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import React, { useState, useMemo, Suspense } from "react";
+import { useForm } from "react-hook-form";
 import TenantShell from "@/components/TenantShell";
+import {
+  FormTextField,
+  FormAutocomplete,
+  ActionButtons,
+  createActions,
+  useToast,
+} from "@/components/common";
 
-/* ── Palette ── */
-import { TENANT_PRIMARY as OR, TENANT_HOVER as OR_D, TENANT_LIGHT as OR_L, GREEN, GREEN_L, RED, BORDER, TEXT, MUTED } from "@/lib/theme";
+/* ── MUI ── */
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
+import Avatar from "@mui/material/Avatar";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import Paper from "@mui/material/Paper";
+import Divider from "@mui/material/Divider";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
+import AddIcon from "@mui/icons-material/Add";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+
+/* ── Theme ── */
+import { TENANT_PRIMARY as OR } from "@/lib/theme";
 
 /* ── Mock Data ── */
 const DEPARTMENTS = ["ฝ่ายขาย", "ฝ่ายบัญชี", "ฝ่ายผลิต", "ฝ่ายบุคคล", "ฝ่ายคลังสินค้า"];
 const POSITIONS = ["ผู้จัดการ", "หัวหน้างาน", "พนักงาน", "เจ้าหน้าที่", "ผู้ช่วย"];
-const PREFIXES = ["นาย", "นาง", "นางสาว"];
-const EMP_TYPES = ["พนักงานประจำ", "พนักงานสัญญาจ้าง", "พนักงานชั่วคราว", "ฝึกงาน"];
-const STATUSES_WORK = ["ทำงานอยู่", "ทดลองงาน", "พ้นสภาพ"];
+const PREFIXES = [
+  { id: "นาย", name: "นาย" },
+  { id: "นาง", name: "นาง" },
+  { id: "นางสาว", name: "นางสาว" },
+];
+const EMP_TYPES = [
+  { id: "พนักงานประจำ", name: "พนักงานประจำ" },
+  { id: "พนักงานสัญญาจ้าง", name: "พนักงานสัญญาจ้าง" },
+  { id: "พนักงานชั่วคราว", name: "พนักงานชั่วคราว" },
+  { id: "ฝึกงาน", name: "ฝึกงาน" },
+];
+const STATUSES_WORK = [
+  { id: "ทำงานอยู่", name: "ทำงานอยู่" },
+  { id: "ทดลองงาน", name: "ทดลองงาน" },
+  { id: "พ้นสภาพ", name: "พ้นสภาพ" },
+];
+const DEPT_OPTIONS = DEPARTMENTS.map((d) => ({ id: d, name: d }));
+const POS_OPTIONS = POSITIONS.map((p) => ({ id: p, name: p }));
+const GENDER_OPTIONS = [
+  { id: "ชาย", name: "ชาย" },
+  { id: "หญิง", name: "หญิง" },
+];
+const MARITAL_OPTIONS = [
+  { id: "โสด", name: "โสด" },
+  { id: "สมรส", name: "สมรส" },
+  { id: "หย่าร้าง", name: "หย่าร้าง" },
+  { id: "หม้าย", name: "หม้าย" },
+];
+const MILITARY_OPTIONS = [
+  { id: "ได้รับการยกเว้น", name: "ได้รับการยกเว้น" },
+  { id: "ผ่านการเกณฑ์ทหาร", name: "ผ่านการเกณฑ์ทหาร" },
+  { id: "ยังไม่ได้เกณฑ์", name: "ยังไม่ได้เกณฑ์" },
+];
 const BANKS = ["ธนาคารกสิกรไทย", "ธนาคารไทยพาณิชย์", "ธนาคารกรุงเทพ", "ธนาคารกรุงไทย", "ธนาคารทหารไทยธนชาต"];
 const ACCOUNT_TYPES = ["ออมทรัพย์", "กระแสรายวัน"];
-const MARITAL = ["โสด", "สมรส", "หย่าร้าง", "หม้าย"];
-const MILITARY = ["ได้รับการยกเว้น", "ผ่านการเกณฑ์ทหาร", "ยังไม่ได้เกณฑ์"];
-const RELATIONSHIPS = ["บิดา", "มารดา", "พี่น้อง", "คู่สมรส", "บุตร", "อื่นๆ"];
+const RELATIONSHIPS = [
+  { id: "บิดา", name: "บิดา" },
+  { id: "มารดา", name: "มารดา" },
+  { id: "พี่น้อง", name: "พี่น้อง" },
+  { id: "คู่สมรส", name: "คู่สมรส" },
+  { id: "บุตร", name: "บุตร" },
+  { id: "อื่นๆ", name: "อื่นๆ" },
+];
 
 interface Employee {
   id: string;
@@ -42,163 +110,206 @@ const mockEmployees: Employee[] = [
   { id: "6", code: "EMP006", name: "จิราพร มั่นคง (จิ)", nickname: "จิ", division: "ฝ่ายขาย", department: "แผนกขายต่างประเทศ", position: "ผู้ช่วย", phone: "086-789-0123", email: "jiraporn@company.com", status: "พ้นสภาพ", type: "พนักงานประจำ", active: false },
 ];
 
-/* ── Reusable Components ── */
-
-const Field = ({ label, value, onChange, required, disabled, type = "text", placeholder }: {
-  label: string; value: string; onChange?: (v: string) => void; required?: boolean; disabled?: boolean; type?: string; placeholder?: string;
-}) => (
-  <div className="field-group">
-    <input type={type} value={value} onChange={(e) => onChange?.(e.target.value)} disabled={disabled} placeholder={placeholder || " "} />
-    <label>{label}{required && <span className="text-[#E53935] ml-0.5">*</span>}</label>
-  </div>
-);
-
-const Select = ({ label, value, onChange, options, required, disabled }: {
-  label: string; value: string; onChange?: (v: string) => void; options: string[]; required?: boolean; disabled?: boolean;
-}) => (
-  <div className="field-group">
-    <select value={value} onChange={(e) => onChange?.(e.target.value)} disabled={disabled} style={{ appearance: "none", background: "transparent" }}>
-      <option value="">เลือก...</option>
-      {options.map((o) => <option key={o} value={o}>{o}</option>)}
-    </select>
-    <label>{label}{required && <span className="text-[#E53935] ml-0.5">*</span>}</label>
-  </div>
-);
-
-const SubTabs = ({ active, tabs, onTab }: { active: string; tabs: { id: string; label: string }[]; onTab: (id: string) => void }) => (
-  <div className="flex items-center gap-1 mb-5">
-    {tabs.map((t) => (
-      <button key={t.id} onClick={() => onTab(t.id)}
-        className="px-5 py-2 rounded-full text-sm font-medium transition-colors"
-        style={{ background: active === t.id ? OR : "transparent", color: active === t.id ? "white" : OR }}>
-        {t.label}
-      </button>
-    ))}
-  </div>
-);
-
-const StatusBadge = ({ label, active }: { label: string; active: boolean }) => (
-  <span className="px-3 py-1 rounded-full text-xs font-medium"
-    style={{ background: active ? GREEN_L : "#FCEBEB", color: active ? GREEN : "#A32D2D" }}>
-    {label}
-  </span>
-);
-
-/* ── Collapsible Section ── */
-const Section = ({ title, open, onToggle, children }: { title: string; open: boolean; onToggle: () => void; children: React.ReactNode }) => (
-  <div className="bg-white rounded-lg border mb-4" style={{ borderColor: BORDER }}>
-    <button onClick={onToggle} className="w-full flex items-center justify-between px-5 py-3 text-left">
-      <span className="font-semibold text-sm" style={{ color: TEXT }}>{title}</span>
-      <span className="text-lg" style={{ color: MUTED }}>{open ? "▲" : "▼"}</span>
-    </button>
-    {open && <div className="px-5 pb-5 border-t" style={{ borderColor: BORDER }}>{children}</div>}
-  </div>
-);
+/* ── Form Type ── */
+interface EmployeeForm {
+  empCode: string;
+  prefix: string;
+  firstNameTH: string;
+  lastNameTH: string;
+  firstNameEN: string;
+  lastNameEN: string;
+  nickname: string;
+  gender: string;
+  birthDate: string;
+  nationality: string;
+  marital: string;
+  military: string;
+  address: string;
+  subDistrict: string;
+  district: string;
+  province: string;
+  zipcode: string;
+  email: string;
+  phone: string;
+  lineId: string;
+  facebook: string;
+  emergencyName: string;
+  emergencyPhone: string;
+  emergencyRelation: string;
+  startDate: string;
+  endDate: string;
+  empType: string;
+  workStatus: string;
+  dept: string;
+  position: string;
+  socialSecurity: boolean;
+  bank: string;
+  accountType: string;
+  accountName: string;
+  accountNo: string;
+  branchName: string;
+  branchNo: string;
+}
 
 /* ══════════════════════════════════════════════════ */
 /* ── MAIN COMPONENT ── */
 /* ══════════════════════════════════════════════════ */
 
 function EmployeeInner() {
+  const { showSuccess, showError } = useToast();
+
   /* ── state ── */
   const [screen, setScreen] = useState<"list" | "add">("list");
-  const [tab, setTab] = useState("current");
+  const [tabIndex, setTabIndex] = useState(0);
   const [filterDept, setFilterDept] = useState("");
   const [filterPos, setFilterPos] = useState("");
   const [search, setSearch] = useState("");
 
-  /* ── form state ── */
-  const [sections, setSections] = useState({ general: true, contact: true, work: true, salary: true, docs: true });
-  const toggle = (s: keyof typeof sections) => setSections((p) => ({ ...p, [s]: !p[s] }));
-
-  // ข้อมูลทั่วไป
-  const [empCode, setEmpCode] = useState("");
-  const [prefix, setPrefix] = useState("");
-  const [firstNameTH, setFirstNameTH] = useState("");
-  const [lastNameTH, setLastNameTH] = useState("");
-  const [firstNameEN, setFirstNameEN] = useState("");
-  const [lastNameEN, setLastNameEN] = useState("");
-  const [idCard, setIdCard] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [gender, setGender] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [race, setRace] = useState("");
-  const [nationality, setNationality] = useState("ไทย");
-  const [marital, setMarital] = useState("");
-  const [military, setMilitary] = useState("");
-
-  // ข้อมูลการติดต่อ
-  const [address, setAddress] = useState("");
-  const [subDistrict, setSubDistrict] = useState("");
-  const [district, setDistrict] = useState("");
-  const [province, setProvince] = useState("");
-  const [zipcode, setZipcode] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [lineId, setLineId] = useState("");
-  const [facebook, setFacebook] = useState("");
-  const [emergencyName, setEmergencyName] = useState("");
-  const [emergencyPhone, setEmergencyPhone] = useState("");
-  const [emergencyRelation, setEmergencyRelation] = useState("");
-
-  // ข้อมูลการทำงาน
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [empType, setEmpType] = useState("");
-  const [workStatus, setWorkStatus] = useState("");
-  const [dept, setDept] = useState("");
-  const [position, setPosition] = useState("");
-  const [socialSecurity, setSocialSecurity] = useState(false);
-
-  // ช่องทางรับเงินเดือน
-  const [payMethod, setPayMethod] = useState<"bank" | "cash">("bank");
-  const [bank, setBank] = useState("");
-  const [accountType, setAccountType] = useState("");
-  const [accountName, setAccountName] = useState("");
-  const [accountNo, setAccountNo] = useState("");
-  const [branchName, setBranchName] = useState("");
-  const [branchNo, setBranchNo] = useState("");
-
-  // เอกสารแนบ
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [docs, setDocs] = useState<string[]>([]);
-
-  /* ── toast ── */
-  const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
-  const showToast = (msg: string, type: "ok" | "err" = "ok") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
-
-  /* ── filter employees ── */
-  const filtered = mockEmployees.filter((e) => {
-    if (tab === "current" && !e.active) return false;
-    if (tab === "resigned" && e.active) return false;
-    if (filterDept && e.department !== filterDept && e.division !== filterDept) return false;
-    if (filterPos && e.position !== filterPos) return false;
-    if (search) {
-      const s = search.toLowerCase();
-      return e.code.toLowerCase().includes(s) || e.name.toLowerCase().includes(s) || e.email.toLowerCase().includes(s);
-    }
-    return true;
+  /* ── form (react-hook-form) ── */
+  const { control, handleSubmit, reset } = useForm<EmployeeForm>({
+    defaultValues: {
+      empCode: "", prefix: "", firstNameTH: "", lastNameTH: "",
+      firstNameEN: "", lastNameEN: "", nickname: "", gender: "",
+      birthDate: "", nationality: "ไทย", marital: "", military: "",
+      address: "", subDistrict: "", district: "", province: "", zipcode: "",
+      email: "", phone: "", lineId: "", facebook: "",
+      emergencyName: "", emergencyPhone: "", emergencyRelation: "",
+      startDate: "", endDate: "", empType: "", workStatus: "",
+      dept: "", position: "", socialSecurity: false,
+      bank: "", accountType: "", accountName: "", accountNo: "",
+      branchName: "", branchNo: "",
+    },
   });
 
-  /* ── calculate age ── */
-  const calcAge = (bd: string) => {
-    if (!bd) return "";
-    const diff = Date.now() - new Date(bd).getTime();
-    return String(Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000))) + " ปี";
+  /* ── accordion state ── */
+  const [expanded, setExpanded] = useState<string[]>(["general", "contact", "work", "salary", "docs"]);
+  const toggleAccordion = (panel: string) => {
+    setExpanded((prev) =>
+      prev.includes(panel) ? prev.filter((p) => p !== panel) : [...prev, panel]
+    );
   };
 
+  /* ── ID card state ── */
+  const [idCard, setIdCard] = useState("");
+
+  /* ── pay method ── */
+  const [payMethod, setPayMethod] = useState<"bank" | "cash">("bank");
+
+  /* ── DataGrid pagination ── */
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+
+  /* ── filter employees ── */
+  const tabFilter = tabIndex === 0 ? "current" : tabIndex === 1 ? "cancelled" : "resigned";
+
+  const filtered = useMemo(() => {
+    return mockEmployees.filter((e) => {
+      if (tabFilter === "current" && !e.active) return false;
+      if (tabFilter === "resigned" && e.active) return false;
+      if (filterDept && e.department !== filterDept && e.division !== filterDept) return false;
+      if (filterPos && e.position !== filterPos) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        return e.code.toLowerCase().includes(s) || e.name.toLowerCase().includes(s) || e.email.toLowerCase().includes(s);
+      }
+      return true;
+    });
+  }, [tabFilter, filterDept, filterPos, search]);
+
+  /* ── DataGrid columns ── */
+  const columns: GridColDef[] = useMemo(
+    () => [
+      {
+        field: "code",
+        headerName: "รหัสพนักงาน",
+        width: 150,
+        renderCell: (params) => (
+          <Typography variant="body2" sx={{ color: OR, fontWeight: 500, cursor: "pointer" }}>
+            {params.value}
+          </Typography>
+        ),
+      },
+      {
+        field: "name",
+        headerName: "ชื่อ-นามสกุล (ชื่อเล่น)",
+        flex: 1,
+        minWidth: 280,
+        renderCell: (params) => (
+          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ height: "100%" }}>
+            <Avatar
+              sx={{
+                width: 36,
+                height: 36,
+                bgcolor: OR,
+                fontSize: "0.875rem",
+                fontWeight: 600,
+              }}
+            >
+              {params.value?.charAt(0)}
+            </Avatar>
+            <Typography variant="body2">{params.value}</Typography>
+          </Stack>
+        ),
+      },
+      { field: "division", headerName: "ส่วนงาน", width: 160 },
+      { field: "department", headerName: "แผนก", width: 180 },
+      { field: "position", headerName: "ตำแหน่ง", width: 140 },
+      { field: "phone", headerName: "เบอร์โทรศัพท์", width: 150 },
+      { field: "email", headerName: "E-mail", width: 200 },
+      {
+        field: "type",
+        headerName: "สถานะ",
+        width: 160,
+        renderCell: (params) => {
+          const row = params.row as Employee;
+          return (
+            <Chip
+              label={params.value}
+              size="small"
+              sx={{
+                bgcolor: row.active ? "rgba(238,251,229,0.98)" : "#FCEBEB",
+                color: row.active ? "#3B6D11" : "#A32D2D",
+                fontWeight: 500,
+                fontSize: "0.8rem",
+              }}
+            />
+          );
+        },
+      },
+      {
+        field: "actions",
+        headerName: "จัดการ",
+        width: 120,
+        sortable: false,
+        filterable: false,
+        renderCell: () => (
+          <ActionButtons
+            actions={[
+              createActions.edit(() => {
+                /* TODO: open edit */
+              }),
+              createActions.more(() => {
+                /* TODO: more menu */
+              }),
+            ]}
+          />
+        ),
+      },
+    ],
+    []
+  );
+
   /* ── breadcrumb ── */
-  const breadcrumb = screen === "list"
-    ? ["บุคคล", "พนักงาน"]
-    : ["บุคคล", "พนักงาน", "เพิ่มพนักงาน"];
+  const breadcrumb =
+    screen === "list" ? ["บุคคล", "พนักงาน"] : ["บุคคล", "พนักงาน", "เพิ่มพนักงาน"];
 
   /* ── handle save ── */
-  const handleSave = () => {
-    if (!empCode || !prefix || !firstNameTH || !lastNameTH || !nationality) {
-      showToast("กรุณากรอกข้อมูลที่จำเป็นให้ครบ", "err");
+  const onSubmit = (data: EmployeeForm) => {
+    if (!data.empCode || !data.prefix || !data.firstNameTH || !data.lastNameTH) {
+      showError("กรุณากรอกข้อมูลที่จำเป็นให้ครบ");
       return;
     }
-    showToast("บันทึกข้อมูลพนักงานเรียบร้อย");
+    showSuccess("บันทึกข้อมูลพนักงานเรียบร้อย");
+    reset();
     setScreen("list");
   };
 
@@ -208,101 +319,146 @@ function EmployeeInner() {
   if (screen === "list") {
     return (
       <TenantShell breadcrumb={breadcrumb} activeModule="hr">
-        {/* Toast */}
-        {toast && (
-          <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium"
-            style={{ background: toast.type === "ok" ? GREEN_L : "#FCEBEB", color: toast.type === "ok" ? GREEN : "#A32D2D", border: `1px solid ${toast.type === "ok" ? GREEN : RED}33` }}>
-            {toast.msg}
-          </div>
-        )}
+        <Box sx={{ display: "flex", justifyContent: "center", width: "100%", minHeight: "100%", bgcolor: "#F7F7F9" }}>
+          <Box sx={{ width: "100%", maxWidth: 1920, px: 3, py: 3 }}>
+            {/* Page Title */}
+            <Typography variant="h5" sx={{ fontWeight: 500, py: 2.5, color: "#374151" }}>
+              รายชื่อพนักงาน
+            </Typography>
 
-        <div className="p-6">
-          <h1 className="text-lg font-bold mb-4" style={{ color: TEXT }}>รายชื่อพนักงาน</h1>
+            {/* Sub-tabs */}
+            <Tabs
+              value={tabIndex}
+              onChange={(_, v) => { setTabIndex(v); setPaginationModel((p) => ({ ...p, page: 0 })); }}
+              sx={{
+                mb: 2,
+                "& .MuiTab-root": {
+                  textTransform: "none",
+                  fontWeight: 500,
+                  fontSize: "1rem",
+                  minHeight: 42,
+                  borderRadius: "8px",
+                  mr: 1,
+                },
+                "& .Mui-selected": {
+                  bgcolor: OR,
+                  color: "#fff !important",
+                  fontWeight: 600,
+                },
+                "& .MuiTabs-indicator": { display: "none" },
+              }}
+            >
+              <Tab label="พนักงานปัจจุบัน" />
+              <Tab label="พนักงานที่ยกเลิก" />
+              <Tab label="พนักงานที่ลาออก" />
+            </Tabs>
 
-          {/* Sub-tabs */}
-          <SubTabs active={tab} tabs={[{ id: "current", label: "พนักงานปัจจุบัน" }, { id: "resigned", label: "พนักงานที่ลาออก" }]} onTab={setTab} />
+            {/* Content Card */}
+            <Paper elevation={3} sx={{ borderRadius: "10px", overflow: "hidden" }}>
+              {/* Filter Bar */}
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ p: 2.5 }}>
+                <Button
+                  variant="contained"
+                  startIcon={<FileUploadOutlinedIcon />}
+                  sx={{ whiteSpace: "nowrap" }}
+                >
+                  ส่งออกรายงาน
+                </Button>
 
-          {/* Toolbar */}
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <button className="px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
-              style={{ borderColor: OR, color: OR }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = OR_L; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-              ส่งออกรายงาน
-            </button>
-
-            <div className="flex-1" />
-
-            {/* Filter: แผนก */}
-            <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)}
-              className="px-3 py-2 rounded-lg text-sm border" style={{ borderColor: BORDER, color: TEXT, minWidth: 140 }}>
-              <option value="">แผนก: ดูทั้งหมด</option>
-              {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
-            </select>
-
-            {/* Filter: ตำแหน่ง */}
-            <select value={filterPos} onChange={(e) => setFilterPos(e.target.value)}
-              className="px-3 py-2 rounded-lg text-sm border" style={{ borderColor: BORDER, color: TEXT, minWidth: 140 }}>
-              <option value="">ตำแหน่ง: ดูทั้งหมด</option>
-              {POSITIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
-
-            {/* Search */}
-            <div className="relative">
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหา..."
-                className="pl-9 pr-3 py-2 rounded-lg text-sm border" style={{ borderColor: BORDER, width: 200 }} />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: MUTED }}>🔍</span>
-            </div>
-
-            {/* Add button */}
-            <button onClick={() => setScreen("add")}
-              className="px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
-              style={{ background: OR }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = OR)}>
-              + เพิ่มพนักงาน
-            </button>
-          </div>
-
-          {/* Table */}
-          <div className="bg-white rounded-lg border overflow-hidden" style={{ borderColor: BORDER }}>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm" style={{ color: TEXT }}>
-                <thead>
-                  <tr style={{ background: "#F8F8F8" }}>
-                    {["รหัสพนักงาน", "ชื่อ-นามสกุล(ชื่อเล่น)", "ส่วนงาน", "แผนก", "ตำแหน่ง", "เบอร์โทร", "E-Mail", "สถานะ", "จัดการ"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left font-semibold text-xs whitespace-nowrap" style={{ color: MUTED, borderBottom: `1px solid ${BORDER}` }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr><td colSpan={9} className="text-center py-10" style={{ color: MUTED }}>ไม่พบข้อมูลพนักงาน</td></tr>
-                  ) : filtered.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-indigo-50 transition-colors" style={{ borderBottom: `1px solid ${BORDER}` }}>
-                      <td className="px-4 py-3 font-medium cursor-pointer" style={{ color: OR }}>{emp.code}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{emp.name}</td>
-                      <td className="px-4 py-3">{emp.division}</td>
-                      <td className="px-4 py-3">{emp.department}</td>
-                      <td className="px-4 py-3">{emp.position}</td>
-                      <td className="px-4 py-3">{emp.phone}</td>
-                      <td className="px-4 py-3">{emp.email}</td>
-                      <td className="px-4 py-3"><StatusBadge label={emp.type} active={emp.active} /></td>
-                      <td className="px-4 py-3">
-                        <button className="text-base hover:opacity-70" title="แก้ไข">✏️</button>
-                      </td>
-                    </tr>
+                <TextField
+                  select
+                  value={filterDept}
+                  onChange={(e) => setFilterDept(e.target.value)}
+                  label="เลือกแผนก"
+                  size="small"
+                  sx={{ minWidth: 180 }}
+                  InputLabelProps={{ shrink: true }}
+                >
+                  <MenuItem value="">ทั้งหมด</MenuItem>
+                  {DEPARTMENTS.map((d) => (
+                    <MenuItem key={d} value={d}>{d}</MenuItem>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                </TextField>
 
-          {/* Row count */}
-          <div className="mt-3 text-xs" style={{ color: MUTED }}>แสดง {filtered.length} จาก {mockEmployees.length} รายการ</div>
-        </div>
+                <TextField
+                  select
+                  value={filterPos}
+                  onChange={(e) => setFilterPos(e.target.value)}
+                  label="เลือกตำแหน่ง"
+                  size="small"
+                  sx={{ minWidth: 180 }}
+                  InputLabelProps={{ shrink: true }}
+                >
+                  <MenuItem value="">ทั้งหมด</MenuItem>
+                  {POSITIONS.map((p) => (
+                    <MenuItem key={p} value={p}>{p}</MenuItem>
+                  ))}
+                </TextField>
+
+                <Box sx={{ flex: 1 }} />
+
+                <TextField
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="ค้นหารหัส, ชื่อพนักงาน"
+                  size="small"
+                  sx={{ minWidth: 280 }}
+                />
+
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => { reset(); setScreen("add"); }}
+                  sx={{ whiteSpace: "nowrap" }}
+                >
+                  เพิ่มพนักงาน
+                </Button>
+              </Stack>
+
+              {/* DataGrid */}
+              <DataGrid
+                rows={filtered}
+                columns={columns}
+                paginationModel={paginationModel}
+                onPaginationModelChange={setPaginationModel}
+                pageSizeOptions={[10, 25, 50]}
+                checkboxSelection
+                disableRowSelectionOnClick
+                autoHeight
+                getRowHeight={() => 60}
+                sx={{
+                  border: "none",
+                  "& .MuiDataGrid-columnHeaders": {
+                    bgcolor: "#F5F5F7",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                    color: "#374151",
+                  },
+                  "& .MuiDataGrid-cell": {
+                    fontSize: "0.875rem",
+                    color: "#374151",
+                    display: "flex",
+                    alignItems: "center",
+                  },
+                  "& .MuiDataGrid-row:hover": {
+                    bgcolor: "rgba(86,93,255,0.04)",
+                  },
+                  "& .MuiDataGrid-footerContainer": {
+                    borderTop: "1px solid #F5F5F7",
+                  },
+                  "& .MuiCheckbox-root": {
+                    color: "#ccc",
+                    "&.Mui-checked": { color: OR },
+                  },
+                }}
+                localeText={{
+                  noRowsLabel: "ไม่พบข้อมูลพนักงาน",
+                  footerRowSelected: (count) => `${count} รายการที่เลือก`,
+                }}
+              />
+            </Paper>
+          </Box>
+        </Box>
       </TenantShell>
     );
   }
@@ -312,187 +468,239 @@ function EmployeeInner() {
   /* ══════════════════════════════════════ */
   return (
     <TenantShell breadcrumb={breadcrumb} activeModule="hr">
-      {/* Toast */}
-      {toast && (
-        <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium"
-          style={{ background: toast.type === "ok" ? GREEN_L : "#FCEBEB", color: toast.type === "ok" ? GREEN : "#A32D2D", border: `1px solid ${toast.type === "ok" ? GREEN : RED}33` }}>
-          {toast.msg}
-        </div>
-      )}
-
-      <div className="p-6">
-        <h1 className="text-lg font-bold mb-5" style={{ color: TEXT }}>เพิ่มพนักงาน</h1>
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2.5, color: "#333" }}>
+          เพิ่มพนักงาน
+        </Typography>
 
         {/* ── Section 1: ข้อมูลทั่วไป ── */}
-        <Section title="ข้อมูลทั่วไป" open={sections.general} onToggle={() => toggle("general")}>
-          {/* Photo upload */}
-          <div className="flex items-start gap-6 mt-4 mb-6">
-            <div className="w-28 h-28 rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:border-indigo-300 transition-colors"
-              style={{ borderColor: BORDER, background: "#FAFAFA" }}>
-              <span className="text-2xl mb-1">📷</span>
-              <span className="text-[10px]" style={{ color: MUTED }}>อัพโหลดรูป</span>
-            </div>
-          </div>
+        <Accordion
+          expanded={expanded.includes("general")}
+          onChange={() => toggleAccordion("general")}
+          sx={{ mb: 2, borderRadius: "8px !important", "&:before": { display: "none" } }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>ข้อมูลทั่วไป</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {/* Photo upload */}
+            <Box
+              sx={{
+                width: 112,
+                height: 112,
+                borderRadius: 2,
+                border: "2px dashed #E0E0E0",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                mb: 3,
+                "&:hover": { borderColor: OR },
+              }}
+            >
+              <Typography sx={{ fontSize: "1.5rem", mb: 0.5 }}>📷</Typography>
+              <Typography variant="caption" color="text.secondary">อัพโหลดรูป</Typography>
+            </Box>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Field label="รหัสพนักงาน" value={empCode} onChange={setEmpCode} required />
-            <Select label="คำนำหน้า" value={prefix} onChange={setPrefix} options={PREFIXES} required />
-            <Field label="ชื่อ(TH)" value={firstNameTH} onChange={setFirstNameTH} required />
-            <Field label="นามสกุล(TH)" value={lastNameTH} onChange={setLastNameTH} required />
-            <Field label="ชื่อ(ENG)" value={firstNameEN} onChange={setFirstNameEN} />
-            <Field label="นามสกุล(ENG)" value={lastNameEN} onChange={setLastNameEN} />
-          </div>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr", lg: "1fr 1fr 1fr 1fr" }, gap: 2 }}>
+              <FormTextField name="empCode" control={control} label="รหัสพนักงาน" required />
+              <FormAutocomplete name="prefix" control={control} label="คำนำหน้า" options={PREFIXES} required />
+              <FormTextField name="firstNameTH" control={control} label="ชื่อ (TH)" required />
+              <FormTextField name="lastNameTH" control={control} label="นามสกุล (TH)" required />
+              <FormTextField name="firstNameEN" control={control} label="ชื่อ (ENG)" />
+              <FormTextField name="lastNameEN" control={control} label="นามสกุล (ENG)" />
+            </Box>
 
-          {/* ID Card - 13 digit boxes */}
-          <div className="mt-4 mb-4">
-            <label className="text-xs font-medium mb-2 block" style={{ color: MUTED }}>หมายเลขบัตรประชาชน (13 หลัก)</label>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: 13 }).map((_, i) => (
-                <input key={i} maxLength={1} value={idCard[i] || ""}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/, "");
-                    const arr = idCard.split("");
-                    arr[i] = v;
-                    setIdCard(arr.join(""));
-                    if (v && i < 12) {
-                      const next = e.target.parentElement?.children[i + 1] as HTMLInputElement;
-                      next?.focus();
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Backspace" && !idCard[i] && i > 0) {
-                      const prev = (e.target as HTMLElement).parentElement?.children[i - 1] as HTMLInputElement;
-                      prev?.focus();
-                    }
-                  }}
-                  className="w-9 h-10 text-center border rounded text-sm font-mono focus:outline-none"
-                  style={{ borderColor: BORDER }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = OR; e.currentTarget.style.boxShadow = `0 0 0 2px ${OR}1F`; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.boxShadow = "none"; }}
-                />
-              ))}
-            </div>
-          </div>
+            {/* ID Card */}
+            <Box sx={{ mt: 2, mb: 2 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
+                หมายเลขบัตรประชาชน (13 หลัก)
+              </Typography>
+              <Stack direction="row" spacing={0.5}>
+                {Array.from({ length: 13 }).map((_, i) => (
+                  <TextField
+                    key={i}
+                    value={idCard[i] || ""}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/, "");
+                      const arr = idCard.split("");
+                      arr[i] = v;
+                      setIdCard(arr.join(""));
+                      if (v && i < 12) {
+                        const next = (e.target as HTMLElement).parentElement?.parentElement?.nextElementSibling?.querySelector("input") as HTMLInputElement;
+                        next?.focus();
+                      }
+                    }}
+                    inputProps={{ maxLength: 1, style: { textAlign: "center", fontFamily: "monospace" } }}
+                    size="small"
+                    sx={{ width: 38 }}
+                  />
+                ))}
+              </Stack>
+            </Box>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Field label="ชื่อเล่น" value={nickname} onChange={setNickname} />
-            <Select label="เพศ" value={gender} onChange={setGender} options={["ชาย", "หญิง"]} />
-            <Field label="วันเกิด" value={birthDate} onChange={setBirthDate} type="date" />
-            <Field label="อายุ" value={calcAge(birthDate)} disabled />
-            <Field label="เชื้อชาติ" value={race} onChange={setRace} />
-            <Field label="สัญชาติ" value={nationality} onChange={setNationality} required />
-            <Select label="สถานะสมรส" value={marital} onChange={setMarital} options={MARITAL} />
-            <Select label="สถานะทางทหาร" value={military} onChange={setMilitary} options={MILITARY} />
-          </div>
-        </Section>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr", lg: "1fr 1fr 1fr 1fr" }, gap: 2 }}>
+              <FormTextField name="nickname" control={control} label="ชื่อเล่น" />
+              <FormAutocomplete name="gender" control={control} label="เพศ" options={GENDER_OPTIONS} />
+              <FormTextField name="birthDate" control={control} label="วันเกิด" type="date" />
+              <FormTextField name="nationality" control={control} label="สัญชาติ" required />
+              <FormAutocomplete name="marital" control={control} label="สถานะสมรส" options={MARITAL_OPTIONS} />
+              <FormAutocomplete name="military" control={control} label="สถานะทางทหาร" options={MILITARY_OPTIONS} />
+            </Box>
+          </AccordionDetails>
+        </Accordion>
 
         {/* ── Section 2: ข้อมูลการติดต่อ ── */}
-        <Section title="ข้อมูลการติดต่อ" open={sections.contact} onToggle={() => toggle("contact")}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-            <div className="lg:col-span-4">
-              <Field label="ที่อยู่" value={address} onChange={setAddress} required />
-            </div>
-            <Field label="แขวง/ตำบล" value={subDistrict} onChange={setSubDistrict} />
-            <Field label="อำเภอ/เขต" value={district} onChange={setDistrict} />
-            <Field label="จังหวัด" value={province} onChange={setProvince} />
-            <Field label="รหัสไปรษณีย์" value={zipcode} onChange={setZipcode} />
-            <Field label="E-mail" value={email} onChange={setEmail} type="email" />
-            <Field label="เบอร์โทรศัพท์" value={phone} onChange={setPhone} />
-            <Field label="Line ID" value={lineId} onChange={setLineId} />
-            <Field label="Facebook" value={facebook} onChange={setFacebook} />
-          </div>
+        <Accordion
+          expanded={expanded.includes("contact")}
+          onChange={() => toggleAccordion("contact")}
+          sx={{ mb: 2, borderRadius: "8px !important", "&:before": { display: "none" } }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>ข้อมูลการติดต่อ</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr", lg: "1fr 1fr 1fr 1fr" }, gap: 2 }}>
+              <Box sx={{ gridColumn: { lg: "1 / -1" } }}>
+                <FormTextField name="address" control={control} label="ที่อยู่" required />
+              </Box>
+              <FormTextField name="subDistrict" control={control} label="แขวง/ตำบล" />
+              <FormTextField name="district" control={control} label="อำเภอ/เขต" />
+              <FormTextField name="province" control={control} label="จังหวัด" />
+              <FormTextField name="zipcode" control={control} label="รหัสไปรษณีย์" />
+              <FormTextField name="email" control={control} label="E-mail" type="email" />
+              <FormTextField name="phone" control={control} label="เบอร์โทรศัพท์" />
+              <FormTextField name="lineId" control={control} label="Line ID" />
+              <FormTextField name="facebook" control={control} label="Facebook" />
+            </Box>
 
-          {/* Emergency contact */}
-          <div className="mt-5 pt-4 border-t" style={{ borderColor: BORDER }}>
-            <p className="text-xs font-semibold mb-3" style={{ color: TEXT }}>บุคคลติดต่อในกรณีฉุกเฉิน</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Field label="ชื่อ-นามสกุล" value={emergencyName} onChange={setEmergencyName} />
-              <Field label="เบอร์โทรศัพท์" value={emergencyPhone} onChange={setEmergencyPhone} />
-              <Select label="ความสัมพันธ์" value={emergencyRelation} onChange={setEmergencyRelation} options={RELATIONSHIPS} />
-            </div>
-          </div>
-        </Section>
+            <Divider sx={{ my: 2.5 }} />
+
+            <Typography variant="body2" sx={{ fontWeight: 600, mb: 2, color: "#333" }}>
+              บุคคลติดต่อในกรณีฉุกเฉิน
+            </Typography>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" }, gap: 2 }}>
+              <FormTextField name="emergencyName" control={control} label="ชื่อ-นามสกุล" />
+              <FormTextField name="emergencyPhone" control={control} label="เบอร์โทรศัพท์" />
+              <FormAutocomplete name="emergencyRelation" control={control} label="ความสัมพันธ์" options={RELATIONSHIPS} />
+            </Box>
+          </AccordionDetails>
+        </Accordion>
 
         {/* ── Section 3: ข้อมูลการทำงาน ── */}
-        <Section title="ข้อมูลการทำงาน" open={sections.work} onToggle={() => toggle("work")}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-            <Field label="วันที่เริ่มทำงาน" value={startDate} onChange={setStartDate} type="date" />
-            <Field label="วันที่สิ้นสุด" value={endDate} onChange={setEndDate} type="date" />
-            <Select label="ประเภทพนักงาน" value={empType} onChange={setEmpType} options={EMP_TYPES} />
-            <Select label="สถานะ" value={workStatus} onChange={setWorkStatus} options={STATUSES_WORK} />
-            <Select label="แผนก" value={dept} onChange={setDept} options={DEPARTMENTS} />
-            <Select label="ตำแหน่ง" value={position} onChange={setPosition} options={POSITIONS} />
-          </div>
-          <label className="flex items-center gap-2 mt-4 cursor-pointer">
-            <input type="checkbox" checked={socialSecurity} onChange={(e) => setSocialSecurity(e.target.checked)}
-              className="w-4 h-4 rounded" style={{ accentColor: OR }} />
-            <span className="text-sm" style={{ color: TEXT }}>ขึ้นทะเบียนประกันสังคม</span>
-          </label>
-        </Section>
+        <Accordion
+          expanded={expanded.includes("work")}
+          onChange={() => toggleAccordion("work")}
+          sx={{ mb: 2, borderRadius: "8px !important", "&:before": { display: "none" } }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>ข้อมูลการทำงาน</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr", lg: "1fr 1fr 1fr 1fr" }, gap: 2 }}>
+              <FormTextField name="startDate" control={control} label="วันที่เริ่มทำงาน" type="date" />
+              <FormTextField name="endDate" control={control} label="วันที่สิ้นสุด" type="date" />
+              <FormAutocomplete name="empType" control={control} label="ประเภทพนักงาน" options={EMP_TYPES} />
+              <FormAutocomplete name="workStatus" control={control} label="สถานะ" options={STATUSES_WORK} />
+              <FormAutocomplete name="dept" control={control} label="แผนก" options={DEPT_OPTIONS} />
+              <FormAutocomplete name="position" control={control} label="ตำแหน่ง" options={POS_OPTIONS} />
+            </Box>
+            <FormControlLabel
+              control={<Checkbox sx={{ "&.Mui-checked": { color: OR } }} />}
+              label="ขึ้นทะเบียนประกันสังคม"
+              sx={{ mt: 2 }}
+            />
+          </AccordionDetails>
+        </Accordion>
 
         {/* ── Section 4: ช่องทางการรับเงินเดือน ── */}
-        <Section title="ช่องทางการรับเงินเดือน" open={sections.salary} onToggle={() => toggle("salary")}>
-          <div className="flex items-center gap-6 mt-4 mb-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="payMethod" checked={payMethod === "bank"} onChange={() => setPayMethod("bank")} style={{ accentColor: OR }} />
-              <span className="text-sm" style={{ color: TEXT }}>บัญชีธนาคาร</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="payMethod" checked={payMethod === "cash"} onChange={() => setPayMethod("cash")} style={{ accentColor: OR }} />
-              <span className="text-sm" style={{ color: TEXT }}>เงินสด</span>
-            </label>
-          </div>
+        <Accordion
+          expanded={expanded.includes("salary")}
+          onChange={() => toggleAccordion("salary")}
+          sx={{ mb: 2, borderRadius: "8px !important", "&:before": { display: "none" } }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>ช่องทางการรับเงินเดือน</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <RadioGroup
+              row
+              value={payMethod}
+              onChange={(e) => setPayMethod(e.target.value as "bank" | "cash")}
+              sx={{ mb: 2 }}
+            >
+              <FormControlLabel value="bank" control={<Radio sx={{ "&.Mui-checked": { color: OR } }} />} label="บัญชีธนาคาร" />
+              <FormControlLabel value="cash" control={<Radio sx={{ "&.Mui-checked": { color: OR } }} />} label="เงินสด" />
+            </RadioGroup>
 
-          {payMethod === "bank" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Select label="ธนาคาร" value={bank} onChange={setBank} options={BANKS} />
-              <Select label="ประเภทบัญชี" value={accountType} onChange={setAccountType} options={ACCOUNT_TYPES} />
-              <Field label="ชื่อบัญชี" value={accountName} onChange={setAccountName} />
-              <Field label="เลขบัญชี" value={accountNo} onChange={setAccountNo} />
-              <Field label="ชื่อสาขา (ถ้ามี)" value={branchName} onChange={setBranchName} />
-              <Field label="เลขที่สาขา (ถ้ามี)" value={branchNo} onChange={setBranchNo} />
-            </div>
-          )}
-        </Section>
+            {payMethod === "bank" && (
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" }, gap: 2 }}>
+                <FormAutocomplete
+                  name="bank"
+                  control={control}
+                  label="ธนาคาร"
+                  options={BANKS.map((b) => ({ id: b, name: b }))}
+                />
+                <FormAutocomplete
+                  name="accountType"
+                  control={control}
+                  label="ประเภทบัญชี"
+                  options={ACCOUNT_TYPES.map((t) => ({ id: t, name: t }))}
+                />
+                <FormTextField name="accountName" control={control} label="ชื่อบัญชี" />
+                <FormTextField name="accountNo" control={control} label="เลขบัญชี" />
+                <FormTextField name="branchName" control={control} label="ชื่อสาขา (ถ้ามี)" />
+                <FormTextField name="branchNo" control={control} label="เลขที่สาขา (ถ้ามี)" />
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
 
         {/* ── Section 5: เอกสารแนบ ── */}
-        <Section title="เอกสารแนบ" open={sections.docs} onToggle={() => toggle("docs")}>
-          <div className="mt-4">
-            <button className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors"
-              style={{ background: OR }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = OR)}>
-              + เพิ่มเอกสาร
-            </button>
-            <p className="text-xs mt-2" style={{ color: MUTED }}>รองรับไฟล์ PDF, JPG, PNG ขนาดไม่เกิน 5MB</p>
-          </div>
-        </Section>
+        <Accordion
+          expanded={expanded.includes("docs")}
+          onChange={() => toggleAccordion("docs")}
+          sx={{ mb: 2, borderRadius: "8px !important", "&:before": { display: "none" } }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>เอกสารแนบ</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Button variant="contained" startIcon={<AddIcon />} size="small">
+              เพิ่มเอกสาร
+            </Button>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+              รองรับไฟล์ PDF, JPG, PNG ขนาดไม่เกิน 5MB
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
 
         {/* ── Footer Buttons ── */}
-        <div className="flex items-center justify-end gap-3 mt-6 pb-6">
-          <button onClick={() => setScreen("list")}
-            className="px-6 py-2.5 rounded-lg text-sm font-medium border transition-colors"
-            style={{ borderColor: BORDER, color: MUTED }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = OR; e.currentTarget.style.color = OR; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = MUTED; }}>
+        <Stack direction="row" justifyContent="flex-end" spacing={1.5} sx={{ mt: 3, pb: 3 }}>
+          <Button
+            variant="outlined"
+            onClick={() => { reset(); setScreen("list"); }}
+            sx={{ px: 4 }}
+          >
             ยกเลิก
-          </button>
-          <button onClick={handleSave}
-            className="px-8 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors"
-            style={{ background: OR }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = OR)}>
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmit(onSubmit)}
+            sx={{ px: 5 }}
+          >
             บันทึก
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Stack>
+      </Box>
     </TenantShell>
   );
 }
 
 export default function EmployeePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm" style={{ color: "#777" }}>กำลังโหลด...</div>}>
+    <Suspense fallback={<Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><Typography color="text.secondary">กำลังโหลด...</Typography></Box>}>
       <EmployeeInner />
     </Suspense>
   );

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ToastProvider } from "@/components/common/Toast";
+import MuiThemeProvider from "@/lib/MuiThemeProvider";
 
 export const metadata: Metadata = {
   title: "Jigsaw ERP - Prototype",
@@ -13,7 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <MuiThemeProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </MuiThemeProvider>
+      </body>
     </html>
   );
 }
