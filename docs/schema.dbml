@@ -1,0 +1,378 @@
+// ============================================================
+// ERP Jigsaw — Database Schema (DBML)
+// Generated from TypeScript interfaces & mock data
+// ============================================================
+
+Project erp_jigsaw {
+  database_type: 'PostgreSQL'
+  Note: '''
+    ERP Jigsaw — Multi-tenant ERP System
+    Thai/English bilingual naming throughout
+  '''
+}
+
+// ── Super Admin Level ────────────────────────────────────────
+
+Table master_accounts {
+  id varchar [pk]
+  first_name varchar [not null]
+  last_name varchar [not null]
+  position varchar
+  company varchar
+  customer_group varchar
+  email varchar [not null, unique]
+  phone varchar
+  tenant_quota int [default: 1]
+  tenant_used int [default: 0]
+  status varchar [not null, note: 'เปิดใช้งาน | รอยืนยัน Email | ปิดใช้งาน']
+  email_verified_at timestamp
+  created_at timestamp [default: `now()`]
+  created_by varchar
+  updated_at timestamp
+  updated_by varchar
+}
+
+// ── Tenant / Multi-tenancy ───────────────────────────────────
+
+Table tenants {
+  id varchar [pk]
+  name varchar [not null]
+  subdomain varchar [unique, not null]
+  plan varchar [not null, note: 'Starter | Professional | Enterprise']
+  status varchar [not null, note: 'Active | Suspended | Trial']
+  users int [default: 0]
+  contact_email varchar
+  contact_phone varchar
+  created_at timestamp [default: `now()`]
+}
+
+Table tenant_details {
+  id varchar [pk]
+  tenant_id varchar [not null, unique, ref: - tenants.id]
+  name_th varchar [not null]
+  name_en varchar
+  entity_type varchar [note: 'บริษัทจำกัด | ห้างหุ้นส่วน | etc.']
+  business_type varchar
+  tax_id varchar [unique]
+  deployment_tier varchar [not null, note: 'Cloud | Dedicated | On-premise']
+  backup_freq int [default: 24]
+  backup_unit varchar [default: 'ชั่วโมง', note: 'ชั่วโมง | วัน']
+  contract_start date
+  contract_end date
+  auto_renewal boolean [default: false]
+  status varchar [not null, note: 'Active | รอ Setup Wizard | Suspended']
+}
+
+Table tenant_quotas {
+  id varchar [pk]
+  tenant_id varchar [not null, unique, ref: - tenants.id]
+  user_quota int [default: 5]
+  branch_quota int [default: 1]
+  warehouse_quota int [default: 1]
+  storage_quota int [default: 10, note: 'GB']
+  audit_log_quota int [default: 90, note: 'days']
+  onboarding_quota int [default: 1]
+}
+
+Table tenant_modules {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  module_id varchar [not null]
+  module_name varchar [not null]
+  status varchar [not null, note: 'locked | on | off']
+
+  indexes {
+    (tenant_id, module_id) [unique]
+  }
+}
+
+// ── Company / Branch ─────────────────────────────────────────
+
+Table companies {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  name varchar [not null]
+  tax_id varchar
+  address text
+  phone varchar
+  email varchar
+  website varchar
+  logo varchar
+}
+
+Table branches {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  code varchar [not null]
+  name varchar [not null]
+
+  indexes {
+    (tenant_id, code) [unique]
+  }
+}
+
+// ── Warehouse ────────────────────────────────────────────────
+
+Table warehouses {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  branch_id varchar [ref: > branches.id]
+  code varchar [not null]
+  name varchar [not null]
+  warehouse_type varchar [note: 'คลังสินค้าสาขา | คลังสินค้ากลาง']
+  country varchar [default: 'Thailand']
+  address text
+  sub_district varchar
+  district varchar
+  province varchar
+  postal_code varchar
+  google_map_url varchar
+  note text
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    (tenant_id, code) [unique]
+  }
+}
+
+// ── Employee & Organization ──────────────────────────────────
+
+Table employees {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  code varchar [not null]
+  name varchar [not null]
+  nickname varchar
+  division varchar
+  department varchar
+  position varchar
+  phone varchar
+  email varchar
+  status varchar [note: 'ทำงาน | พ้นสภาพ']
+  type varchar [note: 'รายเดือน | รายวัน']
+  active boolean [default: true]
+
+  indexes {
+    (tenant_id, code) [unique]
+  }
+}
+
+// ── Permission & Role ────────────────────────────────────────
+
+Table roles {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  name varchar [not null]
+  description text
+
+  indexes {
+    (tenant_id, name) [unique]
+  }
+}
+
+Table user_permissions {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  employee_id varchar [not null, ref: > employees.id]
+  menu_role varchar [note: 'สิทธิ์เมนูที่เข้าถึงได้']
+  erp_role varchar [note: 'สิทธิ์การทำงานใน ERP']
+  has_edit boolean [default: false]
+
+  indexes {
+    (tenant_id, employee_id) [unique]
+  }
+}
+
+// ── Product Catalog ──────────────────────────────────────────
+
+Table product_types {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  code varchar [not null]
+  name_th varchar [not null]
+  name_en varchar
+  category_count int [default: 0]
+  product_count int [default: 0]
+
+  indexes {
+    (tenant_id, code) [unique]
+  }
+}
+
+Table main_categories {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  product_type_id varchar [not null, ref: > product_types.id]
+  code varchar [not null]
+  name_th varchar [not null]
+  name_en varchar
+  sub_cat_count int [default: 0]
+  product_count int [default: 0]
+
+  indexes {
+    (tenant_id, code) [unique]
+  }
+}
+
+Table sub_categories {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  main_cat_id varchar [not null, ref: > main_categories.id]
+  product_type_id varchar [not null, ref: > product_types.id]
+  code varchar [not null]
+  name_th varchar [not null]
+  name_en varchar
+  product_count int [default: 0]
+
+  indexes {
+    (tenant_id, code) [unique]
+  }
+}
+
+Table brands {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  name_th varchar [not null]
+  name_en varchar
+  image varchar
+  active boolean [default: true]
+}
+
+Table units {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  name_th varchar [not null]
+  name_en varchar
+  description varchar
+}
+
+Table pack_sizes {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  name_th varchar [not null]
+  name_en varchar
+  active boolean [default: true]
+}
+
+Table dimensions {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  name_th varchar [not null]
+  name_en varchar
+  active boolean [default: true]
+}
+
+Table weights {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  name_th varchar [not null]
+  name_en varchar
+  active boolean [default: true]
+}
+
+// ── Products ─────────────────────────────────────────────────
+
+Table products {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  name varchar [not null]
+  sku varchar [not null]
+  category varchar
+  sub_category_id varchar [ref: > sub_categories.id]
+  brand_id varchar [ref: > brands.id]
+  unit_id varchar [ref: > units.id]
+  price decimal(12,2) [default: 0]
+  stock int [default: 0]
+
+  indexes {
+    (tenant_id, sku) [unique]
+  }
+}
+
+// ── Purchasing ───────────────────────────────────────────────
+
+Table purchase_requests {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  pr_number varchar [not null]
+  date date [not null]
+  requester_id varchar [ref: > employees.id]
+  department varchar
+  status varchar [not null, note: 'Draft | Pending | Approved | Rejected']
+  total decimal(12,2) [default: 0]
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    (tenant_id, pr_number) [unique]
+  }
+}
+
+Table purchase_request_items {
+  id varchar [pk]
+  pr_id varchar [not null, ref: > purchase_requests.id]
+  product_name varchar [not null]
+  qty int [not null]
+  unit varchar
+  unit_price decimal(12,2) [not null]
+}
+
+// ── Sales ────────────────────────────────────────────────────
+
+Table sales_orders {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  so_number varchar [not null]
+  date date [not null]
+  customer varchar [not null]
+  status varchar [not null, note: 'Draft | Confirmed | Shipped']
+  salesperson_id varchar [ref: > employees.id]
+  total decimal(12,2) [default: 0]
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    (tenant_id, so_number) [unique]
+  }
+}
+
+Table sales_order_items {
+  id varchar [pk]
+  so_id varchar [not null, ref: > sales_orders.id]
+  product_name varchar [not null]
+  qty int [not null]
+  unit_price decimal(12,2) [not null]
+}
+
+// ── Activity Log ─────────────────────────────────────────────
+
+Table activity_logs {
+  id varchar [pk]
+  tenant_id varchar [not null, ref: > tenants.id]
+  time timestamp [not null]
+  action varchar [not null]
+  user_name varchar
+  type varchar [note: 'create | approve | ship | confirm']
+  created_at timestamp [default: `now()`]
+}
+
+// ── Navigation / Module Config (App-Level) ───────────────────
+
+Table modules {
+  id varchar [pk]
+  label varchar [not null]
+  icon varchar
+  sort_order int [default: 0]
+}
+
+Table module_children {
+  id varchar [pk]
+  module_id varchar [not null, ref: > modules.id]
+  label varchar [not null]
+  sort_order int [default: 0]
+}
+
+Table module_grandchildren {
+  id varchar [pk]
+  module_child_id varchar [not null, ref: > module_children.id]
+  label varchar [not null]
+  sort_order int [default: 0]
+}
