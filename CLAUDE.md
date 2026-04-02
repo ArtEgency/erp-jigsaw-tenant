@@ -1,4 +1,5 @@
-# ERP Jigsaw — Claude Code Instructions
+# ERP Jigsaw Tenant — Claude Code Instructions
+# Port 3001 · jigsawx.com / {tenant}.jigsawx.com
 
 ## ⚠️ อ่านไฟล์นี้ก่อนทำงานทุกครั้ง
 
@@ -188,21 +189,24 @@ Content:   bg #F4F4F4
 
 ```
 /src
-  /app/app/                    → Tenant pages (product, employee, settings, etc.)
-  /app/super-admin/            → Super Admin pages
-  /app/login/                  → Login pages
-  /components/common/          → Shared reusable components (MUI-based + legacy)
-  /components/TenantShell.tsx  → Main tenant layout wrapper
-  /components/screens/         → Legacy screen components
-  /lib/MuiThemeProvider.tsx    → MUI ThemeProvider (wrap root layout)
-  /lib/api.ts                  → API service layer (get, post, put, del)
-  /lib/types.ts                → Centralized TypeScript types
-  /lib/theme.ts                → Centralized color constants
-  /store/useStore.ts           → UI state management
-  /data/mock.ts                → Mock data for development
+  /app/
+    page.tsx                         → Redirect → /login
+    layout.tsx                       → Root layout (MuiThemeProvider + Toast)
+    (auth)/login/                    → Backoffice Login (เลือกบริษัท)
+    (tenant)/[slug]/                 → Tenant pages (dynamic slug)
+    (tenant)/[slug]/login/           → Direct tenant login
+    (tenant)/[slug]/setup-wizard/    → Onboarding wizard
+    (tenant)/[slug]/employee/        → Employee management
+    (tenant)/[slug]/product/         → Product management
+    (tenant)/[slug]/settings/        → Business/Product/Warehouse settings
+  /components/
+    ui/                              → Reusable UI (FormTextField, Modal, Toast, etc.)
+    layout/                          → Layout wrappers (TenantShell, SlidePanel)
+  /lib/                              → Utilities (api, theme, types, MuiThemeProvider)
+  /data/                             → Tenant data (tenants.ts)
 ```
 
-## Shared Component Library (`/src/components/common/`)
+## Shared Component Library (`/src/components/ui/`)
 
 **ห้ามสร้าง component ซ้ำ — ต้อง import จาก common ก่อนเสมอ:**
 
@@ -229,7 +233,7 @@ import {
 
   // Legacy (Tailwind-based — backward compat)
   Button, Badge, Modal, FormField, DataTable, Pagination,
-} from "@/components/common";
+} from "@/components/ui";
 ```
 
 ### Table List
