@@ -83,6 +83,14 @@ const th: Record<string, string> = {
   "tenant.warehouse": "คลังสินค้า",
   "tenant.rolePermission": "สิทธิ์การใช้งาน",
   "tenant.assignPermission": "กำหนดสิทธิ์ผู้ใช้งาน",
+
+  // ── Shell UI ──
+  "shell.branch": "ส่วนงาน",
+  "shell.profile": "โปรไฟล์",
+  "shell.logout": "ออกจากระบบ",
+  "shell.switchCompany": "สลับบริษัท",
+  "shell.searchCompany": "ค้นหาบริษัท...",
+  "shell.onboarding": "Onboarding",
 };
 
 export default th;

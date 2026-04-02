@@ -38,8 +38,18 @@ export function hasPermission(role: Role, pathname: string): boolean {
   const allowed = ROLE_PERMISSIONS[role];
   if (!allowed) return false;
   if (allowed.includes("*")) return true;
+
+  // For tenant routes like /june/employee, strip the slug prefix
+  // so /june/employee matches /employee in the allowed list
+  const segments = pathname.split("/").filter(Boolean);
+  const pathWithoutSlug = segments.length > 1 ? "/" + segments.slice(1).join("/") : pathname;
+
   return allowed.some(
-    (route) => pathname === route || pathname.startsWith(route + "/")
+    (route) =>
+      pathname === route ||
+      pathname.startsWith(route + "/") ||
+      pathWithoutSlug === route ||
+      pathWithoutSlug.startsWith(route + "/")
   );
 }
 

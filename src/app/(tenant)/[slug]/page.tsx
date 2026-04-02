@@ -4,11 +4,13 @@ import { useParams } from "next/navigation";
 import { getTenantBySlug } from "@/data/tenants";
 import TenantShell from "@/components/layout/TenantShell";
 import { Box, Typography, Avatar, Chip, Stack, Paper } from "@mui/material";
+import { useLocale } from "@/lib/locale";
 
 export default function TenantDashboardPage() {
   const params = useParams();
   const slug = params.slug as string;
   const tenant = getTenantBySlug(slug);
+  const { t } = useLocale();
 
   if (!tenant) {
     return (
@@ -53,7 +55,7 @@ export default function TenantDashboardPage() {
 
         {/* Module Grid */}
         <Typography variant="body2" sx={{ fontWeight: 600, color: "#555", mb: 2 }}>
-          Module ที่เปิดใช้งาน ({tenant.package})
+          {t("tenant.modules")} ({tenant.package})
         </Typography>
         <Stack direction="row" flexWrap="wrap" gap={1.5}>
           {tenant.modules.map((mod) => (

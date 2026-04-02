@@ -83,6 +83,14 @@ const en: Record<string, string> = {
   "tenant.warehouse": "Warehouse",
   "tenant.rolePermission": "Role & Permission",
   "tenant.assignPermission": "Assign Permission",
+
+  // ── Shell UI ──
+  "shell.branch": "Branch",
+  "shell.profile": "Profile",
+  "shell.logout": "Sign Out",
+  "shell.switchCompany": "Switch Company",
+  "shell.searchCompany": "Search company...",
+  "shell.onboarding": "Onboarding",
 };
 
 export default en;
