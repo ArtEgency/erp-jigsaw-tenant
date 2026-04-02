@@ -519,7 +519,7 @@ export default function TenantShell({ children, breadcrumb, activeModule, onModu
   const [companySearch, setCompanySearch] = useState("");
   const [lang, setLang] = useState<"th" | "en">("th");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [screenIndexOpen, setScreenIndexOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   const handleModuleNav = (id: string) => {
@@ -535,35 +535,87 @@ export default function TenantShell({ children, breadcrumb, activeModule, onModu
   return (
     <div className="min-h-screen flex" style={{ background: BG, fontFamily: "'Sarabun', sans-serif" }}>
 
-      {/* ══════ LEFT SIDEBAR ══════ */}
-      <div className="w-[52px] shrink-0 flex flex-col items-center py-3 gap-1 z-50" style={{ background: "#FFFFFF", borderRight: `1px solid ${BORDER}` }}>
-        {/* JIGSAW logo */}
-        <button onClick={() => router.push("/")} className="w-9 h-9 rounded-lg flex items-center justify-center mb-2 hover:opacity-80 transition-opacity" style={{ background: OR }}>
-          <svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="3" width="7" height="7" rx="1.5" fill="white" />
-            <rect x="14" y="3" width="7" height="7" rx="1.5" fill="white" opacity={0.7} />
-            <rect x="3" y="14" width="7" height="7" rx="1.5" fill="white" opacity={0.7} />
-            <rect x="14" y="14" width="7" height="7" rx="1.5" fill="white" opacity={0.5} />
-          </svg>
-        </button>
-
-        {SIDEBAR_ITEMS.map((item, i) => {
-          const hasPath = !!item.path;
-          return (
-          <button
-            key={i}
-            disabled={!hasPath}
-            onClick={() => hasPath ? router.push(item.path.replace("_SLUG_", slug)) : undefined}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors group relative"
-            style={{ color: hasPath ? (i === 0 ? OR : MUTED) : "#D0D0D0", cursor: hasPath ? "pointer" : "default", opacity: hasPath ? 1 : 0.5 }}
-            onMouseEnter={(e) => { if (hasPath) { e.currentTarget.style.background = OR_L; e.currentTarget.style.color = OR; } }}
-            onMouseLeave={(e) => { if (hasPath) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = i === 0 ? OR : MUTED; } }}
-            title={item.label}
-          >
-            {item.icon}
+      {/* ══════ LEFT SIDEBAR (expandable) ══════ */}
+      <div className={`shrink-0 flex transition-all duration-300 ${sidebarExpanded ? "w-[272px]" : "w-[52px]"}`} style={{ borderRight: `1px solid ${BORDER}` }}>
+        {/* Icon Bar (always visible) */}
+        <div className="w-[52px] shrink-0 flex flex-col items-center py-3 gap-1 z-50" style={{ background: "#FFFFFF" }}>
+          {/* JIGSAW logo */}
+          <button onClick={() => router.push("/")} className="w-9 h-9 rounded-lg flex items-center justify-center mb-2 hover:opacity-80 transition-opacity" style={{ background: OR }}>
+            <svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" fill="white" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" fill="white" opacity={0.7} />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" fill="white" opacity={0.7} />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" fill="white" opacity={0.5} />
+            </svg>
           </button>
-          );
-        })}
+
+          {/* Page icon (toggle sidebar) */}
+          <button
+            onClick={() => setSidebarExpanded(prev => !prev)}
+            className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+            style={{ color: sidebarExpanded ? OR : MUTED, background: sidebarExpanded ? OR_L : "transparent" }}
+            title="Page"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </button>
+
+          {SIDEBAR_ITEMS.map((item, i) => {
+            const hasPath = !!item.path;
+            return (
+            <button
+              key={i}
+              disabled={!hasPath}
+              onClick={() => hasPath ? router.push(item.path.replace("_SLUG_", slug)) : undefined}
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors group relative"
+              style={{ color: hasPath ? (i === 0 ? OR : MUTED) : "#D0D0D0", cursor: hasPath ? "pointer" : "default", opacity: hasPath ? 1 : 0.5 }}
+              onMouseEnter={(e) => { if (hasPath) { e.currentTarget.style.background = OR_L; e.currentTarget.style.color = OR; } }}
+              onMouseLeave={(e) => { if (hasPath) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = i === 0 ? OR : MUTED; } }}
+              title={item.label}
+            >
+              {item.icon}
+            </button>
+            );
+          })}
+        </div>
+
+        {/* Expandable Page List Panel */}
+        <div className={`bg-[#12121f] overflow-hidden transition-all duration-300 ${sidebarExpanded ? "w-[220px] opacity-100" : "w-0 opacity-0"}`}>
+          <div className="w-[220px] h-full overflow-y-auto">
+            <div className="px-3 py-2 pb-3 border-b border-[#2a2a3e] bg-[#0e0e1a]">
+              <div className="text-xs font-semibold text-white flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Page — Jigsaw ERP
+              </div>
+              <div className="text-[10px] text-gray-600 mt-0.5">Prototype ({totalScreens} screens)</div>
+            </div>
+            <div className="py-1.5">
+              {screenIndex.map((group, gi) => {
+                const isCollapsed = collapsedGroups[group.group];
+                return (
+                  <div key={gi}>
+                    <button
+                      onClick={() => setCollapsedGroups(prev => ({ ...prev, [group.group]: !prev[group.group] }))}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-white/70 hover:bg-white/5 transition-colors"
+                    >
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: group.color }} />
+                      <span className="flex-1 text-left truncate">{group.group}</span>
+                      <span className="text-[9px] text-white/30">{isCollapsed ? "+" : "−"}</span>
+                    </button>
+                    {!isCollapsed && group.items.map((item, i) => (
+                      <button key={i} onClick={() => { router.push(item.path.replace("_SLUG_", slug)); setSidebarExpanded(false); }}
+                        className="w-full text-left px-4 py-2 pl-7 text-xs text-white/60 hover:text-white hover:bg-white/5 transition-colors truncate"
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ══════ MAIN AREA ══════ */}
@@ -571,8 +623,8 @@ export default function TenantShell({ children, breadcrumb, activeModule, onModu
 
         {/* ══════ TOP BAR ══════ */}
         <div className="h-[52px] flex items-center px-4 gap-3 shrink-0 relative z-50" style={{ background: OR }}>
-          {/* Hamburger */}
-          <button onClick={() => setScreenIndexOpen(!screenIndexOpen)} className="text-white hover:bg-white/20 rounded-lg p-1.5 transition-colors">
+          {/* Hamburger — toggle sidebar */}
+          <button onClick={() => setSidebarExpanded(prev => !prev)} className="text-white hover:bg-white/20 rounded-lg p-1.5 transition-colors">
             <IconHamburger />
           </button>
 
@@ -861,54 +913,7 @@ export default function TenantShell({ children, breadcrumb, activeModule, onModu
         );
       })()}
 
-      {/* ══════ SCREEN INDEX SIDE PANEL ══════ */}
-      {screenIndexOpen && (
-        <>
-          <div className="fixed inset-0 bg-black/40 z-[200]" onClick={() => setScreenIndexOpen(false)} />
-          <div className="fixed left-0 top-0 bottom-0 w-[320px] bg-[#12121f] z-[210] flex flex-col shadow-2xl overflow-hidden">
-            <div className="px-4 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #2a2a3e" }}>
-              <div>
-                <div className="text-sm font-bold text-white flex items-center gap-2">Jigsaw ERP &mdash; Prototype</div>
-                <div className="text-[10px] text-white/40 mt-1">ออกแบบแล้ว {totalScreens} หน้าจอ</div>
-              </div>
-              <button onClick={() => setScreenIndexOpen(false)} className="text-white/50 hover:text-white text-lg p-1">&times;</button>
-            </div>
-            <div className="flex-1 overflow-y-auto py-2">
-              {screenIndex.map((group) => {
-                const isCollapsed = collapsedGroups[group.group] ?? false;
-                return (
-                  <div key={group.group}>
-                    <button
-                      onClick={() => setCollapsedGroups((prev) => ({ ...prev, [group.group]: !isCollapsed }))}
-                      className="w-full px-4 py-2.5 flex items-center gap-2 hover:bg-white/5 transition-colors cursor-pointer"
-                    >
-                      <span className="text-[10px] text-white/40 transition-transform" style={{ transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>&#x25BC;</span>
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: group.color }} />
-                      <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider flex-1 text-left">{group.group}</span>
-                      <span className="text-[9px] text-white/30">{group.items.length} หน้า</span>
-                    </button>
-                    {!isCollapsed && group.items.map((item, i) => (
-                      <button key={i} onClick={() => { router.push(item.path.replace("_SLUG_", slug)); setScreenIndexOpen(false); }}
-                        className="w-full text-left px-4 py-2 pl-10 text-xs text-white/60 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2"
-                      >
-                        <span className="text-[10px] font-mono w-5 text-white/30">{String(i + 1).padStart(2, "0")}</span>
-                        <span>{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="px-4 py-3 text-center" style={{ borderTop: "1px solid #2a2a3e" }}>
-              <button onClick={() => { router.push("/"); setScreenIndexOpen(false); }}
-                className="text-xs text-white/40 hover:text-white/70 transition-colors"
-              >
-                &larr; กลับหน้าเลือกระบบ
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Old screen index panel removed — now integrated in sidebar */}
     </div>
   );
 }
