@@ -2,50 +2,42 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-
-import { TENANT_PRIMARY as OR, TENANT_HOVER as OR_D, MUTED, BORDER } from "@/lib/theme";
+import {
+  TextField, Button, Alert, Checkbox, FormControlLabel,
+  IconButton, InputAdornment, Typography, Box, Stack, Avatar,
+  List, ListItemButton, ListItemAvatar, ListItemText, Badge, Chip,
+} from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import SearchIcon from "@mui/icons-material/Search";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { TENANTS } from "@/data/tenants";
+import { useAuth } from "@/lib/auth";
+import { useLocale } from "@/lib/locale";
 
-/* ── Mock Companies (จาก Tenant Data) ── */
-interface Company {
-  id: string;
-  slug: string;
-  name: string;
-  domain: string;
-  initials: string;
-  color: string;
-  notifications: number;
-}
-
-const MOCK_COMPANIES: Company[] = TENANTS.map((t, i) => ({
-  id: t.id,
-  slug: t.slug,
-  name: t.name,
-  domain: t.domain,
-  initials: t.initials,
-  color: t.primaryColor,
+/* ── Mock Companies ── */
+const MOCK_COMPANIES = TENANTS.map((t, i) => ({
+  id: t.id, slug: t.slug, name: t.name, domain: t.domain,
+  initials: t.initials, color: t.primaryColor,
   notifications: i === 1 ? 3 : 0,
 }));
 
-/* ── Step Type ── */
 type LoginStep = "login" | "select-company";
 
-export default function LoginPage() {
+export default function BackofficeLoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
+  const { t } = useLocale();
 
-  /* ── Login Form State ── */
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
-
-  /* ── Step State ── */
   const [step, setStep] = useState<LoginStep>("login");
-
-  /* ── Company Selection State ── */
   const [companySearch, setCompanySearch] = useState("");
-  const [activeCompanyId, setActiveCompanyId] = useState("1"); // Payo = active by default
+  const [activeCompanyId, setActiveCompanyId] = useState(MOCK_COMPANIES[0]?.id || "");
 
   const filteredCompanies = useMemo(() => {
     if (!companySearch.trim()) return MOCK_COMPANIES;
@@ -55,315 +47,179 @@ export default function LoginPage() {
     );
   }, [companySearch]);
 
-  /* ── Handlers ── */
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
-      setError("กรุณากรอกข้อมูลให้ครบ");
+      setError(t("auth.fillRequired"));
       return;
     }
-    // Mock: if user has multiple companies → show selection
-    // In production: check API response for company list
+    await login(email, password);
     if (MOCK_COMPANIES.length > 1) {
       setStep("select-company");
     } else {
-      const firstSlug = MOCK_COMPANIES[0]?.slug ?? "june";
-      router.push(`/${firstSlug}`);
+      router.push(`/${MOCK_COMPANIES[0]?.slug ?? "june"}`);
     }
-  };
-
-  const handleSelectCompany = (companyId: string) => {
-    setActiveCompanyId(companyId);
   };
 
   const handleConfirmCompany = () => {
     const selected = MOCK_COMPANIES.find((c) => c.id === activeCompanyId);
-    const slug = selected?.slug ?? "june";
-    router.push(`/${slug}`);
+    router.push(`/${selected?.slug ?? "june"}`);
   };
 
   return (
     <div className="min-h-screen flex">
-      {/* ══════ LEFT — Decorative Panel ══════ */}
-      <div
+      {/* Left: Decorative Panel */}
+      <Box
         className="hidden lg:flex flex-1 flex-col items-center justify-center relative overflow-hidden"
-        style={{ background: "linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)" }}
+        sx={{ background: "linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)" }}
       >
-        {/* Circular decorations */}
-        <div className="absolute" style={{ width: 500, height: 500, borderRadius: "50%", border: "1px solid rgba(86,93,255,0.12)", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} />
-        <div className="absolute" style={{ width: 360, height: 360, borderRadius: "50%", border: "1px solid rgba(86,93,255,0.08)", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} />
-        <div className="absolute" style={{ width: 220, height: 220, borderRadius: "50%", border: "1px solid rgba(86,93,255,0.05)", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }} />
+        <Box className="relative z-10 text-center">
+          <Typography variant="h1" sx={{ fontSize: "5rem", fontWeight: 800, letterSpacing: "0.3em", color: "rgba(86,93,255,0.18)", mb: 2 }}>
+            ERP
+          </Typography>
+          <Typography variant="body2" sx={{ letterSpacing: "0.5em", textTransform: "uppercase", color: "rgba(86,93,255,0.35)" }}>
+            Enterprise Resource Planning
+          </Typography>
+        </Box>
+      </Box>
 
-        {/* Floating icons */}
-        <div className="absolute" style={{ top: "32%", left: "18%" }}>
-          <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "rgba(86,93,255,0.15)" }}>
-            <span className="text-lg" style={{ color: OR }}>👥</span>
-          </div>
-        </div>
-        <div className="absolute" style={{ top: "38%", right: "28%" }}>
-          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(86,93,255,0.12)" }}>
-            <span className="text-sm" style={{ color: OR }}>⚙</span>
-          </div>
-        </div>
-        <div className="absolute" style={{ bottom: "28%", left: "22%" }}>
-          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(86,93,255,0.10)" }}>
-            <span className="text-sm" style={{ color: OR }}>☁</span>
-          </div>
-        </div>
-        <div className="absolute" style={{ bottom: "30%", right: "30%" }}>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(86,93,255,0.08)" }}>
-            <span className="text-xs" style={{ color: OR }}>🔑</span>
-          </div>
-        </div>
+      {/* Right: Login / Company Selection */}
+      <Box sx={{ width: { xs: "100%", lg: 480, xl: 520 }, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", bgcolor: "white", px: { xs: 3, lg: 7 } }}>
 
-        {/* Center text */}
-        <div className="relative z-10 text-center">
-          <h2 className="text-7xl font-extrabold tracking-[0.3em] mb-4" style={{ color: "rgba(86,93,255,0.18)" }}>ERP</h2>
-          <p className="text-sm tracking-[0.5em] uppercase" style={{ color: "rgba(86,93,255,0.35)" }}>Enterprise Resource Planning</p>
-        </div>
-      </div>
-
-      {/* ══════ RIGHT — Login Form / Company Selection ══════ */}
-      <div className="w-full lg:w-[480px] xl:w-[520px] flex flex-col items-center justify-center bg-white px-8 lg:px-14 relative">
-
-        {/* ───── Step 1: Login Form ───── */}
+        {/* ── Step 1: Login Form ── */}
         {step === "login" && (
-          <div className="w-full max-w-[360px]">
-            {/* Logo */}
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: OR }}>
-                <span className="text-2xl">🧩</span>
-              </div>
-              <span className="text-3xl font-extrabold tracking-[0.15em]" style={{ color: OR }}>JIGSAW</span>
-            </div>
+          <Box sx={{ width: "100%", maxWidth: 360 }}>
+            <Box sx={{ textAlign: "center", mb: 1 }}>
+              <Avatar sx={{ bgcolor: "#565DFF", width: 48, height: 48, mx: "auto", mb: 1, fontSize: 24 }}>🧩</Avatar>
+              <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: "0.15em", color: "#565DFF" }}>JIGSAW</Typography>
+            </Box>
+            <Typography variant="body2" sx={{ textAlign: "center", color: "#565DFF", mb: 0.5 }}>{t("auth.welcome")}</Typography>
+            <Typography variant="caption" sx={{ textAlign: "center", display: "block", color: "#999", mb: 3 }}>JIGSAW ERP for Business</Typography>
 
-            {/* Welcome text */}
-            <p className="text-center text-sm mb-0.5" style={{ color: OR }}>ยินดีต้อนรับเข้าสู่ระบบ</p>
-            <p className="text-center text-xs mb-6" style={{ color: "#999" }}>JIGSAW ERP for Business</p>
+            <Typography variant="subtitle1" sx={{ textAlign: "center", fontWeight: 700, mb: 2.5 }}>{t("auth.login")}</Typography>
 
-            {/* Title */}
-            <h2 className="text-center text-base font-bold mb-5" style={{ color: "#333" }}>เข้าสู่ระบบ</h2>
+            {error && <Alert severity="error" sx={{ mb: 2, fontSize: 13 }}>{error}</Alert>}
 
-            {error && (
-              <div className="mb-4 p-3 rounded-lg text-sm text-center" style={{ background: "#FCEBEB", color: "#A32D2D", border: "1px solid #E8CCCC" }}>
-                {error}
-              </div>
-            )}
+            <Stack spacing={2}>
+              <TextField
+                label={t("auth.email")}
+                size="small"
+                fullWidth
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setError(""); }}
+              />
+              <TextField
+                label={t("auth.password")}
+                size="small"
+                fullWidth
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => setShowPassword(!showPassword)} edge="end">
+                        {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Stack>
 
-            {/* Email */}
-            <div className="mb-4">
-              <div className="field-group">
-                <input
-                  type="text"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); setError(""); }}
-                />
-                <label>อีเมล/เบอร์โทรศัพท์/รหัสพนักงาน</label>
-              </div>
-            </div>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", my: 2 }}>
+              <FormControlLabel
+                control={<Checkbox checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} size="small" sx={{ color: "#565DFF", "&.Mui-checked": { color: "#565DFF" } }} />}
+                label={<Typography variant="body2" sx={{ color: "#777" }}>{t("auth.remember")}</Typography>}
+              />
+              <Button variant="text" size="small" sx={{ color: "#565DFF", textTransform: "none", fontSize: 13 }}>
+                {t("auth.forgot")}
+              </Button>
+            </Box>
 
-            {/* Password */}
-            <div className="mb-4">
-              <div className="field-group relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
-                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                />
-                <label>รหัสผ่าน</label>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-lg"
-                  style={{ color: "#999" }}
-                >
-                  {showPassword ? "🙈" : "👁"}
-                </button>
-              </div>
-            </div>
-
-            {/* Remember + Forgot */}
-            <div className="flex items-center justify-between mb-5">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded"
-                  style={{ accentColor: OR }}
-                />
-                <span className="text-xs" style={{ color: "#555" }}>จำรหัสผ่าน</span>
-              </label>
-              <button className="text-xs font-medium hover:underline" style={{ color: OR }}>ลืมรหัสผ่าน ?</button>
-            </div>
-
-            {/* Login Button */}
-            <button
-              onClick={handleLogin}
-              className="w-full py-3 rounded-lg font-semibold text-sm text-white transition-colors"
-              style={{ background: OR }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = OR)}
+            <Button
+              fullWidth variant="contained" onClick={handleLogin}
+              sx={{ bgcolor: "#565DFF", "&:hover": { bgcolor: "#4349E0" }, py: 1.2, fontWeight: 600, textTransform: "none" }}
             >
-              เข้าสู่ระบบ
-            </button>
+              {t("auth.login")}
+            </Button>
 
-            {/* Help text */}
-            <p className="text-center mt-5 text-xs" style={{ color: "#999" }}>
-              หากพบปัญหาการเข้าสู่ระบบ{" "}
-              <button className="font-medium hover:underline" style={{ color: OR }}>กรุณาติดต่อผู้ดูแลระบบ</button>
-            </p>
-
-            {/* Back */}
-            <div className="text-center mt-6">
-              <button
-                onClick={() => router.push("/")}
-                className="text-xs transition-colors"
-                style={{ color: "#bbb" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = OR)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#bbb")}
-              >
-                ← กลับหน้าเลือกระบบ
-              </button>
-            </div>
-          </div>
+            <Typography variant="caption" sx={{ display: "block", textAlign: "center", mt: 3, color: "#999" }}>
+              {t("auth.helpText")}{" "}
+              <Button variant="text" size="small" sx={{ color: "#565DFF", textTransform: "none", fontSize: 11, p: 0, minWidth: 0 }}>
+                {t("auth.contactAdmin")}
+              </Button>
+            </Typography>
+          </Box>
         )}
 
-        {/* ───── Step 2: Company Selection Modal ───── */}
+        {/* ── Step 2: Company Selection ── */}
         {step === "select-company" && (
-          <div className="w-full max-w-[400px]">
-            {/* Logo small */}
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: OR }}>
-                <span className="text-lg">🧩</span>
-              </div>
-              <span className="text-xl font-extrabold tracking-[0.12em]" style={{ color: OR }}>JIGSAW</span>
-            </div>
+          <Box sx={{ width: "100%", maxWidth: 400 }}>
+            <Box sx={{ textAlign: "center", mb: 3 }}>
+              <Avatar sx={{ bgcolor: "#565DFF", width: 36, height: 36, mx: "auto", mb: 1, fontSize: 18 }}>🧩</Avatar>
+              <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: "0.12em", color: "#565DFF" }}>JIGSAW</Typography>
+            </Box>
 
-            {/* Title */}
-            <h2 className="text-center text-lg font-bold mb-1" style={{ color: "#333" }}>กิจการของคุณ</h2>
-            <p className="text-center text-xs mb-5" style={{ color: MUTED }}>เลือกกิจการที่ต้องการเข้าใช้งาน</p>
+            <Typography variant="h6" sx={{ textAlign: "center", fontWeight: 700, mb: 0.5 }}>{t("auth.yourCompanies")}</Typography>
+            <Typography variant="caption" sx={{ textAlign: "center", display: "block", color: "#999", mb: 2.5 }}>{t("auth.selectCompany")}</Typography>
 
-            {/* Search */}
-            <div className="relative mb-4">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: MUTED }}>🔍</span>
-              <input
-                type="text"
-                value={companySearch}
-                onChange={(e) => setCompanySearch(e.target.value)}
-                placeholder="ค้นหากิจการ..."
-                className="w-full pl-9 pr-4 py-2.5 rounded-lg text-sm focus:outline-none transition-colors"
-                style={{ border: `1px solid ${BORDER}`, color: "#333" }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = OR; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = BORDER; }}
-              />
-            </div>
+            <TextField
+              size="small" fullWidth placeholder={t("auth.searchCompany")}
+              value={companySearch} onChange={(e) => setCompanySearch(e.target.value)}
+              sx={{ mb: 2 }}
+              InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: "#999" }} /></InputAdornment> }}
+            />
 
-            {/* Company List */}
-            <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1" style={{ scrollbarWidth: "thin" }}>
+            <List sx={{ maxHeight: 360, overflow: "auto" }}>
               {filteredCompanies.length === 0 ? (
-                <div className="text-center py-8 text-sm" style={{ color: MUTED }}>
-                  ไม่พบกิจการที่ค้นหา
-                </div>
+                <Typography variant="body2" sx={{ textAlign: "center", py: 4, color: "#999" }}>{t("common.noData")}</Typography>
               ) : (
-                filteredCompanies.map((company) => {
-                  const isActive = company.id === activeCompanyId;
+                filteredCompanies.map((c) => {
+                  const isActive = c.id === activeCompanyId;
                   return (
-                    <button
-                      key={company.id}
-                      onClick={() => handleSelectCompany(company.id)}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left group"
-                      style={{
-                        border: isActive ? `2px solid ${OR}` : `1px solid ${BORDER}`,
-                        background: isActive ? `${OR}08` : "white",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.borderColor = "#B3B7FF";
-                          e.currentTarget.style.background = "#FAFAFF";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.borderColor = BORDER;
-                          e.currentTarget.style.background = "white";
-                        }
+                    <ListItemButton
+                      key={c.id}
+                      selected={isActive}
+                      onClick={() => setActiveCompanyId(c.id)}
+                      sx={{
+                        borderRadius: 2, mb: 0.5, border: "1px solid",
+                        borderColor: isActive ? "#565DFF" : "#E0E0E0",
+                        bgcolor: isActive ? "#565DFF08" : "white",
+                        "&.Mui-selected": { bgcolor: "#565DFF08" },
                       }}
                     >
-                      {/* Avatar */}
-                      <div
-                        className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
-                        style={{ background: company.color }}
-                      >
-                        {company.initials}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate" style={{ color: isActive ? OR : "#333" }}>
-                          {company.name}
-                        </p>
-                        {isActive ? (
-                          <span className="text-[11px] font-medium" style={{ color: OR }}>กำลังใช้งาน</span>
-                        ) : company.notifications > 0 ? (
-                          <span className="text-[11px]" style={{ color: "#FF6B6B" }}>
-                            {company.notifications} การแจ้งเตือน
-                          </span>
-                        ) : (
-                          <span className="text-[11px]" style={{ color: MUTED }}>{company.domain}</span>
-                        )}
-                      </div>
-
-                      {/* Right side: checkmark or notification badge */}
-                      {isActive ? (
-                        <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-                          style={{ background: OR }}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        </div>
-                      ) : company.notifications > 0 ? (
-                        <div
-                          className="min-w-[22px] h-[22px] rounded-full flex items-center justify-center px-1.5 text-[11px] font-bold text-white shrink-0"
-                          style={{ background: "#FF6B6B" }}
-                        >
-                          {company.notifications}
-                        </div>
-                      ) : null}
-                    </button>
+                      <ListItemAvatar>
+                        <Avatar sx={{ bgcolor: c.color, width: 40, height: 40, fontSize: 14, fontWeight: 700 }}>{c.initials}</Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={<Typography variant="body2" sx={{ fontWeight: 600, color: isActive ? "#565DFF" : "#333" }}>{c.name}</Typography>}
+                        secondary={isActive ? <Chip label={t("auth.active")} size="small" color="primary" sx={{ fontSize: 10, height: 20 }} /> : c.notifications > 0 ? <Typography variant="caption" sx={{ color: "#FF6B6B" }}>{c.notifications} {t("auth.notifications")}</Typography> : <Typography variant="caption" sx={{ color: "#999" }}>{c.domain}</Typography>}
+                      />
+                      {isActive && <CheckCircleIcon sx={{ color: "#565DFF" }} />}
+                      {!isActive && c.notifications > 0 && <Badge badgeContent={c.notifications} color="error" />}
+                    </ListItemButton>
                   );
                 })
               )}
-            </div>
+            </List>
 
-            {/* Confirm Button */}
-            <button
-              onClick={handleConfirmCompany}
-              className="w-full py-3 rounded-lg font-semibold text-sm text-white transition-colors mt-5"
-              style={{ background: OR }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = OR)}
+            <Button
+              fullWidth variant="contained" onClick={handleConfirmCompany}
+              sx={{ bgcolor: "#565DFF", "&:hover": { bgcolor: "#4349E0" }, py: 1.2, fontWeight: 600, textTransform: "none", mt: 2.5 }}
             >
-              เข้าสู่ระบบบริษัท TA
-            </button>
+              {t("auth.enterSystem")}
+            </Button>
 
-            {/* Back to login */}
-            <div className="text-center mt-4">
-              <button
-                onClick={() => { setStep("login"); setCompanySearch(""); }}
-                className="text-xs transition-colors"
-                style={{ color: "#bbb" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = OR)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#bbb")}
-              >
-                ← กลับหน้าเข้าสู่ระบบ
-              </button>
-            </div>
-          </div>
+            <Box sx={{ textAlign: "center", mt: 2 }}>
+              <Button startIcon={<ArrowBackIcon />} size="small" onClick={() => { setStep("login"); setCompanySearch(""); }}
+                sx={{ color: "#bbb", textTransform: "none", fontSize: 12, "&:hover": { color: "#565DFF" } }}>
+                {t("nav.backToLogin")}
+              </Button>
+            </Box>
+          </Box>
         )}
-      </div>
+      </Box>
     </div>
   );
 }

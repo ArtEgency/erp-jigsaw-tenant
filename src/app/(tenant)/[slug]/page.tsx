@@ -3,87 +3,74 @@
 import { useParams } from "next/navigation";
 import { getTenantBySlug } from "@/data/tenants";
 import TenantShell from "@/components/layout/TenantShell";
+import { Box, Typography, Avatar, Chip, Stack, Paper } from "@mui/material";
 
-export default function TenantAppPage() {
+export default function TenantDashboardPage() {
   const params = useParams();
   const slug = params.slug as string;
   const tenant = getTenantBySlug(slug);
 
   if (!tenant) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ fontFamily: "'Sarabun', sans-serif" }}>
-        <p>Tenant not found</p>
-      </div>
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Typography>Tenant not found</Typography>
+      </Box>
     );
   }
 
   return (
     <TenantShell breadcrumb={[tenant.name, "Dashboard"]} activeModule="my-tasks">
-      <div style={{ padding: 32, fontFamily: "'Sarabun', sans-serif" }}>
+      <Box sx={{ p: 4 }}>
         {/* Tenant Info Banner */}
-        <div style={{
-          background: tenant.lightColor,
-          border: `1.5px solid ${tenant.primaryColor}30`,
-          borderRadius: 12,
-          padding: "24px 28px",
-          marginBottom: 24,
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-        }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 12,
-            background: tenant.primaryColor,
-            color: "#fff", fontWeight: 700, fontSize: 18,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 3, mb: 3, display: "flex", alignItems: "center", gap: 2,
+            borderColor: `${tenant.primaryColor}30`, bgcolor: tenant.lightColor,
+            borderRadius: 3,
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 48, height: 48, borderRadius: 3,
+              bgcolor: tenant.primaryColor, fontWeight: 700, fontSize: 18,
+            }}
+          >
             {tenant.initials}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, color: "#333" }}>{tenant.name}</div>
-            <div style={{ fontSize: 13, color: "#777", marginTop: 2 }}>
+          </Avatar>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{tenant.name}</Typography>
+            <Typography variant="caption" sx={{ color: "#777" }}>
               {tenant.domain} — Package: {tenant.package}
-            </div>
-          </div>
-          <div style={{
-            background: `${tenant.primaryColor}15`,
-            borderRadius: 8,
-            padding: "6px 14px",
-            fontSize: 12,
-            color: tenant.primaryColor,
-            fontWeight: 600,
-          }}>
-            {tenant.modules.length} Modules
-          </div>
-        </div>
+            </Typography>
+          </Box>
+          <Chip
+            label={`${tenant.modules.length} Modules`}
+            size="small"
+            sx={{ bgcolor: `${tenant.primaryColor}15`, color: tenant.primaryColor, fontWeight: 600 }}
+          />
+        </Paper>
 
         {/* Module Grid */}
-        <div style={{ marginBottom: 16, fontWeight: 600, fontSize: 14, color: "#555" }}>
+        <Typography variant="body2" sx={{ fontWeight: 600, color: "#555", mb: 2 }}>
           Module ที่เปิดใช้งาน ({tenant.package})
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
+        </Typography>
+        <Stack direction="row" flexWrap="wrap" gap={1.5}>
           {tenant.modules.map((mod) => (
-            <div key={mod} style={{
-              background: "#fff",
-              border: "1px solid #E0E0E0",
-              borderRadius: 10,
-              padding: "14px 16px",
-              fontSize: 13,
-              color: "#555",
-              fontWeight: 500,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}>
-              <div style={{
-                width: 8, height: 8, borderRadius: "50%",
-                background: tenant.primaryColor,
-              }} />
+            <Paper
+              key={mod}
+              variant="outlined"
+              sx={{
+                px: 2, py: 1.5, borderRadius: 2, display: "flex", alignItems: "center", gap: 1,
+                minWidth: 160, fontSize: 13, color: "#555", fontWeight: 500,
+              }}
+            >
+              <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: tenant.primaryColor }} />
               {mod}
-            </div>
+            </Paper>
           ))}
-        </div>
-      </div>
+        </Stack>
+      </Box>
     </TenantShell>
   );
 }

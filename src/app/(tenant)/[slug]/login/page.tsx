@@ -3,12 +3,23 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getTenantBySlug } from "@/data/tenants";
+import {
+  TextField, Button, Alert, IconButton, InputAdornment,
+  Typography, Box, Stack, Avatar, Chip,
+} from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useAuth } from "@/lib/auth";
+import { useLocale } from "@/lib/locale";
 
 export default function TenantLoginPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
   const tenant = getTenantBySlug(slug);
+  const { login } = useAuth();
+  const { t } = useLocale();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,127 +28,107 @@ export default function TenantLoginPage() {
 
   if (!tenant) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100" style={{ fontFamily: "'Sarabun', sans-serif" }}>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">ไม่พบบริษัท</h1>
-          <p className="text-gray-500 mb-4">ไม่พบ tenant &quot;{slug}&quot; ในระบบ</p>
-          <button onClick={() => router.push("/")} className="text-sm px-4 py-2 rounded-lg" style={{ background: "#565DFF", color: "#fff" }}>
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#F4F4F4" }}>
+        <Box sx={{ textAlign: "center" }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>ไม่พบบริษัท</Typography>
+          <Typography variant="body2" sx={{ color: "#999", mb: 2 }}>ไม่พบ tenant &quot;{slug}&quot; ในระบบ</Typography>
+          <Button variant="contained" onClick={() => router.push("/")} sx={{ bgcolor: "#565DFF", textTransform: "none" }}>
             กลับหน้าหลัก
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Box>
+      </Box>
     );
   }
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
-      setError("กรุณากรอกข้อมูลให้ครบ");
+      setError(t("auth.fillRequired"));
       return;
     }
+    await login(email, password);
     router.push(`/${slug}`);
   };
 
   const PC = tenant.primaryColor;
 
   return (
-    <div className="min-h-screen flex" style={{ fontFamily: "'Sarabun', sans-serif" }}>
+    <div className="min-h-screen flex">
       {/* Left Panel — Branding */}
-      <div className="hidden lg:flex w-[480px] shrink-0 flex-col items-center justify-center relative overflow-hidden" style={{ background: PC }}>
-        {/* Decorative circles */}
-        <div className="absolute w-[600px] h-[600px] rounded-full opacity-10 bg-white" style={{ top: -200, left: -200 }} />
-        <div className="absolute w-[300px] h-[300px] rounded-full opacity-10 bg-white" style={{ bottom: -80, right: -80 }} />
-
-        <div className="relative z-10 text-center px-12">
-          <div className="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center text-3xl font-bold text-white mx-auto mb-6">
+      <Box
+        className="hidden lg:flex"
+        sx={{
+          width: 480, flexShrink: 0, flexDirection: "column", alignItems: "center", justifyContent: "center",
+          position: "relative", overflow: "hidden", bgcolor: PC,
+        }}
+      >
+        <Box className="absolute w-[600px] h-[600px] rounded-full opacity-10 bg-white" sx={{ top: -200, left: -200 }} />
+        <Box className="absolute w-[300px] h-[300px] rounded-full opacity-10 bg-white" sx={{ bottom: -80, right: -80 }} />
+        <Box sx={{ position: "relative", zIndex: 10, textAlign: "center", px: 6 }}>
+          <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 80, height: 80, fontSize: 28, fontWeight: 700, mx: "auto", mb: 3, borderRadius: 3 }}>
             {tenant.initials}
-          </div>
-          <h1 className="text-white text-2xl font-bold mb-2">{tenant.name}</h1>
-          {tenant.description && (
-            <p className="text-white/70 text-sm mb-4">{tenant.description}</p>
-          )}
-          <div className="inline-block bg-white/15 rounded-full px-4 py-1.5 text-white/80 text-xs">
-            {tenant.domain}
-          </div>
-          <div className="mt-3 inline-block bg-white/10 rounded-full px-4 py-1.5 text-white/60 text-xs ml-2">
-            {tenant.package}
-          </div>
-        </div>
-      </div>
+          </Avatar>
+          <Typography variant="h5" sx={{ color: "white", fontWeight: 700, mb: 1 }}>{tenant.name}</Typography>
+          {tenant.description && <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>{tenant.description}</Typography>}
+          <Chip label={tenant.domain} sx={{ bgcolor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.8)", fontSize: 12 }} />
+          <Chip label={tenant.package} sx={{ bgcolor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", fontSize: 12, ml: 1 }} />
+        </Box>
+      </Box>
 
       {/* Right Panel — Login Form */}
-      <div className="flex-1 flex items-center justify-center bg-white px-8">
-        <div className="w-full max-w-[380px]">
-          {/* Mobile: show tenant name */}
-          <div className="lg:hidden mb-6 text-center">
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold text-white mx-auto mb-3" style={{ background: PC }}>
+      <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "white", px: 4 }}>
+        <Box sx={{ width: "100%", maxWidth: 380 }}>
+          {/* Mobile: tenant name */}
+          <Box sx={{ display: { lg: "none" }, mb: 3, textAlign: "center" }}>
+            <Avatar sx={{ bgcolor: PC, width: 56, height: 56, fontSize: 20, fontWeight: 700, mx: "auto", mb: 1.5, borderRadius: 2 }}>
               {tenant.initials}
-            </div>
-            <h2 className="text-lg font-bold" style={{ color: "#333" }}>{tenant.name}</h2>
-          </div>
+            </Avatar>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>{tenant.name}</Typography>
+          </Box>
 
-          <h2 className="text-xl font-bold mb-1" style={{ color: "#333" }}>เข้าสู่ระบบ</h2>
-          <p className="text-sm mb-6" style={{ color: "#999" }}>{tenant.domain}</p>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>{t("auth.login")}</Typography>
+          <Typography variant="body2" sx={{ color: "#999", mb: 3 }}>{tenant.domain}</Typography>
 
-          {error && (
-            <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}>
-              {error}
-            </div>
-          )}
+          {error && <Alert severity="error" sx={{ mb: 2, fontSize: 13 }}>{error}</Alert>}
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: "#555" }}>อีเมล / เบอร์โทร / รหัสพนักงาน</label>
-              <input
-                type="text"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(""); }}
-                placeholder="email@company.com"
-                className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-colors"
-                style={{ border: "1.5px solid #E0E0E0", color: "#333" }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = PC; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = "#E0E0E0"; }}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: "#555" }}>รหัสผ่าน</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
-                  placeholder="รหัสผ่าน"
-                  className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-colors pr-12"
-                  style={{ border: "1.5px solid #E0E0E0", color: "#333" }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = PC; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = "#E0E0E0"; }}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleLogin(); }}
-                />
-                <button
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showPassword ? "ซ่อน" : "แสดง"}
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={handleLogin}
-              className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90"
-              style={{ background: PC }}
+          <Stack spacing={2}>
+            <TextField
+              label={t("auth.email")} size="small" fullWidth
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(""); }}
+              placeholder="email@company.com"
+            />
+            <TextField
+              label={t("auth.password")} size="small" fullWidth
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setError(""); }}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setShowPassword(!showPassword)} edge="end">
+                      {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              fullWidth variant="contained" onClick={handleLogin}
+              sx={{ bgcolor: PC, "&:hover": { opacity: 0.9 }, py: 1.2, fontWeight: 600, textTransform: "none" }}
             >
-              เข้าสู่ระบบ
-            </button>
-          </div>
+              {t("auth.login")}
+            </Button>
+          </Stack>
 
-          <div className="mt-6 text-center">
-            <button onClick={() => router.push("/")} className="text-xs hover:underline" style={{ color: "#999" }}>
-              ← กลับหน้าหลัก
-            </button>
-          </div>
-        </div>
-      </div>
+          <Box sx={{ textAlign: "center", mt: 3 }}>
+            <Button startIcon={<ArrowBackIcon />} size="small" onClick={() => router.push("/")}
+              sx={{ color: "#999", textTransform: "none", fontSize: 12, "&:hover": { color: PC } }}>
+              กลับหน้าหลัก
+            </Button>
+          </Box>
+        </Box>
+      </Box>
     </div>
   );
 }
