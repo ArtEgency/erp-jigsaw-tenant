@@ -198,7 +198,7 @@ export default function LoginPage() {
               onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
               onMouseLeave={(e) => (e.currentTarget.style.background = OR)}
             >
-              เข้าสู่ระบบ
+              เข้าสู่ระบบ Jigsaw Admin
             </button>
 
             {/* Help text */}
@@ -339,7 +339,7 @@ export default function LoginPage() {
               onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
               onMouseLeave={(e) => (e.currentTarget.style.background = OR)}
             >
-              เข้าสู่ระบบ
+              เข้าสู่ระบบบริษัท TA
             </button>
 
             {/* Back to login */}

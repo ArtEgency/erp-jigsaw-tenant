@@ -147,6 +147,7 @@ const SECTIONS = [
   { id: "avatars", label: "Avatars & Typography", icon: <PersonIcon fontSize="small" /> },
   { id: "timeline", label: "Timeline & Stepper", icon: <CalendarMonthIcon fontSize="small" /> },
   { id: "speeddial", label: "SpeedDial & Rating", icon: <StarIcon fontSize="small" /> },
+  { id: "icons", label: "Icons", icon: <InventoryIcon fontSize="small" /> },
 ];
 
 /* ══════════════════════════════════════ */
@@ -161,6 +162,20 @@ function SectionBlock({ id, title, children }: { id: string; title: string; chil
       <Paper sx={{ p: 3, borderRadius: 2 }}>
         {children}
       </Paper>
+    </Box>
+  );
+}
+
+/* ── Sub-section label with optional Last Approved ── */
+function SubLabel({ children, approved }: { children: React.ReactNode; approved?: string }) {
+  return (
+    <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, mb: 1.5 }}>
+      <Typography variant="subtitle2" sx={{ color: "#666" }}>{children}</Typography>
+      {approved && (
+        <Typography variant="caption" sx={{ color: "#bbb", fontStyle: "italic", fontSize: "0.7rem" }}>
+          (Last Approved {approved})
+        </Typography>
+      )}
     </Box>
   );
 }
@@ -331,7 +346,7 @@ export default function ComponentShowcase() {
         {/* ── 1. BUTTONS & FAB ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="buttons" title="Buttons & FAB">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Contained Buttons</Typography>
+          <SubLabel>Contained Buttons</SubLabel>
           <Stack direction="row" spacing={1.5} flexWrap="wrap" sx={{ mb: 3 }}>
             <Button variant="contained">Primary</Button>
             <Button variant="contained" color="secondary">Secondary</Button>
@@ -342,7 +357,7 @@ export default function ComponentShowcase() {
             <Button variant="contained" disabled>Disabled</Button>
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Outlined Buttons</Typography>
+          <SubLabel approved="V.1 23/03/2026">Outlined Buttons</SubLabel>
           <Stack direction="row" spacing={1.5} flexWrap="wrap" sx={{ mb: 3 }}>
             <Button variant="outlined">Primary</Button>
             <Button variant="outlined" color="secondary">Secondary</Button>
@@ -350,21 +365,21 @@ export default function ComponentShowcase() {
             <Button variant="outlined" color="error">Error</Button>
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Text Buttons</Typography>
+          <SubLabel>Text Buttons</SubLabel>
           <Stack direction="row" spacing={1.5} flexWrap="wrap" sx={{ mb: 3 }}>
             <Button variant="text">Primary</Button>
             <Button variant="text" color="secondary">Secondary</Button>
             <Button variant="text" startIcon={<AddIcon />}>With Icon</Button>
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Sizes</Typography>
+          <SubLabel>Sizes</SubLabel>
           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
             <Button variant="contained" size="small">Small</Button>
             <Button variant="contained" size="medium">Medium</Button>
             <Button variant="contained" size="large">Large</Button>
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Icon Buttons</Typography>
+          <SubLabel>Icon Buttons</SubLabel>
           <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
             <IconButton color="primary"><EditIcon /></IconButton>
             <IconButton color="error"><DeleteIcon /></IconButton>
@@ -372,7 +387,7 @@ export default function ComponentShowcase() {
             <IconButton color="info"><InfoIcon /></IconButton>
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Floating Action Button (FAB)</Typography>
+          <SubLabel>Floating Action Button (FAB)</SubLabel>
           <Stack direction="row" spacing={2} alignItems="center">
             <Fab color="primary" size="small"><AddIcon /></Fab>
             <Fab color="secondary" size="medium"><EditIcon /></Fab>
@@ -396,7 +411,7 @@ export default function ComponentShowcase() {
             <TextField label="Number" type="number" size="small" defaultValue={42} />
           </Box>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Multiline / Textarea</Typography>
+          <SubLabel>Multiline / Textarea</SubLabel>
           <TextField label="ข้อความยาว" multiline rows={3} fullWidth placeholder="พิมพ์ข้อความยาวที่นี่..." />
 
           <Typography variant="subtitle2" sx={{ mt: 3, mb: 1.5, color: "#666" }}>Select (Dropdown)</Typography>
@@ -449,7 +464,7 @@ export default function ComponentShowcase() {
         {/* ── 4. SWITCHES & TOGGLES ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="switches" title="Switches, Checkboxes, Radios & Toggles">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Switch</Typography>
+          <SubLabel>Switch</SubLabel>
           <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
             <FormControlLabel control={<Switch checked={switchChecked} onChange={(e) => setSwitchChecked(e.target.checked)} />} label="ใช้งาน" />
             <FormControlLabel control={<Switch disabled />} label="Disabled" />
@@ -457,7 +472,7 @@ export default function ComponentShowcase() {
             <FormControlLabel control={<Switch color="warning" defaultChecked />} label="Warning" />
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Checkbox</Typography>
+          <SubLabel>Checkbox</SubLabel>
           <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
             <FormControlLabel control={<Checkbox defaultChecked />} label="เลือก A" />
             <FormControlLabel control={<Checkbox />} label="เลือก B" />
@@ -465,7 +480,7 @@ export default function ComponentShowcase() {
             <FormControlLabel control={<Checkbox color="success" defaultChecked />} label="Success" />
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Radio Group</Typography>
+          <SubLabel>Radio Group</SubLabel>
           <RadioGroup row defaultValue="bank">
             <FormControlLabel value="bank" control={<Radio />} label="บัญชีธนาคาร" />
             <FormControlLabel value="cash" control={<Radio />} label="เงินสด" />
@@ -474,7 +489,7 @@ export default function ComponentShowcase() {
 
           <Divider sx={{ my: 2.5 }} />
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Toggle Button Group</Typography>
+          <SubLabel>Toggle Button Group</SubLabel>
           <Stack direction="row" spacing={2}>
             <ToggleButtonGroup value={toggleFormat} onChange={(_, v) => setToggleFormat(v)} size="small">
               <ToggleButton value="bold"><FormatBoldIcon /></ToggleButton>
@@ -489,7 +504,7 @@ export default function ComponentShowcase() {
 
           <Divider sx={{ my: 2.5 }} />
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Slider</Typography>
+          <SubLabel>Slider</SubLabel>
           <Box sx={{ width: 300 }}>
             <Slider value={sliderVal} onChange={(_, v) => setSliderVal(v as number)} valueLabelDisplay="auto" />
             <Typography variant="body2" color="text.secondary">Value: {sliderVal}</Typography>
@@ -527,7 +542,7 @@ export default function ComponentShowcase() {
         {/* ── 6. TABLES & DATAGRID ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="tables" title="Tables & MUI X DataGrid">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>MUI X DataGrid (Production-grade)</Typography>
+          <SubLabel>MUI X DataGrid (Production-grade)</SubLabel>
           <DataGrid
             rows={gridRows}
             columns={gridColumns}
@@ -546,7 +561,7 @@ export default function ComponentShowcase() {
             }}
           />
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>MUI Table (Simple)</Typography>
+          <SubLabel>MUI Table (Simple)</SubLabel>
           <TableContainer component={Paper} variant="outlined">
             <Table size="small">
               <TableHead>
@@ -620,7 +635,7 @@ export default function ComponentShowcase() {
         {/* ── 8. FEEDBACK & ALERTS ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="feedback" title="Feedback, Alerts & Snackbar">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Alert</Typography>
+          <SubLabel>Alert</SubLabel>
           <Stack spacing={1.5} sx={{ mb: 3 }}>
             <Alert severity="success"><AlertTitle>สำเร็จ</AlertTitle>บันทึกข้อมูลเรียบร้อยแล้ว</Alert>
             <Alert severity="error"><AlertTitle>ข้อผิดพลาด</AlertTitle>ไม่สามารถบันทึกข้อมูลได้</Alert>
@@ -628,14 +643,14 @@ export default function ComponentShowcase() {
             <Alert severity="info"><AlertTitle>ข้อมูล</AlertTitle>ระบบจะอัปเดตข้อมูลทุกๆ 5 นาที</Alert>
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Toast (Custom useToast)</Typography>
+          <SubLabel>Toast (Custom useToast)</SubLabel>
           <Stack direction="row" spacing={1.5} sx={{ mb: 3 }}>
             <Button variant="contained" color="success" size="small" onClick={() => showSuccess("บันทึกเรียบร้อย!")}>showSuccess</Button>
             <Button variant="contained" color="error" size="small" onClick={() => showError("เกิดข้อผิดพลาด!")}>showError</Button>
             <Button variant="contained" color="warning" size="small" onClick={() => showWarning("คำเตือน!")}>showWarning</Button>
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Snackbar</Typography>
+          <SubLabel>Snackbar</SubLabel>
           <Button variant="outlined" size="small" onClick={() => setSnackOpen(true)}>แสดง Snackbar</Button>
           <Snackbar open={snackOpen} autoHideDuration={3000} onClose={() => setSnackOpen(false)} message="ดำเนินการเรียบร้อย!" />
         </SectionBlock>
@@ -644,7 +659,7 @@ export default function ComponentShowcase() {
         {/* ── 9. CHIPS & BADGES ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="chips" title="Chips & Badges">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Chips</Typography>
+          <SubLabel>Chips</SubLabel>
           <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 3 }}>
             <Chip label="ใช้งาน" color="success" size="small" />
             <Chip label="ไม่ใช้งาน" color="default" size="small" />
@@ -656,7 +671,7 @@ export default function ComponentShowcase() {
             <Chip icon={<StarIcon />} label="Featured" color="primary" variant="outlined" size="small" />
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Badges</Typography>
+          <SubLabel>Badges</SubLabel>
           <Stack direction="row" spacing={3}>
             <Badge badgeContent={4} color="primary"><MailIcon /></Badge>
             <Badge badgeContent={12} color="error"><NotificationsIcon /></Badge>
@@ -748,7 +763,7 @@ export default function ComponentShowcase() {
         {/* ── 12. NAVIGATION ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="navigation" title="Navigation (Tabs, Breadcrumbs)">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Tabs</Typography>
+          <SubLabel>Tabs</SubLabel>
           <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} sx={{ mb: 2 }}>
             <Tab label="ทั้งหมด" />
             <Tab label="ใช้งาน" />
@@ -761,7 +776,7 @@ export default function ComponentShowcase() {
             </Typography>
           </Paper>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Breadcrumbs</Typography>
+          <SubLabel>Breadcrumbs</SubLabel>
           <Stack spacing={1}>
             <Breadcrumbs>
               <Link underline="hover" color="inherit" href="#"><HomeIcon sx={{ fontSize: "1rem", mr: 0.5, verticalAlign: "middle" }} />หน้าหลัก</Link>
@@ -780,7 +795,7 @@ export default function ComponentShowcase() {
         {/* ── 13. PROGRESS & SKELETON ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="progress" title="Progress & Skeleton Loading">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Linear Progress</Typography>
+          <SubLabel>Linear Progress</SubLabel>
           <Stack spacing={2} sx={{ mb: 3, width: 400 }}>
             <LinearProgress />
             <LinearProgress variant="determinate" value={65} />
@@ -788,7 +803,7 @@ export default function ComponentShowcase() {
             <LinearProgress color="success" variant="buffer" value={80} valueBuffer={90} />
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Circular Progress</Typography>
+          <SubLabel>Circular Progress</SubLabel>
           <Stack direction="row" spacing={3} sx={{ mb: 3 }}>
             <CircularProgress />
             <CircularProgress color="secondary" />
@@ -796,7 +811,7 @@ export default function ComponentShowcase() {
             <CircularProgress size={24} />
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Skeleton Loading</Typography>
+          <SubLabel>Skeleton Loading</SubLabel>
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
             <Paper sx={{ p: 2 }}>
               <Skeleton variant="circular" width={40} height={40} />
@@ -828,7 +843,7 @@ export default function ComponentShowcase() {
         {/* ── 14. LAYOUT & ACCORDION ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="layout" title="Layout (Accordion, Divider, Tooltip)">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Accordion (Collapsible Sections)</Typography>
+          <SubLabel>Accordion (Collapsible Sections)</SubLabel>
           {[
             { title: "ข้อมูลทั่วไป", content: "รหัสพนักงาน, ชื่อ-นามสกุล, คำนำหน้า, เพศ, วันเกิด" },
             { title: "ข้อมูลการติดต่อ", content: "ที่อยู่, เบอร์โทร, อีเมล, Line ID" },
@@ -846,7 +861,7 @@ export default function ComponentShowcase() {
 
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Tooltips</Typography>
+          <SubLabel>Tooltips</SubLabel>
           <Stack direction="row" spacing={2}>
             <Tooltip title="แก้ไขรายการ" arrow><IconButton color="primary"><EditIcon /></IconButton></Tooltip>
             <Tooltip title="ลบรายการ" arrow><IconButton color="error"><DeleteIcon /></IconButton></Tooltip>
@@ -859,7 +874,7 @@ export default function ComponentShowcase() {
         {/* ── 15. AVATARS & TYPOGRAPHY ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="avatars" title="Avatars & Typography">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Avatars</Typography>
+          <SubLabel>Avatars</SubLabel>
           <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
             <Avatar sx={{ bgcolor: "#FF6B6B" }}>PA</Avatar>
             <Avatar sx={{ bgcolor: "#565DFF" }}>JI</Avatar>
@@ -868,7 +883,7 @@ export default function ComponentShowcase() {
             <Avatar sx={{ bgcolor: "#8B5CF6" }}>SA</Avatar>
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Avatar Group</Typography>
+          <SubLabel>Avatar Group</SubLabel>
           <AvatarGroup max={4} sx={{ mb: 3, justifyContent: "flex-end" }}>
             <Avatar sx={{ bgcolor: "#FF6B6B" }}>S</Avatar>
             <Avatar sx={{ bgcolor: "#565DFF" }}>W</Avatar>
@@ -879,7 +894,7 @@ export default function ComponentShowcase() {
 
           <Divider sx={{ my: 2 }} />
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Typography Scale</Typography>
+          <SubLabel>Typography Scale</SubLabel>
           <Typography variant="h3" gutterBottom>h3 - Heading</Typography>
           <Typography variant="h4" gutterBottom>h4 - Heading</Typography>
           <Typography variant="h5" gutterBottom>h5 - Heading</Typography>
@@ -896,7 +911,7 @@ export default function ComponentShowcase() {
         {/* ── 16. TIMELINE & STEPPER ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="timeline" title="Timeline & Stepper">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Stepper</Typography>
+          <SubLabel>Stepper</SubLabel>
           <Stepper activeStep={activeStep} sx={{ mb: 2 }}>
             <Step><StepLabel>ข้อมูลทั่วไป</StepLabel></Step>
             <Step><StepLabel>ข้อมูลการติดต่อ</StepLabel></Step>
@@ -910,7 +925,7 @@ export default function ComponentShowcase() {
 
           <Divider sx={{ my: 2 }} />
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Timeline</Typography>
+          <SubLabel>Timeline</SubLabel>
           <Timeline position="alternate">
             <TimelineItem>
               <TimelineSeparator><TimelineDot color="primary" /><TimelineConnector /></TimelineSeparator>
@@ -935,7 +950,7 @@ export default function ComponentShowcase() {
         {/* ── 17. SPEED DIAL & RATING ── */}
         {/* ═══════════════════════════════════════════ */}
         <SectionBlock id="speeddial" title="SpeedDial & Rating">
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>Rating</Typography>
+          <SubLabel>Rating</SubLabel>
           <Stack direction="row" spacing={3} alignItems="center" sx={{ mb: 3 }}>
             <Box>
               <Typography variant="caption" color="text.secondary">ความพึงพอใจ</Typography>
@@ -951,7 +966,7 @@ export default function ComponentShowcase() {
             </Box>
           </Stack>
 
-          <Typography variant="subtitle2" sx={{ mb: 1.5, color: "#666" }}>SpeedDial</Typography>
+          <SubLabel>SpeedDial</SubLabel>
           <Box sx={{ position: "relative", height: 140 }}>
             <SpeedDial
               ariaLabel="SpeedDial demo"
@@ -964,6 +979,32 @@ export default function ComponentShowcase() {
               <SpeedDialAction icon={<PrintIcon />} tooltipTitle="พิมพ์" />
               <SpeedDialAction icon={<ShareIcon />} tooltipTitle="แชร์" />
             </SpeedDial>
+          </Box>
+        </SectionBlock>
+
+        {/* ── 18. Icons ── */}
+        <SectionBlock id="icons" title="Icons">
+          <SubLabel>Main Menu Icon</SubLabel>
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 2 }}>
+            {[
+              { name: "my-tasks", label: "งานของฉัน" },
+              { name: "products", label: "สินค้า" },
+              { name: "purchase", label: "จัดซื้อ" },
+              { name: "warehouse", label: "คลังสินค้า" },
+              { name: "contacts", label: "ลูกค้า" },
+              { name: "sales", label: "ขาย" },
+              { name: "finance", label: "การเงิน" },
+              { name: "manufacturing", label: "การผลิต" },
+              { name: "hr", label: "บุคคล" },
+              { name: "reports", label: "รายงาน" },
+              { name: "analytics", label: "การวิเคราะห์" },
+            ].map((icon) => (
+              <Paper key={icon.name} variant="outlined" sx={{ p: 2, textAlign: "center", borderRadius: 2 }}>
+                <img src={`/icons/menu/${icon.name}.svg`} alt={icon.label} width={40} height={40} style={{ borderRadius: 8, marginBottom: 8 }} />
+                <Typography variant="caption" display="block" sx={{ color: "#666", fontWeight: 500 }}>{icon.label}</Typography>
+                <Typography variant="caption" display="block" sx={{ color: "#bbb", fontSize: "0.65rem" }}>{icon.name}.svg</Typography>
+              </Paper>
+            ))}
           </Box>
         </SectionBlock>
 
