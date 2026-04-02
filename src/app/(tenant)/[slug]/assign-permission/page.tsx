@@ -2,9 +2,36 @@
 
 import { useState, Suspense } from "react";
 import TenantShell from "@/components/layout/TenantShell";
+import { useToast } from "@/components/ui/Toast";
+
+/* ── MUI ── */
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Avatar from "@mui/material/Avatar";
+import Menu from "@mui/material/Menu";
+import Table from "@mui/material/Table";
+import TableHead from "@mui/material/TableHead";
+import TableBody from "@mui/material/TableBody";
+import TableRow from "@mui/material/TableRow";
+import TableCell from "@mui/material/TableCell";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import AddIcon from "@mui/icons-material/Add";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import MuiMenuItem from "@mui/material/MenuItem";
 
 /* ── Palette ── */
-import { TENANT_PRIMARY as OR, TENANT_HOVER as OR_D, GREEN, GREEN_L, RED, BORDER, TEXT, MUTED } from "@/lib/theme";
+import { TENANT_PRIMARY as OR, TENANT_HOVER as OR_D } from "@/lib/theme";
 
 /* ── Mock Data ── */
 interface PermUser {
@@ -46,38 +73,12 @@ const ERP_ROLES = ["ผู้ดูแลระบบ", "SaleP", "Admin", "EMP00
 const DEPARTMENTS = ["ฝ่ายขาย", "ฝ่ายบัญชี", "ฝ่ายผลิต", "ฝ่ายบุคคล", "ฝ่ายคลังสินค้า"];
 const POSITIONS = ["ผู้จัดการ", "หัวหน้างาน", "พนักงาน", "เจ้าหน้าที่"];
 
-/* ── Reusable Components ── */
-const Field = ({ label, value, onChange, required, disabled, type = "text", placeholder }: {
-  label: string; value: string; onChange?: (v: string) => void; required?: boolean; disabled?: boolean; type?: string; placeholder?: string;
-}) => (
-  <div className="field-group">
-    <input type={type} value={value} onChange={(e) => onChange?.(e.target.value)} disabled={disabled} placeholder={placeholder || " "} />
-    <label>{label}{required && <span className="text-[#E53935] ml-0.5">*</span>}</label>
-  </div>
-);
-
-const Select = ({ label, value, onChange, options, required, disabled, placeholder }: {
-  label: string; value: string; onChange?: (v: string) => void; options: { value: string; label: string }[] | string[]; required?: boolean; disabled?: boolean; placeholder?: string;
-}) => (
-  <div className="field-group">
-    <select value={value} onChange={(e) => onChange?.(e.target.value)} disabled={disabled} style={{ appearance: "none", background: "transparent" }}>
-      <option value="">{placeholder || "เลือก..."}</option>
-      {options.map((o) => {
-        const val = typeof o === "string" ? o : o.value;
-        const lbl = typeof o === "string" ? o : o.label;
-        return <option key={val} value={val}>{lbl}</option>;
-      })}
-    </select>
-    <label>{label}{required && <span className="text-[#E53935] ml-0.5">*</span>}</label>
-  </div>
-);
-
-
 /* ══════════════════════════════════════════════════ */
 /* ── MAIN COMPONENT ── */
 /* ══════════════════════════════════════════════════ */
 
 function AssignPermissionInner() {
+  const { showSuccess, showError } = useToast();
   const [screen, setScreen] = useState<"list" | "add">("list");
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("");
@@ -93,11 +94,8 @@ function AssignPermissionInner() {
   const [formErpRole, setFormErpRole] = useState("");
 
   /* ── meatball menu ── */
-  const [meatballOpen, setMeatballOpen] = useState<string | null>(null);
-
-  /* ── toast ── */
-  const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
-  const showToast = (msg: string, type: "ok" | "err" = "ok") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuUserId, setMenuUserId] = useState<string | null>(null);
 
   /* ── filter ── */
   const filtered = mockUsers.filter((u) => {
@@ -123,20 +121,19 @@ function AssignPermissionInner() {
       setFormLastName("");
       setFormEmail("");
     }
-    // reset after employee select
   };
 
   /* ── save ── */
   const handleSave = () => {
     if (!selectedEmployee || !formEmail) {
-      showToast("กรุณากรอกข้อมูลที่จำเป็นให้ครบ", "err");
+      showError("กรุณากรอกข้อมูลที่จำเป็นให้ครบ");
       return;
     }
     if (!formMenuRole || !formErpRole) {
-      showToast("กรุณาเลือกสิทธิ์การใช้งาน", "err");
+      showError("กรุณาเลือกสิทธิ์การใช้งาน");
       return;
     }
-    showToast("บันทึกและส่งคำเชิญเรียบร้อย");
+    showSuccess("บันทึกและส่งคำเชิญเรียบร้อย");
     setScreen("list");
   };
 
@@ -147,9 +144,9 @@ function AssignPermissionInner() {
   };
 
   /* ── breadcrumb ── */
-  const breadcrumb = screen === "list"
-    ? ["บุคคล", "จัดการสิทธิ์ผู้ใช้งาน", "กำหนดสิทธิ์ผู้ใช้งาน"]
-    : ["บุคคล", "จัดการสิทธิ์ผู้ใช้งาน", "กำหนดสิทธิ์ผู้ใช้งาน"];
+  const breadcrumb = ["บุคคล", "จัดการสิทธิ์ผู้ใช้งาน", "กำหนดสิทธิ์ผู้ใช้งาน"];
+
+  const TABLE_HEADERS = ["รหัสพนักงาน", "ชื่อ-นามสกุล (ชื่อเล่น)", "แผนก", "ตำแหน่ง", "สิทธิ์การใช้งาน", "จัดการ"];
 
   /* ══════════════════════════════════════ */
   /* ── LIST SCREEN ── */
@@ -157,132 +154,142 @@ function AssignPermissionInner() {
   if (screen === "list") {
     return (
       <TenantShell breadcrumb={breadcrumb} activeModule="hr">
-        {toast && (
-          <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium"
-            style={{ background: toast.type === "ok" ? GREEN_L : "#FCEBEB", color: toast.type === "ok" ? GREEN : "#A32D2D", border: `1px solid ${toast.type === "ok" ? GREEN : RED}33` }}>
-            {toast.msg}
-          </div>
-        )}
-
-        <div className="p-6">
-          <h1 className="text-lg font-bold mb-5" style={{ color: TEXT }}>กำหนดสิทธิ์ผู้ใช้งาน</h1>
+        <Box sx={{ p: 3 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2.5, color: "text.primary" }}>
+            กำหนดสิทธิ์ผู้ใช้งาน
+          </Typography>
 
           {/* Toolbar */}
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            {/* Export button */}
-            <button className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
-              style={{ background: OR }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = OR)}>
-              ⬇ ส่งออกรายงาน
-            </button>
+          <Stack direction="row" spacing={1.5} sx={{ mb: 2, flexWrap: "wrap", alignItems: "center" }}>
+            <Button
+              variant="contained"
+              startIcon={<FileDownloadIcon />}
+              sx={{ bgcolor: OR, "&:hover": { bgcolor: OR_D }, textTransform: "none", fontWeight: 600 }}
+            >
+              ส่งออกรายงาน
+            </Button>
 
-            {/* Filter: แผนก */}
-            <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)}
-              className="px-3 py-2 rounded-lg text-sm border" style={{ borderColor: BORDER, color: TEXT, minWidth: 130 }}>
-              <option value="">ดูทั้งหมด</option>
-              {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
-            </select>
+            <TextField
+              select
+              size="small"
+              value={filterDept}
+              onChange={(e) => setFilterDept(e.target.value)}
+              sx={{ minWidth: 140 }}
+              label="แผนก"
+            >
+              <MenuItem value="">ดูทั้งหมด</MenuItem>
+              {DEPARTMENTS.map((d) => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+            </TextField>
 
-            {/* Filter: ตำแหน่ง */}
-            <select value={filterPos} onChange={(e) => setFilterPos(e.target.value)}
-              className="px-3 py-2 rounded-lg text-sm border" style={{ borderColor: BORDER, color: TEXT, minWidth: 130 }}>
-              <option value="">ดูทั้งหมด</option>
-              {POSITIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
+            <TextField
+              select
+              size="small"
+              value={filterPos}
+              onChange={(e) => setFilterPos(e.target.value)}
+              sx={{ minWidth: 140 }}
+              label="ตำแหน่ง"
+            >
+              <MenuItem value="">ดูทั้งหมด</MenuItem>
+              {POSITIONS.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+            </TextField>
 
-            <div className="flex-1" />
+            <Box sx={{ flex: 1 }} />
 
-            {/* Search */}
-            <div className="relative">
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหารหัสบัตร,ชื่อผู้ใช้งาน"
-                className="pl-3 pr-3 py-2 rounded-lg text-sm border" style={{ borderColor: BORDER, width: 260 }} />
-            </div>
+            <TextField
+              size="small"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="ค้นหารหัสบัตร,ชื่อผู้ใช้งาน"
+              sx={{ width: 260 }}
+            />
 
-            {/* Add button */}
-            <button onClick={() => { resetForm(); setScreen("add"); }}
-              className="px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
-              style={{ background: OR }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = OR)}>
-              + กำหนดสิทธิ์
-            </button>
-          </div>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => { resetForm(); setScreen("add"); }}
+              sx={{ bgcolor: OR, "&:hover": { bgcolor: OR_D }, textTransform: "none", fontWeight: 600 }}
+            >
+              กำหนดสิทธิ์
+            </Button>
+          </Stack>
 
           {/* Table */}
-          <div className="bg-white rounded-lg border" style={{ borderColor: BORDER }}>
-            <div className="overflow-x-auto" style={{ overflow: "visible" }}>
-              <table className="w-full text-sm" style={{ color: TEXT }}>
-                <thead>
-                  <tr style={{ background: "#F8F8F8" }}>
-                    {["รหัสพนักงาน", "ชื่อ-นามสกุล (ชื่อเล่น)", "แผนก", "ตำแหน่ง", "สิทธิ์การใช้งาน", "จัดการ"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left font-semibold text-xs whitespace-nowrap" style={{ color: MUTED, borderBottom: `1px solid ${BORDER}` }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr><td colSpan={6} className="text-center py-10" style={{ color: MUTED }}>ไม่พบข้อมูล</td></tr>
-                  ) : filtered.map((u) => (
-                    <tr key={u.id} className="hover:bg-indigo-50 transition-colors" style={{ borderBottom: `1px solid ${BORDER}` }}>
-                      <td className="px-4 py-3 font-medium cursor-pointer" style={{ color: OR }}>{u.code}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0"
-                            style={{ background: u.avatar ? "#E8E8E8" : "#F0F0F0", color: MUTED }}>
-                            {u.avatar || "👤"}
-                          </div>
-                          <span>{u.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">{u.department || "—"}</td>
-                      <td className="px-4 py-3">{u.position || "—"}</td>
-                      <td className="px-4 py-3">
-                        {(u.menuRole || u.erpRole) ? (
-                          <span className="font-medium" style={{ color: OR }}>{u.menuRole || u.erpRole}</span>
-                        ) : "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="relative" style={{ zIndex: meatballOpen === u.id ? 50 : 0 }}>
-                          <button onClick={() => setMeatballOpen(meatballOpen === u.id ? null : u.id)}
-                            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors text-lg cursor-pointer"
-                            style={{ color: MUTED }}>
-                            ⋮
-                          </button>
-                          {meatballOpen === u.id && (
-                            <>
-                              <div className="fixed inset-0 z-40" onMouseDown={() => setMeatballOpen(null)} />
-                              <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-lg shadow-lg border py-1 min-w-[160px]"
-                                style={{ borderColor: BORDER }}>
-                                <button onClick={() => { showToast(`ส่งคำเชิญซ้ำไปยัง ${u.name} แล้ว`); setMeatballOpen(null); }}
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-indigo-50 transition-colors cursor-pointer flex items-center gap-2"
-                                  style={{ color: TEXT }}>
-                                  <span>📩</span> ส่งคำเชิญซ้ำ
-                                </button>
-                                <button onClick={() => { setMeatballOpen(null); }}
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-indigo-50 transition-colors cursor-pointer flex items-center gap-2"
-                                  style={{ color: TEXT }}>
-                                  <span>✏️</span> แก้ไข
-                                </button>
-                                <button onClick={() => { setMeatballOpen(null); }}
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 transition-colors cursor-pointer flex items-center gap-2"
-                                  style={{ color: RED }}>
-                                  <span>🗑</span> ลบ
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+          <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: "#F8F8F8" }}>
+                  {TABLE_HEADERS.map((h) => (
+                    <TableCell key={h} sx={{ fontWeight: 600, fontSize: 12, color: "text.secondary", whiteSpace: "nowrap" }}>
+                      {h}
+                    </TableCell>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} sx={{ textAlign: "center", py: 5, color: "text.secondary" }}>
+                      ไม่พบข้อมูล
+                    </TableCell>
+                  </TableRow>
+                ) : filtered.map((u) => (
+                  <TableRow key={u.id} hover>
+                    <TableCell sx={{ fontWeight: 500, color: OR, cursor: "pointer" }}>{u.code}</TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <Avatar sx={{ width: 32, height: 32, fontSize: 14, bgcolor: u.avatar ? "#E8E8E8" : "#F0F0F0", color: "text.secondary" }}>
+                          {u.avatar || "👤"}
+                        </Avatar>
+                        <Typography variant="body2">{u.name}</Typography>
+                      </Stack>
+                    </TableCell>
+                    <TableCell>{u.department || "—"}</TableCell>
+                    <TableCell>{u.position || "—"}</TableCell>
+                    <TableCell>
+                      {(u.menuRole || u.erpRole) ? (
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: OR }}>{u.menuRole || u.erpRole}</Typography>
+                      ) : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => { setMenuAnchorEl(e.currentTarget); setMenuUserId(u.id); }}
+                      >
+                        <MoreVertIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
+
+          {/* Meatball Menu */}
+          <Menu
+            anchorEl={menuAnchorEl}
+            open={Boolean(menuAnchorEl)}
+            onClose={() => { setMenuAnchorEl(null); setMenuUserId(null); }}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+          >
+            <MuiMenuItem onClick={() => {
+              const u = mockUsers.find((x) => x.id === menuUserId);
+              showSuccess(`ส่งคำเชิญซ้ำไปยัง ${u?.name} แล้ว`);
+              setMenuAnchorEl(null); setMenuUserId(null);
+            }}>
+              <ListItemIcon><MailOutlineIcon fontSize="small" /></ListItemIcon>
+              <ListItemText>ส่งคำเชิญซ้ำ</ListItemText>
+            </MuiMenuItem>
+            <MuiMenuItem onClick={() => { setMenuAnchorEl(null); setMenuUserId(null); }}>
+              <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+              <ListItemText>แก้ไข</ListItemText>
+            </MuiMenuItem>
+            <MuiMenuItem onClick={() => { setMenuAnchorEl(null); setMenuUserId(null); }} sx={{ color: "error.main" }}>
+              <ListItemIcon><DeleteIcon fontSize="small" sx={{ color: "error.main" }} /></ListItemIcon>
+              <ListItemText>ลบ</ListItemText>
+            </MuiMenuItem>
+          </Menu>
+        </Box>
       </TenantShell>
     );
   }
@@ -292,94 +299,114 @@ function AssignPermissionInner() {
   /* ══════════════════════════════════════ */
   return (
     <TenantShell breadcrumb={breadcrumb} activeModule="hr">
-      {toast && (
-        <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium"
-          style={{ background: toast.type === "ok" ? GREEN_L : "#FCEBEB", color: toast.type === "ok" ? GREEN : "#A32D2D", border: `1px solid ${toast.type === "ok" ? GREEN : RED}33` }}>
-          {toast.msg}
-        </div>
-      )}
-
-      <div className="p-6">
-        <h1 className="text-lg font-bold mb-5" style={{ color: TEXT }}>กำหนดสิทธิ์ผู้ใช้งาน</h1>
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2.5, color: "text.primary" }}>
+          กำหนดสิทธิ์ผู้ใช้งาน
+        </Typography>
 
         {/* ── Section 1: ดึงข้อมูลพนักงาน ── */}
-        <div className="bg-white rounded-lg border mb-5 p-5" style={{ borderColor: BORDER }}>
-          <h2 className="font-semibold text-sm mb-4" style={{ color: TEXT }}>ดึงข้อมูลพนักงาน</h2>
+        <Paper variant="outlined" sx={{ borderRadius: 2, mb: 2.5, p: 2.5 }}>
+          <Typography variant="subtitle2" sx={{ mb: 2, color: "text.primary" }}>
+            ดึงข้อมูลพนักงาน
+          </Typography>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Employee search dropdown */}
-            <div className="md:col-span-1">
-              <Select
-                label="ค้นหาชื่อพนักงาน"
-                value={selectedEmployee}
-                onChange={handleSelectEmployee}
-                options={EMPLOYEE_LIST.map((e) => ({ value: e.code, label: `${e.firstName} ${e.lastName} (${e.code})` }))}
-                required
-                placeholder="เลือกพนักงาน..."
-              />
-            </div>
-          </div>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" }, gap: 2 }}>
+            <TextField
+              select
+              size="small"
+              label="ค้นหาชื่อพนักงาน"
+              value={selectedEmployee}
+              onChange={(e) => handleSelectEmployee(e.target.value)}
+              required
+            >
+              <MenuItem value="">เลือกพนักงาน...</MenuItem>
+              {EMPLOYEE_LIST.map((e) => (
+                <MenuItem key={e.code} value={e.code}>{`${e.firstName} ${e.lastName} (${e.code})`}</MenuItem>
+              ))}
+            </TextField>
+          </Box>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            <Field label="รหัสพนักงาน" value={formCode} disabled placeholder="รหัสพนักงาน" />
-            <Field label="ชื่อ" value={formFirstName} disabled placeholder="ชื่อพนักงาน" />
-            <Field label="นามสกุล" value={formLastName} disabled placeholder="นามสกุลพนักงาน" />
-          </div>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" }, gap: 2, mt: 2 }}>
+            <TextField size="small" label="รหัสพนักงาน" value={formCode} disabled />
+            <TextField size="small" label="ชื่อ" value={formFirstName} disabled />
+            <TextField size="small" label="นามสกุล" value={formLastName} disabled />
+          </Box>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            <Field label="E-mail" value={formEmail} onChange={setFormEmail} required type="email" placeholder="กรอก E-mail" />
-          </div>
-        </div>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" }, gap: 2, mt: 2 }}>
+            <TextField
+              size="small"
+              label="E-mail"
+              value={formEmail}
+              onChange={(e) => setFormEmail(e.target.value)}
+              required
+              type="email"
+              placeholder="กรอก E-mail"
+            />
+          </Box>
+        </Paper>
 
         {/* ── Section 2: กำหนดสิทธิ์ผู้ใช้งาน ── */}
-        <div className="bg-white rounded-lg border mb-5 p-5" style={{ borderColor: BORDER }}>
-          <h2 className="font-semibold text-sm mb-4" style={{ color: TEXT }}>กำหนดสิทธิ์ผู้ใช้งาน</h2>
+        <Paper variant="outlined" sx={{ borderRadius: 2, mb: 2.5, p: 2.5 }}>
+          <Typography variant="subtitle2" sx={{ mb: 2, color: "text.primary" }}>
+            กำหนดสิทธิ์ผู้ใช้งาน
+          </Typography>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
+            <TextField
+              select
+              size="small"
               label="สิทธิ์จัดการเมนู"
               value={formMenuRole}
-              onChange={setFormMenuRole}
-              options={MENU_ROLES}
+              onChange={(e) => setFormMenuRole(e.target.value)}
               required
-              placeholder="เลือกสิทธิ์จัดการเมนู"
-            />
-            <Select
+            >
+              <MenuItem value="">เลือกสิทธิ์จัดการเมนู</MenuItem>
+              {MENU_ROLES.map((r) => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+            </TextField>
+
+            <TextField
+              select
+              size="small"
               label="สิทธิ์จัดการส่วนงาน"
               value={formErpRole}
-              onChange={setFormErpRole}
-              options={ERP_ROLES}
+              onChange={(e) => setFormErpRole(e.target.value)}
               required
-              placeholder="เลือกสิทธิ์จัดการส่วนงาน"
-            />
-          </div>
-        </div>
+            >
+              <MenuItem value="">เลือกสิทธิ์จัดการส่วนงาน</MenuItem>
+              {ERP_ROLES.map((r) => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+            </TextField>
+          </Box>
+        </Paper>
 
         {/* ── Footer Buttons ── */}
-        <div className="flex items-center justify-end gap-3 mt-2 pb-6" style={{ background: "#F4F4F4" }}>
-          <button onClick={() => setScreen("list")}
-            className="px-6 py-2.5 rounded-lg text-sm font-medium border transition-colors"
-            style={{ borderColor: BORDER, color: MUTED }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = OR; e.currentTarget.style.color = OR; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = MUTED; }}>
+        <Stack direction="row" spacing={1.5} justifyContent="flex-end" sx={{ mt: 1, pb: 3 }}>
+          <Button
+            variant="outlined"
+            onClick={() => setScreen("list")}
+            sx={{ textTransform: "none", color: "text.secondary", borderColor: "divider" }}
+          >
             ยกเลิก
-          </button>
-          <button onClick={handleSave}
-            className="px-8 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors"
-            style={{ background: OR }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = OR)}>
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            sx={{ bgcolor: OR, "&:hover": { bgcolor: OR_D }, textTransform: "none", fontWeight: 600 }}
+          >
             บันทึกและส่งคำเชิญ
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Stack>
+      </Box>
     </TenantShell>
   );
 }
 
 export default function AssignPermissionPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm" style={{ color: "#777" }}>กำลังโหลด...</div>}>
+    <Suspense fallback={
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Typography variant="body2" color="text.secondary">กำลังโหลด...</Typography>
+      </Box>
+    }>
       <AssignPermissionInner />
     </Suspense>
   );

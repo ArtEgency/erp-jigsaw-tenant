@@ -2,6 +2,11 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
+import {
+  Box, Typography, TextField, MenuItem, Button, Stack, Paper, Alert,
+  Radio, RadioGroup, FormControlLabel, LinearProgress, Chip, Switch,
+  Divider,
+} from "@mui/material";
 
 type Screen = "w1" | "w2a" | "w4" | "w5" | "w6" | "w7" | "we1";
 
@@ -46,7 +51,6 @@ function getStepStatuses(screen: Screen): StepStatus[] {
 
 function getCriticalDone(screen: Screen): number {
   const s = getStepStatuses(screen);
-  // critical steps are indices 0,1,2,3
   return [0, 1, 2, 3].filter((i) => s[i] === "done").length;
 }
 
@@ -186,34 +190,39 @@ function SetupWizardInner() {
   /* ── sub-components ── */
 
   const TopBar = () => (
-    <div className="h-[52px] flex items-center px-4 gap-2.5 shrink-0" style={{ background: OR }}>
-      <button onClick={() => setNavOpen(!navOpen)} className="text-white text-lg mr-1">☰</button>
-      <div className="text-[11px] text-white/80 flex-1"><strong className="text-white font-semibold">สยามเทรด จำกัด</strong> | siamtrade.jigsawerp.com</div>
-      <div className="flex items-center gap-3">
-        <span className="text-white text-lg cursor-pointer relative">🔔</span>
-        <div className="w-px h-[22px] bg-white/30" />
-        <span className="text-white text-xs font-medium">สมชาย วงศ์ใหญ่</span>
-        <div className="w-[30px] h-[30px] rounded-full bg-white flex items-center justify-center text-[11px] font-bold border-2 border-white/40" style={{ color: OR }}>สว</div>
-      </div>
-    </div>
+    <Box sx={{ height: 52, display: "flex", alignItems: "center", px: 2, gap: 1.25, flexShrink: 0, bgcolor: OR }}>
+      <Button onClick={() => setNavOpen(!navOpen)} sx={{ color: "white", fontSize: 18, minWidth: 0, mr: 0.5 }}>☰</Button>
+      <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,.8)", flex: 1 }}><strong style={{ color: "white" }}>สยามเทรด จำกัด</strong> | siamtrade.jigsawerp.com</Typography>
+      <Stack direction="row" alignItems="center" gap={1.5}>
+        <Typography sx={{ fontSize: 18, color: "white", cursor: "pointer", position: "relative" }}>🔔</Typography>
+        <Box sx={{ width: 1, height: 22, bgcolor: "rgba(255,255,255,.3)" }} />
+        <Typography sx={{ color: "white", fontSize: 12, fontWeight: 500 }}>สมชาย วงศ์ใหญ่</Typography>
+        <Box sx={{ width: 30, height: 30, borderRadius: "50%", bgcolor: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, border: "2px solid rgba(255,255,255,.4)", color: OR }}>สว</Box>
+      </Stack>
+    </Box>
   );
 
   const ScreenMeta = ({ id, title, actor = "Tenant Admin", pills }: { id: string; title: string; actor?: string; pills?: { label: string; target: Screen; hi?: boolean }[] }) => (
-    <div className="flex items-center gap-2.5 flex-wrap shrink-0 px-4 py-2" style={{ background: "#1e1e2e" }}>
-      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ color: "#7ab8f5", background: "#1e3a5f" }}>{id}</span>
-      <span className="text-xs font-medium text-white flex-1">{title}</span>
-      <span className="text-[10px] px-1.5 py-0.5 rounded-lg" style={{ background: "#3d2800", color: "#fac775" }}>{actor}</span>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, flexWrap: "wrap", flexShrink: 0, px: 2, py: 1, bgcolor: "#1e1e2e" }}>
+      <Typography sx={{ fontSize: 10, fontFamily: "monospace", px: 0.75, py: 0.25, borderRadius: 0.5, color: "#7ab8f5", bgcolor: "#1e3a5f" }}>{id}</Typography>
+      <Typography sx={{ fontSize: 12, fontWeight: 500, color: "white", flex: 1 }}>{title}</Typography>
+      <Typography sx={{ fontSize: 10, px: 0.75, py: 0.25, borderRadius: 2, bgcolor: "#3d2800", color: "#fac775" }}>{actor}</Typography>
       {pills && (
-        <div className="flex gap-1.5 ml-auto flex-wrap">
+        <Stack direction="row" gap={0.75} sx={{ ml: "auto", flexWrap: "wrap" }}>
           {pills.map((p) => (
-            <button key={p.label} onClick={() => go(p.target)}
-              className="px-3 py-1 rounded-xl text-[11px] cursor-pointer transition-all border"
-              style={p.hi ? { background: OR, color: "white", borderColor: OR } : { background: "#2a2a3e", color: "#888", borderColor: "#2a2a3e" }}
-            >{p.label}</button>
+            <Button key={p.label} onClick={() => go(p.target)} size="small"
+              sx={{
+                px: 1.5, py: 0.5, borderRadius: 3, fontSize: 11, textTransform: "none", minWidth: 0,
+                ...(p.hi
+                  ? { bgcolor: OR, color: "white", borderColor: OR, "&:hover": { bgcolor: OR, opacity: 0.9 } }
+                  : { bgcolor: "#2a2a3e", color: "#888", borderColor: "#2a2a3e" }),
+                border: "1px solid",
+              }}
+            >{p.label}</Button>
           ))}
-        </div>
+        </Stack>
       )}
-    </div>
+    </Box>
   );
 
   /* ── Wizard sidebar ── */
@@ -223,7 +232,7 @@ function SetupWizardInner() {
     const pct = getProgressPct(currentScreen);
     const isW7 = currentScreen === "w7";
 
-    const circleStyle = (status: StepStatus, step: WizStep): React.CSSProperties => {
+    const circleStyle = (status: StepStatus, step: WizStep): Record<string, string> => {
       if (status === "active" && isW7) return { background: GREEN, borderColor: GREEN, color: "white" };
       if (status === "active") return { background: OR, borderColor: OR, color: "white" };
       if (status === "done") return { background: GREEN, borderColor: GREEN, color: "white" };
@@ -240,144 +249,152 @@ function SetupWizardInner() {
     };
 
     const typeLabel = (status: StepStatus, step: WizStep) => {
-      if (status === "done") return <span style={{ color: GREEN, fontSize: 9 }}>✓ เสร็จแล้ว</span>;
-      if (status === "skip") return <span style={{ color: "#EF9F27", fontSize: 9 }}>⚠ ข้ามแล้ว</span>;
-      if (step.type === "critical") return <span style={{ color: RED, fontSize: 9 }}>● Critical</span>;
-      if (step.type === "warn") return <span style={{ color: "#EF9F27", fontSize: 9 }}>⚠ ข้ามได้</span>;
-      if (step.type === "checklist") return <span style={{ color: GREEN, fontSize: 9 }}>● Checklist</span>;
+      if (status === "done") return <Typography sx={{ color: GREEN, fontSize: 9 }}>✓ เสร็จแล้ว</Typography>;
+      if (status === "skip") return <Typography sx={{ color: "#EF9F27", fontSize: 9 }}>⚠ ข้ามแล้ว</Typography>;
+      if (step.type === "critical") return <Typography sx={{ color: RED, fontSize: 9 }}>● Critical</Typography>;
+      if (step.type === "warn") return <Typography sx={{ color: "#EF9F27", fontSize: 9 }}>⚠ ข้ามได้</Typography>;
+      if (step.type === "checklist") return <Typography sx={{ color: GREEN, fontSize: 9 }}>● Checklist</Typography>;
       return null;
     };
 
     return (
-      <div className="w-[220px] bg-white shrink-0 overflow-y-auto flex flex-col" style={{ borderRight: `1px solid ${BORDER}` }}>
-        <div className="px-4 pb-3.5 mb-2" style={{ borderBottom: `1px solid ${BORDER}`, paddingTop: 16 }}>
-          <div className="text-[13px] font-bold" style={{ color: OR }}>⚙ ตั้งค่าระบบ</div>
-          <div className="text-[10px] mt-0.5" style={{ color: MUTED }}>{getStepOf(currentScreen)}</div>
-        </div>
+      <Box sx={{ width: 220, bgcolor: "white", flexShrink: 0, overflowY: "auto", display: "flex", flexDirection: "column", borderRight: `1px solid ${BORDER}` }}>
+        <Box sx={{ px: 2, pb: 1.75, mb: 1, borderBottom: `1px solid ${BORDER}`, pt: 2 }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 700, color: OR }}>⚙ ตั้งค่าระบบ</Typography>
+          <Typography sx={{ fontSize: 10, mt: 0.25, color: MUTED }}>{getStepOf(currentScreen)}</Typography>
+        </Box>
         {currentScreen === "w1" && (
-          <div className="px-4 mb-1 text-[9px] font-semibold uppercase tracking-wider" style={{ color: HINT, letterSpacing: "0.7px" }}>ขั้นตอน</div>
+          <Typography sx={{ px: 2, mb: 0.5, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.7px", color: HINT }}>ขั้นตอน</Typography>
         )}
         {STEPS.map((step, i) => {
           const status = statuses[i];
           return (
-            <div key={i}
-              className="flex items-center gap-2.5 px-4 py-2 cursor-pointer transition-all"
-              style={{
-                background: status === "active" ? OR_L : "transparent",
+            <Box key={i}
+              sx={{
+                display: "flex", alignItems: "center", gap: 1.25, px: 2, py: 1, cursor: "pointer", transition: "all 0.15s",
+                bgcolor: status === "active" ? OR_L : "transparent",
                 borderLeft: `3px solid ${status === "active" ? OR : status === "done" ? GREEN : status === "skip" ? "#EF9F27" : "transparent"}`,
               }}
             >
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style={{ ...circleStyle(status, step), borderWidth: 2 }}>
+              <Box sx={{
+                width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 10, fontWeight: 700, flexShrink: 0, borderWidth: 2, borderStyle: "solid",
+                ...circleStyle(status, step),
+              }}>
                 {circleContent(status, step)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium" style={{
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{
+                  fontSize: 12,
                   color: status === "active" ? (isW7 ? GREEN : OR) : status === "done" ? GREEN : TEXT,
                   fontWeight: status === "active" ? 600 : 500,
-                }}>{step.name}</div>
+                }}>{step.name}</Typography>
                 {typeLabel(status, step)}
-              </div>
-            </div>
+              </Box>
+            </Box>
           );
         })}
-        <div className="mt-auto px-4 py-3" style={{ borderTop: `1px solid ${BORDER}` }}>
-          <div className="h-1 rounded-sm overflow-hidden mb-1.5" style={{ background: BORDER }}>
-            <div className="h-full rounded-sm transition-all duration-300" style={{ width: `${pct}%`, background: isW7 ? GREEN : OR }} />
-          </div>
-          <div className="text-[10px]" style={{ color: isW7 ? GREEN : MUTED }}>
-            <span className="font-semibold" style={{ color: isW7 ? GREEN : OR }}>{critDone}</span> / 4 Critical เสร็จแล้ว{isW7 ? " 🎉" : ""}
-          </div>
-        </div>
-      </div>
+        <Box sx={{ mt: "auto", px: 2, py: 1.5, borderTop: `1px solid ${BORDER}` }}>
+          <LinearProgress variant="determinate" value={pct} sx={{
+            height: 4, borderRadius: 0.5, mb: 0.75, bgcolor: BORDER,
+            "& .MuiLinearProgress-bar": { bgcolor: isW7 ? GREEN : OR, borderRadius: 0.5 },
+          }} />
+          <Typography sx={{ fontSize: 10, color: isW7 ? GREEN : MUTED }}>
+            <Box component="span" sx={{ fontWeight: 600, color: isW7 ? GREEN : OR }}>{critDone}</Box> / 4 Critical เสร็จแล้ว{isW7 ? " 🎉" : ""}
+          </Typography>
+        </Box>
+      </Box>
     );
   };
 
-  /* ── Notice box ── */
+  /* ── Notice box (MUI Alert) ── */
   const Notice = ({ variant, icon, children }: { variant: "red" | "warn" | "blue" | "green" | "orange"; icon: string; children: React.ReactNode }) => {
-    const styles: Record<string, { bg: string; color: string; border: string }> = {
+    const severityMap: Record<string, "error" | "warning" | "info" | "success"> = {
+      red: "error", warn: "warning", blue: "info", green: "success", orange: "warning",
+    };
+    const colorMap: Record<string, { bg: string; color: string; border: string }> = {
       red: { bg: RED_L, color: RED, border: "#FDCACA" },
       warn: { bg: AMBER_L, color: AMBER, border: "#FAC775" },
       blue: { bg: BLUE_L, color: BLUE, border: "#B5D4F4" },
       green: { bg: GREEN_L, color: GREEN, border: GREEN_M },
       orange: { bg: OR_L, color: "#7A3000", border: OR_M },
     };
-    const s = styles[variant];
+    const s = colorMap[variant];
     return (
-      <div className="flex items-start gap-2.5 rounded-[7px] mb-3.5 text-xs leading-relaxed" style={{ padding: "10px 14px", background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
-        <span className="text-sm shrink-0 mt-0.5">{icon}</span>
-        <div>{children}</div>
-      </div>
+      <Alert severity={severityMap[variant]} icon={<Typography sx={{ fontSize: 14, mt: 0.25 }}>{icon}</Typography>}
+        sx={{ mb: 1.75, fontSize: 12, lineHeight: 1.6, bgcolor: s.bg, color: s.color, border: `1px solid ${s.border}`, borderRadius: "7px", py: 0.5, px: 1, "& .MuiAlert-icon": { mr: 1 }, "& .MuiAlert-message": { p: 0 } }}
+      >
+        {children}
+      </Alert>
     );
   };
 
   /* ── Section card ── */
   const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="bg-white rounded-lg mb-3.5" style={{ border: `1px solid ${BORDER}`, padding: 18 }}>
-      <div className="text-[13px] font-bold mb-3.5 flex items-center gap-1.5" style={{ color: OR }}>
-        {title}
-        <div className="flex-1 h-px" style={{ background: BORDER }} />
-      </div>
+    <Paper variant="outlined" sx={{ borderRadius: 2, mb: 1.75, border: `1px solid ${BORDER}`, p: "18px" }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1.75 }}>
+        <Typography sx={{ fontSize: 13, fontWeight: 700, color: OR }}>{title}</Typography>
+        <Box sx={{ flex: 1, height: 1, bgcolor: BORDER }} />
+      </Box>
       {children}
-    </div>
+    </Paper>
   );
 
   /* ── Wizard content header ── */
   const WizContentHdr = ({ num, numColor, title, badge }: { num: string; numColor: string; title: string; badge?: { label: string; bg: string; color: string } }) => (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0" style={{ background: numColor }}>{num}</div>
-      <div className="text-lg font-bold" style={{ color: TEXT }}>{title}</div>
-      {badge && <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-[10px]" style={{ background: badge.bg, color: badge.color }}>{badge.label}</span>}
-    </div>
+    <Stack direction="row" alignItems="center" gap={1.5} sx={{ mb: 2 }}>
+      <Box sx={{ width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "white", flexShrink: 0, bgcolor: numColor }}>{num}</Box>
+      <Typography sx={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{title}</Typography>
+      {badge && <Chip label={badge.label} size="small" sx={{ fontSize: 10, fontWeight: 600, bgcolor: badge.bg, color: badge.color, height: 22, borderRadius: "10px" }} />}
+    </Stack>
   );
 
   /* ── Action footer ── */
   const WizAction = ({ left, children }: { left: string; children: React.ReactNode }) => (
-    <div className="flex justify-between items-center shrink-0 bg-white" style={{ padding: "14px 20px", borderTop: `1px solid ${BORDER}` }}>
-      <span className="text-[11px]" style={{ color: MUTED }}>{left}</span>
-      <div className="flex gap-2.5">{children}</div>
-    </div>
+    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, bgcolor: "white", p: "14px 20px", borderTop: `1px solid ${BORDER}` }}>
+      <Typography sx={{ fontSize: 11, color: MUTED }}>{left}</Typography>
+      <Stack direction="row" gap={1.25}>{children}</Stack>
+    </Box>
   );
 
-  const BtnGhost = ({ onClick, disabled, children }: { onClick?: () => void; disabled?: boolean; children: React.ReactNode }) => (
-    <button onClick={onClick} disabled={disabled}
-      className="px-4 py-2 rounded-md text-xs cursor-pointer font-[inherit] transition-colors"
-      style={{ border: `1px solid ${BORDER2}`, background: "white", color: disabled ? HINT : TEXT, opacity: disabled ? 0.4 : 1 }}
-    >{children}</button>
-  );
-  const BtnOr = ({ onClick, disabled, children }: { onClick?: () => void; disabled?: boolean; children: React.ReactNode }) => (
-    <button onClick={onClick} disabled={disabled}
-      className="px-5 py-2 rounded-md text-xs font-bold cursor-pointer font-[inherit] border-none"
-      style={{ background: disabled ? "#ccc" : OR, color: "white", opacity: disabled ? 0.4 : 1 }}
-    >{children}</button>
-  );
-  const BtnGreen = ({ onClick, children }: { onClick?: () => void; children: React.ReactNode }) => (
-    <button onClick={onClick}
-      className="px-5 py-2 rounded-md text-xs font-bold cursor-pointer font-[inherit] border-none"
-      style={{ background: GREEN, color: "white" }}
-    >{children}</button>
-  );
-
-  /* ── Form field (floating label) ── */
-  const FGroup = ({ label, value, onChange, type = "text", locked, error, fullSpan, children }: {
-    label: string; value?: string; onChange?: (v: string) => void; type?: string; locked?: boolean; error?: boolean; fullSpan?: boolean; children?: React.ReactNode;
+  /* ── MUI Form Field with floating label ── */
+  const FField = ({ label, value, onChange, type = "text", locked, error, select, children: selectChildren }: {
+    label: string; value?: string; onChange?: (v: string) => void; type?: string; locked?: boolean; error?: boolean; select?: boolean; children?: React.ReactNode;
   }) => (
-    <div className={fullSpan ? "col-span-2" : ""}>
-      <div className="relative mb-0.5">
-        {children ? children : (
-          <input
-            type={type} value={value || ""} onChange={(e) => onChange?.(e.target.value)}
-            readOnly={locked}
-            className="w-full rounded-md text-[13px] outline-none transition-colors"
-            style={{
-              padding: "10px 12px", border: `1px solid ${error ? RED : BORDER2}`,
-              background: locked ? "#f5f5f5" : "white", color: locked ? MUTED : TEXT,
-              cursor: locked ? "not-allowed" : "text",
-            }}
-          />
-        )}
-        <label className="absolute top-0 left-[11px] -translate-y-1/2 bg-white px-0.5 text-[10px] pointer-events-none" style={{ color: error ? RED : OR }}>{label}</label>
-      </div>
-    </div>
+    <TextField
+      label={label}
+      value={value || ""}
+      onChange={(e) => onChange?.(e.target.value)}
+      type={type}
+      size="small"
+      fullWidth
+      select={select}
+      error={error}
+      slotProps={{
+        input: {
+          readOnly: locked,
+        },
+        inputLabel: {
+          sx: { color: error ? RED : OR, "&.Mui-focused": { color: error ? RED : OR } },
+        },
+      }}
+      sx={{
+        "& .MuiOutlinedInput-root": {
+          fontSize: 13,
+          bgcolor: locked ? "#f5f5f5" : "white",
+          cursor: locked ? "not-allowed" : "text",
+          "& fieldset": { borderColor: error ? RED : BORDER2 },
+          "&:hover fieldset": { borderColor: error ? RED : OR },
+          "&.Mui-focused fieldset": { borderColor: error ? RED : OR },
+        },
+        "& .MuiInputBase-input": {
+          color: locked ? MUTED : TEXT,
+          cursor: locked ? "not-allowed" : "text",
+        },
+      }}
+    >
+      {selectChildren}
+    </TextField>
   );
 
   /* ═══════ SCREEN NAV (dev nav) ═══════ */
@@ -403,56 +420,59 @@ function SetupWizardInner() {
 
   /* ═══════════════════════════ RENDER ═══════════════════════════ */
   return (
-    <div className="flex min-h-screen" style={{ background: "#2c2c3a" }}>
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#2c2c3a" }}>
       {/* Screen Nav (toggle) */}
       {navOpen && (
-        <div className="w-[220px] fixed left-[52px] top-0 h-screen z-[90] overflow-y-auto flex flex-col" style={{ background: "#12121f" }}>
-          <div className="px-3 py-2 pb-3" style={{ borderBottom: "1px solid #2a2a3e", background: "#0e0e1a" }}>
-            <div className="text-xs font-semibold text-white">🧩 F-02 Wireframe</div>
-            <div className="text-[10px] mt-0.5" style={{ color: "#555" }}>Setup Wizard — Onboarding</div>
-          </div>
-          <div className="px-3 pt-1.5 pb-0.5 text-[9px] font-semibold uppercase tracking-wider" style={{ color: "#444", letterSpacing: "0.7px" }}>Setup Wizard</div>
+        <Box sx={{ width: 220, position: "fixed", left: 52, top: 0, height: "100vh", zIndex: 90, overflowY: "auto", display: "flex", flexDirection: "column", bgcolor: "#12121f" }}>
+          <Box sx={{ px: 1.5, py: 1, pb: 1.5, borderBottom: "1px solid #2a2a3e", bgcolor: "#0e0e1a" }}>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: "white" }}>🧩 F-02 Wireframe</Typography>
+            <Typography sx={{ fontSize: 10, mt: 0.25, color: "#555" }}>Setup Wizard — Onboarding</Typography>
+          </Box>
+          <Typography sx={{ px: 1.5, pt: 0.75, pb: 0.25, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.7px", color: "#444" }}>Setup Wizard</Typography>
           {screenNavItems.slice(0, 6).map((item) => (
-            <button key={item.id} onClick={() => { go(item.id); setNavOpen(false); }}
-              className="flex items-center gap-2 px-3 py-1.5 text-left text-xs transition-all"
-              style={{
+            <Button key={item.id} onClick={() => { go(item.id); setNavOpen(false); }}
+              sx={{
+                display: "flex", alignItems: "center", gap: 1, px: 1.5, py: 0.75, textAlign: "left", fontSize: 12, textTransform: "none", justifyContent: "flex-start", minWidth: 0,
                 color: screen === item.id ? "white" : "#777",
-                background: screen === item.id ? "#1a1a2e" : "transparent",
+                bgcolor: screen === item.id ? "#1a1a2e" : "transparent",
                 borderLeft: `2px solid ${screen === item.id ? OR : "transparent"}`,
+                borderRadius: 0,
               }}
             >
-              <span className="text-[10px] font-mono w-[22px] opacity-70">{item.id.replace("w", "0").toUpperCase()}</span>
-              <span className="flex-1">{item.label}</span>
+              <Typography sx={{ fontSize: 10, fontFamily: "monospace", width: 22, opacity: 0.7 }}>{item.id.replace("w", "0").toUpperCase()}</Typography>
+              <Typography sx={{ flex: 1, fontSize: 12 }}>{item.label}</Typography>
               {item.badge && (
-                <span className="text-[9px] px-1.5 py-px rounded-lg text-white" style={{ background: item.badge === "✓" ? GREEN : "#EF9F27" }}>{item.badge}</span>
+                <Chip label={item.badge} size="small" sx={{ fontSize: 9, height: 16, bgcolor: item.badge === "✓" ? GREEN : "#EF9F27", color: "white" }} />
               )}
-            </button>
+            </Button>
           ))}
-          <div className="px-3 pt-2 pb-0.5 text-[9px] font-semibold uppercase tracking-wider" style={{ color: "#444", letterSpacing: "0.7px" }}>Error States</div>
-          <button onClick={() => { go("we1"); setNavOpen(false); }}
-            className="flex items-center gap-2 px-3 py-1.5 text-left text-xs"
-            style={{ color: screen === "we1" ? "white" : "#777", background: screen === "we1" ? "#1a1a2e" : "transparent", borderLeft: `2px solid ${screen === "we1" ? OR : "transparent"}` }}
+          <Typography sx={{ px: 1.5, pt: 1, pb: 0.25, fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.7px", color: "#444" }}>Error States</Typography>
+          <Button onClick={() => { go("we1"); setNavOpen(false); }}
+            sx={{
+              display: "flex", alignItems: "center", gap: 1, px: 1.5, py: 0.75, textAlign: "left", fontSize: 12, textTransform: "none", justifyContent: "flex-start", minWidth: 0, borderRadius: 0,
+              color: screen === "we1" ? "white" : "#777", bgcolor: screen === "we1" ? "#1a1a2e" : "transparent", borderLeft: `2px solid ${screen === "we1" ? OR : "transparent"}`,
+            }}
           >
-            <span className="text-[10px] font-mono w-[22px] opacity-70">E1</span>
+            <Typography sx={{ fontSize: 10, fontFamily: "monospace", width: 22, opacity: 0.7 }}>E1</Typography>
             Block Navigation Modal
-          </button>
-        </div>
+          </Button>
+        </Box>
       )}
 
       {/* Icon Sidebar */}
-      <div className="w-[52px] shrink-0 flex flex-col items-center fixed h-screen z-[100] top-0 left-0" style={{ background: "#2D2D2D" }}>
-        <div className="w-[52px] h-[56px] flex items-center justify-center cursor-pointer" style={{ background: OR }} onClick={() => setNavOpen(!navOpen)}>
-          <div className="text-[9px] font-extrabold text-white text-center leading-tight tracking-wider">JIG<br />SAW</div>
-        </div>
+      <Box sx={{ width: 52, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", position: "fixed", height: "100vh", zIndex: 100, top: 0, left: 0, bgcolor: "#2D2D2D" }}>
+        <Box onClick={() => setNavOpen(!navOpen)} sx={{ width: 52, height: 56, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", bgcolor: OR }}>
+          <Typography sx={{ fontSize: 9, fontWeight: 800, color: "white", textAlign: "center", lineHeight: 1.2, letterSpacing: "0.05em" }}>JIG<br />SAW</Typography>
+        </Box>
         {iconSidebarItems.map((item) => (
-          <div key={item.title} className="w-[44px] h-[40px] flex items-center justify-center rounded-md cursor-pointer text-[16px] my-0.5" style={{ color: "#888" }} title={item.title}>{item.icon}</div>
+          <Box key={item.title} sx={{ width: 44, height: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 1, cursor: "pointer", fontSize: 16, my: 0.25, color: "#888" }} title={item.title}>{item.icon}</Box>
         ))}
-        <div className="flex-1" />
-        <div className="w-[44px] h-[40px] flex items-center justify-center rounded-md cursor-pointer text-[16px] mb-2" style={{ background: OR_L, color: OR }}>⚙</div>
-      </div>
+        <Box sx={{ flex: 1 }} />
+        <Box sx={{ width: 44, height: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 1, cursor: "pointer", fontSize: 16, mb: 1, bgcolor: OR_L, color: OR }}>⚙</Box>
+      </Box>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col h-screen" style={{ marginLeft: navOpen ? 272 : 52, background: BG, transition: "margin-left 0.15s" }}>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", ml: navOpen ? "272px" : "52px", bgcolor: BG, transition: "margin-left 0.15s" }}>
 
         {/* ════ W1: WIZARD ENTRY ════ */}
         {screen === "w1" && (
@@ -462,34 +482,34 @@ function SetupWizardInner() {
               { label: "Block Modal →", target: "we1" },
             ]} />
             <TopBar />
-            <div className="flex flex-1 min-h-0">
+            <Box sx={{ display: "flex", flex: 1, minHeight: 0 }}>
               <WizSidebar currentScreen="w1" />
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-5">
+              <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <Box sx={{ flex: 1, overflowY: "auto", p: 2.5 }}>
                   <Notice variant="orange" icon="👋">ยินดีต้อนรับสู่ <strong>ERP Jigsaw</strong> — กรุณาตั้งค่าระบบเบื้องต้นให้ครบก่อนเริ่มใช้งาน · Step ที่มี ⚠ ข้ามได้และแก้ภายหลัง</Notice>
                   <SectionCard title="ภาพรวมการตั้งค่า">
-                    <div className="flex flex-col gap-2">
+                    <Stack gap={1}>
                       {/* Step 1 active */}
-                      <div className="flex items-center gap-2.5 rounded-md" style={{ padding: "8px 12px", background: OR_L, border: `1px solid ${OR_M}` }}>
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: OR }} />
-                        <div className="text-xs font-semibold flex-1" style={{ color: "#7A3000" }}>Step 1 — ข้อมูลธุรกิจ</div>
-                        <div className="text-[10px]" style={{ color: OR }}>กำลังดำเนินการ</div>
-                      </div>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, borderRadius: 1, p: "8px 12px", bgcolor: OR_L, border: `1px solid ${OR_M}` }}>
+                        <Box sx={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, bgcolor: OR }} />
+                        <Typography sx={{ fontSize: 12, fontWeight: 600, flex: 1, color: "#7A3000" }}>Step 1 — ข้อมูลธุรกิจ</Typography>
+                        <Typography sx={{ fontSize: 10, color: OR }}>กำลังดำเนินการ</Typography>
+                      </Box>
                       {[{ n: 2, t: "สาขาแรก" }, { n: 3, t: "การเงินพื้นฐาน" }, { n: 4, t: "คลังสินค้าแรก" }].map((s) => (
-                        <div key={s.n} className="flex items-center gap-2.5 rounded-md" style={{ padding: "8px 12px", background: "#f9f9f7", border: `1px solid ${BORDER}` }}>
-                          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: RED }} />
-                          <div className="text-xs flex-1" style={{ color: MUTED }}>Step {s.n} — {s.t}</div>
-                          <div className="text-[10px]" style={{ color: HINT }}>รอ</div>
-                        </div>
+                        <Box key={s.n} sx={{ display: "flex", alignItems: "center", gap: 1.25, borderRadius: 1, p: "8px 12px", bgcolor: "#f9f9f7", border: `1px solid ${BORDER}` }}>
+                          <Box sx={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, bgcolor: RED }} />
+                          <Typography sx={{ fontSize: 12, flex: 1, color: MUTED }}>Step {s.n} — {s.t}</Typography>
+                          <Typography sx={{ fontSize: 10, color: HINT }}>รอ</Typography>
+                        </Box>
                       ))}
-                    </div>
+                    </Stack>
                   </SectionCard>
-                </div>
+                </Box>
                 <WizAction left="0 / 4 Critical เสร็จแล้ว">
-                  <BtnOr onClick={() => go("w2a")}>เริ่มตั้งค่า →</BtnOr>
+                  <Button variant="contained" onClick={() => go("w2a")} sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, fontSize: 12, fontWeight: 700, textTransform: "none" }}>เริ่มตั้งค่า →</Button>
                 </WizAction>
-              </div>
-            </div>
+              </Box>
+            </Box>
           </>
         )}
 
@@ -501,179 +521,128 @@ function SetupWizardInner() {
               { label: "ถัดไป → Step 2 →", target: "w4", hi: true },
             ]} />
             <TopBar />
-            <div className="flex flex-1 min-h-0">
+            <Box sx={{ display: "flex", flex: 1, minHeight: 0 }}>
               <WizSidebar currentScreen="w2a" />
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-5">
+              <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <Box sx={{ flex: 1, overflowY: "auto", p: 2.5 }}>
                   <WizContentHdr num="1" numColor={RED} title="ข้อมูลธุรกิจ" badge={{ label: "🔴 Critical", bg: RED_L, color: RED }} />
 
                   {/* ── Card รวมทุก Section ── */}
-                  <div className="bg-white rounded-lg" style={{ border: `1px solid ${BORDER}`, padding: "24px 28px" }}>
+                  <Paper variant="outlined" sx={{ borderRadius: 2, border: `1px solid ${BORDER}`, p: "24px 28px" }}>
 
                     {/* ── Section: ข้อมูลธุรกิจ ── */}
-                    <div className="text-[15px] font-bold mb-4" style={{ color: OR }}>ข้อมูลธุรกิจ</div>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 2, color: OR }}>ข้อมูลธุรกิจ</Typography>
 
                     {/* Logo upload */}
-                    <div className="flex items-center gap-4 mb-5">
-                      <div className="w-[90px] h-[90px] rounded-lg flex items-center justify-center shrink-0" style={{ background: "#F0F0F0", border: `1px solid ${BORDER}` }}>
+                    <Stack direction="row" alignItems="center" gap={2} sx={{ mb: 2.5 }}>
+                      <Box sx={{ width: 90, height: 90, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, bgcolor: "#F0F0F0", border: `1px solid ${BORDER}` }}>
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                        <button className="px-4 py-2 rounded-md text-[13px] font-semibold text-white border-none cursor-pointer" style={{ background: OR }}>อัพโหลดรูปภาพ</button>
-                        <button className="px-4 py-2 rounded-md text-[13px] cursor-pointer" style={{ border: `1px solid ${BORDER2}`, background: "white", color: RED }}>ลบ</button>
-                      </div>
-                      <span className="text-[11px]" style={{ color: HINT }}>อัพโหลดไฟล์ JPG, GIF or PNG. ขนาดไม่เกิน 800K</span>
-                    </div>
+                      </Box>
+                      <Stack direction="row" alignItems="center" gap={1.25}>
+                        <Button variant="contained" sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, fontSize: 13, fontWeight: 600, textTransform: "none" }}>อัพโหลดรูปภาพ</Button>
+                        <Button variant="outlined" sx={{ fontSize: 13, textTransform: "none", color: RED, borderColor: BORDER2 }}>ลบ</Button>
+                      </Stack>
+                      <Typography sx={{ fontSize: 11, color: HINT }}>อัพโหลดไฟล์ JPG, GIF or PNG. ขนาดไม่เกิน 800K</Typography>
+                    </Stack>
 
                     {/* Row: Radio + เลขภาษี + ประเภทกิจการ */}
-                    <div className="flex items-end gap-4 mb-4">
-                      <div className="flex items-center gap-5 shrink-0 pb-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="personType" checked={personType === "natural"} onChange={() => setPersonType("natural")}
-                            className="w-4 h-4 accent-[#565DFF]" />
-                          <span className="text-[13px]" style={{ color: TEXT }}>บุคคลธรรมดา</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" name="personType" checked={personType === "juristic"} onChange={() => setPersonType("juristic")}
-                            className="w-4 h-4 accent-[#565DFF]" />
-                          <span className="text-[13px]" style={{ color: TEXT }}>นิติบุคคล</span>
-                        </label>
-                      </div>
-                      <div className="flex-1">
-                        <FGroup label="เลขประจำตัวผู้เสียภาษี *" value={taxId} onChange={setTaxId} />
-                      </div>
-                      <div className="w-[180px]">
-                        <FGroup label="ประเภทกิจการ *">
-                          <select value={bizCategory} onChange={(e) => {
-                            setBizCategory(e.target.value);
-                            const prefixes = BIZ_PREFIXES[e.target.value] || [];
-                            setPrefix(prefixes[0] || "");
-                            setSuffix(BIZ_SUFFIXES[e.target.value] || "");
-                          }}
-                            className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                            style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                          >
-                            {BIZ_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                          </select>
-                        </FGroup>
-                      </div>
-                    </div>
+                    <Stack direction="row" alignItems="flex-end" gap={2} sx={{ mb: 2 }}>
+                      <RadioGroup row value={personType} onChange={(e) => setPersonType(e.target.value as "natural" | "juristic")} sx={{ flexShrink: 0, pb: 0.5 }}>
+                        <FormControlLabel value="natural" control={<Radio size="small" sx={{ color: OR, "&.Mui-checked": { color: OR } }} />} label={<Typography sx={{ fontSize: 13, color: TEXT }}>บุคคลธรรมดา</Typography>} />
+                        <FormControlLabel value="juristic" control={<Radio size="small" sx={{ color: OR, "&.Mui-checked": { color: OR } }} />} label={<Typography sx={{ fontSize: 13, color: TEXT }}>นิติบุคคล</Typography>} />
+                      </RadioGroup>
+                      <Box sx={{ flex: 1 }}>
+                        <FField label="เลขประจำตัวผู้เสียภาษี *" value={taxId} onChange={setTaxId} />
+                      </Box>
+                      <Box sx={{ width: 180 }}>
+                        <FField label="ประเภทกิจการ *" value={bizCategory} select onChange={(v) => {
+                          setBizCategory(v);
+                          const prefixes = BIZ_PREFIXES[v] || [];
+                          setPrefix(prefixes[0] || "");
+                          setSuffix(BIZ_SUFFIXES[v] || "");
+                        }}>
+                          {BIZ_CATEGORIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                        </FField>
+                      </Box>
+                    </Stack>
 
                     {/* Row: คำนำหน้า(TH), ชื่อบริษัท(TH), คำลงท้าย(TH), ชื่อบริษัท(EN) */}
-                    <div className="grid grid-cols-[140px_1fr_140px_1fr] gap-3 mb-4">
-                      <FGroup label="คำนำหน้า (TH)" value={prefix} onChange={setPrefix} />
-                      <FGroup label="ชื่อบริษัท (TH) *" value={companyName} onChange={setCompanyName} />
-                      <FGroup label="คำลงท้าย (TH)" value={suffix} onChange={setSuffix} />
-                      <FGroup label="ชื่อบริษัท (EN)" value="Siam Trade Co., Ltd." onChange={() => {}} />
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "140px 1fr 140px 1fr", gap: 1.5, mb: 2 }}>
+                      <FField label="คำนำหน้า (TH)" value={prefix} onChange={setPrefix} />
+                      <FField label="ชื่อบริษัท (TH) *" value={companyName} onChange={setCompanyName} />
+                      <FField label="คำลงท้าย (TH)" value={suffix} onChange={setSuffix} />
+                      <FField label="ชื่อบริษัท (EN)" value="Siam Trade Co., Ltd." onChange={() => {}} />
+                    </Box>
 
                     {/* Row: เบอร์โทร, อีเมล, ประเภทธุรกิจ */}
-                    <div className="grid grid-cols-3 gap-3 mb-6">
-                      <FGroup label="เบอร์โทรศัพท์ *" value={phone} onChange={setPhone} />
-                      <FGroup label="อีเมล" value={email} onChange={setEmail} />
-                      <FGroup label="ประเภทธุรกิจ *">
-                        <select value={bizType} onChange={(e) => setBizType(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          {BIZ_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                      </FGroup>
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1.5, mb: 3 }}>
+                      <FField label="เบอร์โทรศัพท์ *" value={phone} onChange={setPhone} />
+                      <FField label="อีเมล" value={email} onChange={setEmail} />
+                      <FField label="ประเภทธุรกิจ *" value={bizType} select onChange={(v) => setBizType(v)}>
+                        {BIZ_TYPES.map((t) => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+                      </FField>
+                    </Box>
 
-                    {/* ── Divider ── */}
-                    <div className="h-px mb-5" style={{ background: BORDER }} />
+                    <Divider sx={{ mb: 2.5 }} />
 
                     {/* ── Section: ข้อมูลที่อยู่ธุรกิจ ── */}
-                    <div className="text-[15px] font-bold mb-4" style={{ color: OR }}>ข้อมูลที่อยู่ธุรกิจ</div>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 2, color: OR }}>ข้อมูลที่อยู่ธุรกิจ</Typography>
 
                     {/* Row 1: ประเทศ, ที่อยู่, แขวง/ตำบล, เขต/อำเภอ */}
-                    <div className="grid grid-cols-4 gap-3 mb-4">
-                      <FGroup label="ประเทศ *">
-                        <select value={country} onChange={(e) => setCountry(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">เลือกประเทศ</option>
-                          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </FGroup>
-                      <FGroup label="ที่อยู่ *" value={address} onChange={setAddress} />
-                      <FGroup label="แขวง/ตำบล *">
-                        <select value={subDistrict} onChange={(e) => setSubDistrict(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">เลือกแขวง/ตำบล</option>
-                          {(SUB_DISTRICTS[district] || []).map((s) => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </FGroup>
-                      <FGroup label="เขต/อำเภอ *">
-                        <select value={district} onChange={(e) => { setDistrict(e.target.value); setSubDistrict(""); }}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">เลือกเขต/อำเภอ</option>
-                          {(DISTRICTS[province] || []).map((d) => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                      </FGroup>
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 1.5, mb: 2 }}>
+                      <FField label="ประเทศ *" value={country} select onChange={(v) => setCountry(v)}>
+                        <MenuItem value="">เลือกประเทศ</MenuItem>
+                        {COUNTRIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                      </FField>
+                      <FField label="ที่อยู่ *" value={address} onChange={setAddress} />
+                      <FField label="แขวง/ตำบล *" value={subDistrict} select onChange={(v) => setSubDistrict(v)}>
+                        <MenuItem value="">เลือกแขวง/ตำบล</MenuItem>
+                        {(SUB_DISTRICTS[district] || []).map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                      </FField>
+                      <FField label="เขต/อำเภอ *" value={district} select onChange={(v) => { setDistrict(v); setSubDistrict(""); }}>
+                        <MenuItem value="">เลือกเขต/อำเภอ</MenuItem>
+                        {(DISTRICTS[province] || []).map((d) => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+                      </FField>
+                    </Box>
 
                     {/* Row 2: จังหวัด, รหัสไปรษณีย์, เบอร์โทรศัพท์ */}
-                    <div className="grid grid-cols-3 gap-3 mb-6">
-                      <FGroup label="จังหวัด *">
-                        <select value={province} onChange={(e) => { setProvince(e.target.value); setDistrict(""); setSubDistrict(""); }}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">เลือกจังหวัด</option>
-                          {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-                        </select>
-                      </FGroup>
-                      <FGroup label="รหัสไปรษณีย์ *">
-                        <select value={postalCode} onChange={(e) => setPostalCode(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">กรอกรหัสไปรษณีย์</option>
-                        </select>
-                      </FGroup>
-                      <FGroup label="เบอร์โทรศัพท์" value={contactPhone} onChange={setContactPhone} />
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1.5, mb: 3 }}>
+                      <FField label="จังหวัด *" value={province} select onChange={(v) => { setProvince(v); setDistrict(""); setSubDistrict(""); }}>
+                        <MenuItem value="">เลือกจังหวัด</MenuItem>
+                        {PROVINCES.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+                      </FField>
+                      <FField label="รหัสไปรษณีย์ *" value={postalCode} select onChange={(v) => setPostalCode(v)}>
+                        <MenuItem value="">กรอกรหัสไปรษณีย์</MenuItem>
+                      </FField>
+                      <FField label="เบอร์โทรศัพท์" value={contactPhone} onChange={setContactPhone} />
+                    </Box>
 
-                    {/* ── Divider ── */}
-                    <div className="h-px mb-5" style={{ background: BORDER }} />
+                    <Divider sx={{ mb: 2.5 }} />
 
                     {/* ── Section: Branding ── */}
-                    <div className="text-[15px] font-bold mb-4" style={{ color: OR }}>Branding</div>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 2, color: OR }}>Branding</Typography>
 
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="flex-1 max-w-[360px]">
-                        <FGroup label="ชื่อระบบที่แสดงบน Header" value="Siam Trade" onChange={() => {}} />
-                      </div>
-                      <div className="flex-1 max-w-[300px]">
-                        <FGroup label="สีหลัก *" value="#565DFF" onChange={() => {}} />
-                      </div>
-                      <div className="w-10 h-10 rounded-md shrink-0" style={{ background: OR }} />
-                      <span className="text-[12px] shrink-0" style={{ color: MUTED }}>สีหลัก, Tab active</span>
-                    </div>
+                    <Stack direction="row" alignItems="center" gap={2} sx={{ mb: 3 }}>
+                      <Box sx={{ flex: 1, maxWidth: 360 }}>
+                        <FField label="ชื่อระบบที่แสดงบน Header" value="Siam Trade" onChange={() => {}} />
+                      </Box>
+                      <Box sx={{ flex: 1, maxWidth: 300 }}>
+                        <FField label="สีหลัก *" value="#565DFF" onChange={() => {}} />
+                      </Box>
+                      <Box sx={{ width: 40, height: 40, borderRadius: 1, flexShrink: 0, bgcolor: OR }} />
+                      <Typography sx={{ fontSize: 12, flexShrink: 0, color: MUTED }}>สีหลัก, Tab active</Typography>
+                    </Stack>
 
                     {/* ── ปุ่ม ยกเลิก / บันทึก ── */}
-                    <div className="flex justify-end gap-3 pt-2">
-                      <button onClick={() => go("w1")}
-                        className="px-6 py-2.5 rounded-md text-[13px] cursor-pointer"
-                        style={{ border: `1px solid ${BORDER2}`, background: "white", color: TEXT }}
-                      >ยกเลิก</button>
-                      <button onClick={() => go("w4")}
-                        className="px-6 py-2.5 rounded-md text-[13px] font-bold cursor-pointer border-none text-white"
-                        style={{ background: OR }}
-                      >ถัดไป →</button>
-                    </div>
+                    <Stack direction="row" justifyContent="flex-end" gap={1.5} sx={{ pt: 1 }}>
+                      <Button variant="outlined" onClick={() => go("w1")} sx={{ fontSize: 13, textTransform: "none", color: TEXT, borderColor: BORDER2 }}>ยกเลิก</Button>
+                      <Button variant="contained" onClick={() => go("w4")} sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, fontSize: 13, fontWeight: 700, textTransform: "none" }}>ถัดไป →</Button>
+                    </Stack>
 
-                  </div>
-                </div>
-              </div>
-            </div>
+                  </Paper>
+                </Box>
+              </Box>
+            </Box>
           </>
         )}
 
@@ -685,158 +654,115 @@ function SetupWizardInner() {
               { label: "ถัดไป → Step 3 →", target: "w5", hi: true },
             ]} />
             <TopBar />
-            <div className="flex flex-1 min-h-0">
+            <Box sx={{ display: "flex", flex: 1, minHeight: 0 }}>
               <WizSidebar currentScreen="w4" />
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-5">
+              <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <Box sx={{ flex: 1, overflowY: "auto", p: 2.5 }}>
                   <WizContentHdr num="2" numColor={RED} title="สาขาแรก (สำนักงานใหญ่)" badge={{ label: "🔴 Critical", bg: RED_L, color: RED }} />
 
-                  {/* ── Card รวมทุก Section ── */}
-                  <div className="bg-white rounded-lg" style={{ border: `1px solid ${BORDER}`, padding: "24px 28px" }}>
+                  <Paper variant="outlined" sx={{ borderRadius: 2, border: `1px solid ${BORDER}`, p: "24px 28px" }}>
 
                     {/* ── Section: ข้อมูลสาขา ── */}
-                    <div className="text-[15px] font-bold mb-4" style={{ color: OR }}>ข้อมูลสาขา</div>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 2, color: OR }}>ข้อมูลสาขา</Typography>
 
                     {/* Notice */}
-                    <div className="flex items-center gap-2.5 rounded-[7px] mb-4 text-xs" style={{ padding: "10px 14px", background: OR_L, border: `1px solid ${OR_M}`, color: "#7A3000" }}>
-                      <span className="text-sm shrink-0">ℹ️</span>
-                      <span>สาขาแรกจะถูกกำหนดเป็น <strong>HQ (สำนักงานใหญ่)</strong> อัตโนมัติ เพิ่มสาขาอื่นได้ภายหลังใน Settings</span>
-                    </div>
+                    <Alert severity="info" icon={<Typography sx={{ fontSize: 14 }}>ℹ️</Typography>}
+                      sx={{ mb: 2, fontSize: 12, bgcolor: OR_L, color: "#7A3000", border: `1px solid ${OR_M}`, borderRadius: "7px", py: 0.25, "& .MuiAlert-icon": { mr: 1 }, "& .MuiAlert-message": { p: 0 } }}
+                    >
+                      สาขาแรกจะถูกกำหนดเป็น <strong>HQ (สำนักงานใหญ่)</strong> อัตโนมัติ เพิ่มสาขาอื่นได้ภายหลังใน Settings
+                    </Alert>
 
                     {/* Row: รหัสสาขา + Radio + VAT CODE */}
-                    <div className="flex items-end gap-4 mb-4">
-                      <div className="w-[160px]">
-                        <FGroup label="รหัสสาขา *" value={branchCode} onChange={setBranchCode} />
-                      </div>
-                      <div className="flex items-center gap-5 shrink-0 pb-2">
+                    <Stack direction="row" alignItems="flex-end" gap={2} sx={{ mb: 2 }}>
+                      <Box sx={{ width: 160 }}>
+                        <FField label="รหัสสาขา *" value={branchCode} onChange={setBranchCode} />
+                      </Box>
+                      <RadioGroup row value={branchType} onChange={(e) => setBranchType(e.target.value as "hq" | "branch" | "none")} sx={{ flexShrink: 0, pb: 0.5 }}>
                         {([
                           { id: "hq" as const, label: "สำนักงานใหญ่" },
                           { id: "branch" as const, label: "สาขา" },
                           { id: "none" as const, label: "ไม่ระบุ" },
                         ]).map((opt) => (
-                          <label key={opt.id} className="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="branchType" checked={branchType === opt.id} onChange={() => setBranchType(opt.id)}
-                              className="w-4 h-4 accent-[#565DFF]" />
-                            <span className="text-[13px]" style={{ color: TEXT }}>{opt.label}</span>
-                          </label>
+                          <FormControlLabel key={opt.id} value={opt.id} control={<Radio size="small" sx={{ color: OR, "&.Mui-checked": { color: OR } }} />} label={<Typography sx={{ fontSize: 13, color: TEXT }}>{opt.label}</Typography>} />
                         ))}
-                      </div>
-                      <div className="w-[180px]">
-                        <FGroup label="VAT CODE *" value={vatCode} onChange={setVatCode} />
-                      </div>
-                    </div>
+                      </RadioGroup>
+                      <Box sx={{ width: 180 }}>
+                        <FField label="VAT CODE *" value={vatCode} onChange={setVatCode} />
+                      </Box>
+                    </Stack>
 
                     {/* Row: ชื่อสาขา TH + EN */}
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                      <FGroup label="ชื่อสาขา (TH) *" value={branchNameTH} onChange={setBranchNameTH} />
-                      <FGroup label="ชื่อสาขา (EN) *" value={branchNameEN} onChange={setBranchNameEN} />
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 3 }}>
+                      <FField label="ชื่อสาขา (TH) *" value={branchNameTH} onChange={setBranchNameTH} />
+                      <FField label="ชื่อสาขา (EN) *" value={branchNameEN} onChange={setBranchNameEN} />
+                    </Box>
 
-                    {/* ── Divider ── */}
-                    <div className="h-px mb-5" style={{ background: BORDER }} />
+                    <Divider sx={{ mb: 2.5 }} />
 
                     {/* ── Section: ที่อยู่ภาษาไทย ── */}
-                    <div className="text-[15px] font-bold mb-4" style={{ color: OR }}>ที่อยู่ภาษาไทย</div>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 2, color: OR }}>ที่อยู่ภาษาไทย</Typography>
 
-                    {/* Button: ดึงที่อยู่จากหน้าธุรกิจ */}
-                    <button className="px-4 py-2 rounded-md text-[13px] font-semibold text-white border-none cursor-pointer mb-4" style={{ background: "#333" }}>
+                    <Button variant="contained" sx={{ bgcolor: "#333", "&:hover": { bgcolor: "#444" }, fontSize: 13, fontWeight: 600, textTransform: "none", mb: 2 }}>
                       ดึงที่อยู่จากหน้าธุรกิจ
-                    </button>
+                    </Button>
 
                     {/* Row 1: ประเทศ, ที่อยู่, แขวง/ตำบล, เขต/อำเภอ */}
-                    <div className="grid grid-cols-4 gap-3 mb-4">
-                      <FGroup label="ประเทศ *">
-                        <select value={branchCountry} onChange={(e) => setBranchCountry(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">เลือกประเทศ</option>
-                          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </FGroup>
-                      <FGroup label="ที่อยู่ *" value={branchAddress} onChange={setBranchAddress} />
-                      <FGroup label="แขวง/ตำบล *">
-                        <select value={branchSubDistrict} onChange={(e) => setBranchSubDistrict(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">เลือกแขวง/ตำบล</option>
-                          {(SUB_DISTRICTS[branchDistrict] || []).map((s) => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </FGroup>
-                      <FGroup label="เขต/อำเภอ *">
-                        <select value={branchDistrict} onChange={(e) => { setBranchDistrict(e.target.value); setBranchSubDistrict(""); }}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">เลือกเขต/อำเภอ</option>
-                          {(DISTRICTS[branchProvince] || []).map((d) => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                      </FGroup>
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 1.5, mb: 2 }}>
+                      <FField label="ประเทศ *" value={branchCountry} select onChange={(v) => setBranchCountry(v)}>
+                        <MenuItem value="">เลือกประเทศ</MenuItem>
+                        {COUNTRIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                      </FField>
+                      <FField label="ที่อยู่ *" value={branchAddress} onChange={setBranchAddress} />
+                      <FField label="แขวง/ตำบล *" value={branchSubDistrict} select onChange={(v) => setBranchSubDistrict(v)}>
+                        <MenuItem value="">เลือกแขวง/ตำบล</MenuItem>
+                        {(SUB_DISTRICTS[branchDistrict] || []).map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                      </FField>
+                      <FField label="เขต/อำเภอ *" value={branchDistrict} select onChange={(v) => { setBranchDistrict(v); setBranchSubDistrict(""); }}>
+                        <MenuItem value="">เลือกเขต/อำเภอ</MenuItem>
+                        {(DISTRICTS[branchProvince] || []).map((d) => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+                      </FField>
+                    </Box>
 
                     {/* Row 2: จังหวัด, รหัสไปรษณีย์, เบอร์โทร */}
-                    <div className="grid grid-cols-3 gap-3 mb-6">
-                      <FGroup label="จังหวัด *">
-                        <select value={branchProvince} onChange={(e) => { setBranchProvince(e.target.value); setBranchDistrict(""); setBranchSubDistrict(""); }}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">เลือกจังหวัด</option>
-                          {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-                        </select>
-                      </FGroup>
-                      <FGroup label="รหัสไปรษณีย์ *">
-                        <select value={branchPostalCode} onChange={(e) => setBranchPostalCode(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">กรอกรหัสไปรษณีย์</option>
-                        </select>
-                      </FGroup>
-                      <FGroup label="เบอร์โทรศัพท์" value={branchPhone} onChange={setBranchPhone} />
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1.5, mb: 3 }}>
+                      <FField label="จังหวัด *" value={branchProvince} select onChange={(v) => { setBranchProvince(v); setBranchDistrict(""); setBranchSubDistrict(""); }}>
+                        <MenuItem value="">เลือกจังหวัด</MenuItem>
+                        {PROVINCES.map((p) => <MenuItem key={p} value={p}>{p}</MenuItem>)}
+                      </FField>
+                      <FField label="รหัสไปรษณีย์ *" value={branchPostalCode} select onChange={(v) => setBranchPostalCode(v)}>
+                        <MenuItem value="">กรอกรหัสไปรษณีย์</MenuItem>
+                      </FField>
+                      <FField label="เบอร์โทรศัพท์" value={branchPhone} onChange={setBranchPhone} />
+                    </Box>
 
-                    {/* ── Divider ── */}
-                    <div className="h-px mb-5" style={{ background: BORDER }} />
+                    <Divider sx={{ mb: 2.5 }} />
 
                     {/* ── Section: ที่อยู่ภาษาอังกฤษ ── */}
-                    <div className="text-[15px] font-bold mb-4" style={{ color: OR }}>ที่อยู่ภาษาอังกฤษ</div>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 2, color: OR }}>ที่อยู่ภาษาอังกฤษ</Typography>
 
-                    <div className="max-w-[480px] flex flex-col gap-3 mb-4">
-                      <FGroup label="ที่อยู่ 1 (Line1) *" value={enAddr1} onChange={setEnAddr1} />
-                      <FGroup label="ที่อยู่ 2 (Line2)" value={enAddr2} onChange={setEnAddr2} />
-                      <FGroup label="ที่อยู่ 3 (Line3)" value={enAddr3} onChange={setEnAddr3} />
-                    </div>
-                    <div className="grid grid-cols-[220px_220px] gap-3 mb-6">
-                      <FGroup label="ประเทศ *">
-                        <select value={enCountry} onChange={(e) => setEnCountry(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="">เลือกประเทศ</option>
-                          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </FGroup>
-                      <FGroup label="รหัสไปรษณีย์ *" value={enPostalCode} onChange={setEnPostalCode} />
-                    </div>
+                    <Stack gap={1.5} sx={{ maxWidth: 480, mb: 2 }}>
+                      <FField label="ที่อยู่ 1 (Line1) *" value={enAddr1} onChange={setEnAddr1} />
+                      <FField label="ที่อยู่ 2 (Line2)" value={enAddr2} onChange={setEnAddr2} />
+                      <FField label="ที่อยู่ 3 (Line3)" value={enAddr3} onChange={setEnAddr3} />
+                    </Stack>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "220px 220px", gap: 1.5, mb: 3 }}>
+                      <FField label="ประเทศ *" value={enCountry} select onChange={(v) => setEnCountry(v)}>
+                        <MenuItem value="">เลือกประเทศ</MenuItem>
+                        {COUNTRIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                      </FField>
+                      <FField label="รหัสไปรษณีย์ *" value={enPostalCode} onChange={setEnPostalCode} />
+                    </Box>
 
                     {/* ── ปุ่ม ยกเลิก / บันทึก ── */}
-                    <div className="flex justify-end gap-3 pt-2">
-                      <button onClick={() => go("w2a")}
-                        className="px-6 py-2.5 rounded-md text-[13px] cursor-pointer"
-                        style={{ border: `1px solid ${BORDER2}`, background: "white", color: TEXT }}
-                      >ยกเลิก</button>
-                      <button onClick={() => go("w5")}
-                        className="px-6 py-2.5 rounded-md text-[13px] font-bold cursor-pointer border-none text-white"
-                        style={{ background: OR }}
-                      >ถัดไป →</button>
-                    </div>
+                    <Stack direction="row" justifyContent="flex-end" gap={1.5} sx={{ pt: 1 }}>
+                      <Button variant="outlined" onClick={() => go("w2a")} sx={{ fontSize: 13, textTransform: "none", color: TEXT, borderColor: BORDER2 }}>ยกเลิก</Button>
+                      <Button variant="contained" onClick={() => go("w5")} sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, fontSize: 13, fontWeight: 700, textTransform: "none" }}>ถัดไป →</Button>
+                    </Stack>
 
-                  </div>
-                </div>
-              </div>
-            </div>
+                  </Paper>
+                </Box>
+              </Box>
+            </Box>
           </>
         )}
 
@@ -848,137 +774,115 @@ function SetupWizardInner() {
               { label: "ถัดไป → Step 4 →", target: "w6", hi: true },
             ]} />
             <TopBar />
-            <div className="flex flex-1 min-h-0">
+            <Box sx={{ display: "flex", flex: 1, minHeight: 0 }}>
               <WizSidebar currentScreen="w5" />
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-5">
+              <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <Box sx={{ flex: 1, overflowY: "auto", p: 2.5 }}>
                   <WizContentHdr num="3" numColor={RED} title="การเงินพื้นฐาน" badge={{ label: "🔴 Critical", bg: RED_L, color: RED }} />
 
-                  {/* ── Card รวมทุก Section ── */}
-                  <div className="bg-white rounded-lg" style={{ border: `1px solid ${BORDER}`, padding: "24px 28px" }}>
+                  <Paper variant="outlined" sx={{ borderRadius: 2, border: `1px solid ${BORDER}`, p: "24px 28px" }}>
 
                     {/* ── Section: ข้อมูลภาษี ── */}
-                    <div className="text-[15px] font-bold mb-4" style={{ color: OR }}>ข้อมูลภาษี</div>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 2, color: OR }}>ข้อมูลภาษี</Typography>
 
                     {/* สกุลเงิน */}
-                    <div className="mb-4">
-                      <FGroup label="สกุลเงิน *">
-                        <select value={currency} onChange={(e) => setCurrency(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="บาท">บาท</option>
-                          <option value="USD">USD</option>
-                          <option value="EUR">EUR</option>
-                          <option value="JPY">JPY</option>
-                        </select>
-                      </FGroup>
-                    </div>
+                    <Box sx={{ mb: 2 }}>
+                      <FField label="สกุลเงิน *" value={currency} select onChange={(v) => setCurrency(v)}>
+                        <MenuItem value="บาท">บาท</MenuItem>
+                        <MenuItem value="USD">USD</MenuItem>
+                        <MenuItem value="EUR">EUR</MenuItem>
+                        <MenuItem value="JPY">JPY</MenuItem>
+                      </FField>
+                    </Box>
 
                     {/* Toggle VAT + ภาษีมูลค่าเพิ่ม */}
-                    <div className="flex items-end gap-4 mb-4">
-                      {/* Toggle */}
-                      <div className="shrink-0 pb-2">
-                        <button onClick={() => setVatEnabled(!vatEnabled)}
-                          className="w-[44px] h-[24px] rounded-full relative transition-colors cursor-pointer border-none"
-                          style={{ background: vatEnabled ? "#F5A623" : BORDER2 }}
-                        >
-                          <div className="w-[20px] h-[20px] rounded-full bg-white absolute top-[2px] transition-all shadow-sm"
-                            style={{ left: vatEnabled ? 22 : 2 }}
-                          />
-                        </button>
-                      </div>
-                      <div className="flex-1">
-                        <FGroup label="ภาษีมูลค่าเพิ่ม (VAT) *" value={vatRate} onChange={setVatRate} type="number" />
-                      </div>
-                    </div>
+                    <Stack direction="row" alignItems="flex-end" gap={2} sx={{ mb: 2 }}>
+                      <Box sx={{ flexShrink: 0, pb: 0.5 }}>
+                        <Switch checked={vatEnabled} onChange={() => setVatEnabled(!vatEnabled)}
+                          sx={{
+                            "& .MuiSwitch-switchBase.Mui-checked": { color: "#F5A623" },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: "#F5A623" },
+                          }}
+                        />
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <FField label="ภาษีมูลค่าเพิ่ม (VAT) *" value={vatRate} onChange={setVatRate} type="number" />
+                      </Box>
+                    </Stack>
 
                     {/* วันที่จดทะเบียนภาษี */}
-                    <div className="mb-4">
-                      <FGroup label="วันที่จดทะเบียนภาษีมูลค่าเพิ่ม *" value={vatRegDate} onChange={setVatRegDate} type="date" />
-                    </div>
+                    <Box sx={{ mb: 2 }}>
+                      <FField label="วันที่จดทะเบียนภาษีมูลค่าเพิ่ม *" value={vatRegDate} onChange={setVatRegDate} type="date" />
+                    </Box>
 
                     {/* วิธีคิดภาษีมูลค่าเพิ่ม */}
-                    <div className="mb-6">
-                      <FGroup label="วิธีคิดภาษีมูลค่าเพิ่ม *">
-                        <select value={vatCalcMethod} onChange={(e) => setVatCalcMethod(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="แยกภาษี">แยกภาษี</option>
-                          <option value="รวมภาษี">รวมภาษี</option>
-                        </select>
-                      </FGroup>
-                    </div>
+                    <Box sx={{ mb: 3 }}>
+                      <FField label="วิธีคิดภาษีมูลค่าเพิ่ม *" value={vatCalcMethod} select onChange={(v) => setVatCalcMethod(v)}>
+                        <MenuItem value="แยกภาษี">แยกภาษี</MenuItem>
+                        <MenuItem value="รวมภาษี">รวมภาษี</MenuItem>
+                      </FField>
+                    </Box>
 
-                    {/* ── Divider ── */}
-                    <div className="h-px mb-5" style={{ background: BORDER }} />
+                    <Divider sx={{ mb: 2.5 }} />
 
                     {/* ── Section: วิธีคิดต้นทุนสินค้า ── */}
-                    <div className="text-[15px] font-bold mb-4" style={{ color: OR }}>วิธีคิดต้นทุนสินค้า</div>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 2, color: OR }}>วิธีคิดต้นทุนสินค้า</Typography>
 
-                    <div className="flex items-center gap-2.5 rounded-[7px] mb-4 text-xs" style={{ padding: "10px 14px", background: AMBER_L, border: `1px solid #FAC775`, color: AMBER }}>
-                      <span className="text-sm shrink-0">⚠</span>
-                      <span>🔒 Lv 4 — SA แก้ได้ก่อนมีใบรับสินค้า (GR) · หลัง GR แรกไม่มีใครแก้ได้ · เลือกให้ถูกต้องก่อนรับสินค้าครั้งแรก</span>
-                    </div>
+                    <Alert severity="warning" icon={<Typography sx={{ fontSize: 14 }}>⚠</Typography>}
+                      sx={{ mb: 2, fontSize: 12, bgcolor: AMBER_L, color: AMBER, border: `1px solid #FAC775`, borderRadius: "7px", py: 0.25, "& .MuiAlert-icon": { mr: 1 }, "& .MuiAlert-message": { p: 0 } }}
+                    >
+                      🔒 Lv 4 — SA แก้ได้ก่อนมีใบรับสินค้า (GR) · หลัง GR แรกไม่มีใครแก้ได้ · เลือกให้ถูกต้องก่อนรับสินค้าครั้งแรก
+                    </Alert>
 
-                    <div className="grid grid-cols-2 gap-3 mb-6">
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 3 }}>
                       {([
                         { id: "fifo" as const, name: "FIFO", sub: "First In, First Out", desc: "ของที่เข้ามาก่อนถูกตัดออกก่อน · เหมาะกับสินค้าที่มีวันหมดอายุ" },
                         { id: "avg" as const, name: "Average Cost", sub: "ต้นทุนถัวเฉลี่ย", desc: "เฉลี่ยต้นทุนทุกล็อตเข้าด้วยกัน · เหมาะกับสินค้าทั่วไป" },
                       ]).map((m) => {
                         const sel = costingMethod === m.id;
                         return (
-                          <button key={m.id} onClick={() => setCostingMethod(m.id)}
-                            className="rounded-lg p-4 text-left cursor-pointer transition-all"
-                            style={{ border: `1.5px solid ${sel ? OR : BORDER2}`, background: sel ? OR_L : "white" }}
+                          <Paper key={m.id} variant="outlined" onClick={() => setCostingMethod(m.id)}
+                            sx={{
+                              borderRadius: 2, p: 2, textAlign: "left", cursor: "pointer", transition: "all 0.15s",
+                              border: `1.5px solid ${sel ? OR : BORDER2}`, bgcolor: sel ? OR_L : "white",
+                            }}
                           >
-                            <div className="text-[14px] font-bold" style={{ color: sel ? "#7A3000" : TEXT }}>{m.name}</div>
-                            <div className="text-[11px] font-semibold mt-0.5" style={{ color: sel ? OR : MUTED }}>{m.sub}</div>
-                            <div className="text-[12px] mt-1.5 leading-relaxed" style={{ color: MUTED }}>{m.desc}</div>
-                            <div className="text-[10px] mt-2 flex items-center gap-1" style={{ color: AMBER }}>🔒 Lv 4 — lock หลัง GR แรก</div>
-                          </button>
+                            <Typography sx={{ fontSize: 14, fontWeight: 700, color: sel ? "#7A3000" : TEXT }}>{m.name}</Typography>
+                            <Typography sx={{ fontSize: 11, fontWeight: 600, mt: 0.25, color: sel ? OR : MUTED }}>{m.sub}</Typography>
+                            <Typography sx={{ fontSize: 12, mt: 0.75, lineHeight: 1.6, color: MUTED }}>{m.desc}</Typography>
+                            <Typography sx={{ fontSize: 10, mt: 1, color: AMBER }}>🔒 Lv 4 — lock หลัง GR แรก</Typography>
+                          </Paper>
                         );
                       })}
-                    </div>
+                    </Box>
 
-                    {/* ── Divider ── */}
-                    <div className="h-px mb-5" style={{ background: BORDER }} />
+                    <Divider sx={{ mb: 2.5 }} />
 
                     {/* ── Section: ค่าเริ่มต้น AR / AP ── */}
-                    <div className="text-[15px] font-bold mb-4" style={{ color: OR }}>ค่าเริ่มต้น AR / AP</div>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 2, color: OR }}>ค่าเริ่มต้น AR / AP</Typography>
 
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <FGroup label="เครดิตลูกค้า default (วัน)" value="30" onChange={() => {}} type="number" />
-                      <FGroup label="เครดิต Supplier default (วัน)" value="30" onChange={() => {}} type="number" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                      <FGroup label="รูปแบบราคา default">
-                        <select className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option>รวม VAT</option><option>แยก VAT</option>
-                        </select>
-                      </FGroup>
-                      <FGroup label="หัก ณ ที่จ่าย default (%)" value="3" onChange={() => {}} type="number" />
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 2 }}>
+                      <FField label="เครดิตลูกค้า default (วัน)" value="30" onChange={() => {}} type="number" />
+                      <FField label="เครดิต Supplier default (วัน)" value="30" onChange={() => {}} type="number" />
+                    </Box>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 3 }}>
+                      <FField label="รูปแบบราคา default" value="รวม VAT" select onChange={() => {}}>
+                        <MenuItem value="รวม VAT">รวม VAT</MenuItem>
+                        <MenuItem value="แยก VAT">แยก VAT</MenuItem>
+                      </FField>
+                      <FField label="หัก ณ ที่จ่าย default (%)" value="3" onChange={() => {}} type="number" />
+                    </Box>
 
                     {/* ── ปุ่ม ยกเลิก / บันทึก ── */}
-                    <div className="flex justify-end gap-3 pt-2">
-                      <button onClick={() => go("w4")}
-                        className="px-6 py-2.5 rounded-md text-[13px] cursor-pointer"
-                        style={{ border: `1px solid ${BORDER2}`, background: "white", color: TEXT }}
-                      >ยกเลิก</button>
-                      <button onClick={() => go("w6")}
-                        className="px-6 py-2.5 rounded-md text-[13px] font-bold cursor-pointer border-none text-white"
-                        style={{ background: OR }}
-                      >ถัดไป →</button>
-                    </div>
+                    <Stack direction="row" justifyContent="flex-end" gap={1.5} sx={{ pt: 1 }}>
+                      <Button variant="outlined" onClick={() => go("w4")} sx={{ fontSize: 13, textTransform: "none", color: TEXT, borderColor: BORDER2 }}>ยกเลิก</Button>
+                      <Button variant="contained" onClick={() => go("w6")} sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, fontSize: 13, fontWeight: 700, textTransform: "none" }}>ถัดไป →</Button>
+                    </Stack>
 
-                  </div>
-                </div>
-              </div>
-            </div>
+                  </Paper>
+                </Box>
+              </Box>
+            </Box>
           </>
         )}
 
@@ -990,111 +894,108 @@ function SetupWizardInner() {
               { label: "ถัดไป → สรุป →", target: "w7", hi: true },
             ]} />
             <TopBar />
-            <div className="flex flex-1 min-h-0">
+            <Box sx={{ display: "flex", flex: 1, minHeight: 0 }}>
               <WizSidebar currentScreen="w6" />
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-5">
+              <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <Box sx={{ flex: 1, overflowY: "auto", p: 2.5 }}>
                   <WizContentHdr num="4" numColor={RED} title="คลังสินค้าแรก" badge={{ label: "🔴 Critical", bg: RED_L, color: RED }} />
 
-                  {/* ── Card รวมทุก Section ── */}
-                  <div className="bg-white rounded-lg" style={{ border: `1px solid ${BORDER}`, padding: "24px 28px" }}>
+                  <Paper variant="outlined" sx={{ borderRadius: 2, border: `1px solid ${BORDER}`, p: "24px 28px" }}>
 
                     {/* รหัสคลังสินค้า */}
-                    <div className="mb-4">
-                      <FGroup label="รหัสคลังสินค้า *" value={whCode} onChange={setWhCode} />
-                    </div>
+                    <Box sx={{ mb: 2 }}>
+                      <FField label="รหัสคลังสินค้า *" value={whCode} onChange={setWhCode} />
+                    </Box>
 
                     {/* ชื่อคลังสินค้า */}
-                    <div className="mb-4">
-                      <FGroup label="ชื่อคลังสินค้า *" value={whName} onChange={setWhName} />
-                    </div>
+                    <Box sx={{ mb: 2 }}>
+                      <FField label="ชื่อคลังสินค้า *" value={whName} onChange={setWhName} />
+                    </Box>
 
                     {/* ประเภทคลังสินค้า — locked เป็นคลังสินค้าสาขา */}
-                    <div className="mb-1">
-                      <div className="text-[13px] font-semibold mb-2" style={{ color: "#F5A623" }}>ประเภทคลังสินค้า<span style={{ color: RED }}>*</span></div>
-                      <div className="flex items-center gap-5">
-                        <label className="flex items-center gap-2 opacity-40 cursor-not-allowed">
-                          <input type="radio" name="whCategory" checked={false} disabled className="w-4 h-4 accent-[#F5A623]" />
-                          <span className="text-[13px]" style={{ color: TEXT }}>คลังสินค้ากลาง</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-not-allowed">
-                          <input type="radio" name="whCategory" checked={true} disabled className="w-4 h-4 accent-[#F5A623]" />
-                          <span className="text-[13px] font-medium" style={{ color: TEXT }}>คลังสินค้าสาขา</span>
-                        </label>
-                      </div>
-                    </div>
+                    <Box sx={{ mb: 0.5 }}>
+                      <Typography sx={{ fontSize: 13, fontWeight: 600, mb: 1, color: "#F5A623" }}>ประเภทคลังสินค้า<Box component="span" sx={{ color: RED }}>*</Box></Typography>
+                      <RadioGroup row value="branch">
+                        <FormControlLabel value="central" disabled control={<Radio size="small" sx={{ color: "#F5A623", "&.Mui-checked": { color: "#F5A623" } }} />}
+                          label={<Typography sx={{ fontSize: 13, color: TEXT }}>คลังสินค้ากลาง</Typography>} sx={{ opacity: 0.4 }} />
+                        <FormControlLabel value="branch" disabled control={<Radio size="small" checked sx={{ color: "#F5A623", "&.Mui-checked": { color: "#F5A623" } }} />}
+                          label={<Typography sx={{ fontSize: 13, fontWeight: 500, color: TEXT }}>คลังสินค้าสาขา</Typography>} />
+                      </RadioGroup>
+                    </Box>
                     {/* แสดงสาขาที่ผูก */}
-                    <div className="flex items-center gap-2 rounded-md mb-5" style={{ background: "#f5f5f5", border: `1px solid ${BORDER}`, padding: "9px 12px", marginTop: 8 }}>
-                      <span className="text-[13px]" style={{ color: MUTED }}>🏢 สาขาสำนักงานใหญ่</span>
-                      <span className="text-[9px] font-semibold px-2 py-0.5 rounded-[10px] whitespace-nowrap" style={{ background: BLUE_L, color: BLUE }}>ล๊อกจาก Step 2</span>
-                    </div>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, borderRadius: 1, bgcolor: "#f5f5f5", border: `1px solid ${BORDER}`, p: "9px 12px", mt: 1, mb: 2.5 }}>
+                      <Typography sx={{ fontSize: 13, color: MUTED }}>🏢 สาขาสำนักงานใหญ่</Typography>
+                      <Chip label="ล๊อกจาก Step 2" size="small" sx={{ fontSize: 9, fontWeight: 600, bgcolor: BLUE_L, color: BLUE, height: 18, borderRadius: "10px" }} />
+                    </Box>
 
-                    {/* ── Divider ── */}
-                    <div className="h-px mb-5" style={{ background: BORDER }} />
+                    <Divider sx={{ mb: 2.5 }} />
 
                     {/* ── Section: ที่อยู่คลังสินค้า ── */}
-                    <div className="text-[15px] font-bold mb-4" style={{ color: OR }}>ที่อยู่คลังสินค้า</div>
+                    <Typography sx={{ fontSize: 15, fontWeight: 700, mb: 2, color: OR }}>ที่อยู่คลังสินค้า</Typography>
 
                     {/* Row 1: ประเทศ, ที่อยู่ */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <FGroup label="ประเทศ *">
-                        <select value={whCountry} onChange={(e) => setWhCountry(e.target.value)}
-                          className="w-full rounded-md text-[13px] outline-none appearance-none bg-white cursor-pointer"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-                        >
-                          <option value="Thailand">Thailand</option>
-                          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </FGroup>
-                      <FGroup label="ที่อยู่" value={whAddress} onChange={setWhAddress} />
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 2 }}>
+                      <FField label="ประเทศ *" value={whCountry} select onChange={(v) => setWhCountry(v)}>
+                        <MenuItem value="Thailand">Thailand</MenuItem>
+                        {COUNTRIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                      </FField>
+                      <FField label="ที่อยู่" value={whAddress} onChange={setWhAddress} />
+                    </Box>
 
                     {/* Row 2: แขวง/ตำบล, อำเภอ/เขต */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <FGroup label="แขวง/ตำบล" value={whSubDistrict} onChange={setWhSubDistrict} />
-                      <FGroup label="อำเภอ/เขต" value={whDistrict} onChange={setWhDistrict} />
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 2 }}>
+                      <FField label="แขวง/ตำบล" value={whSubDistrict} onChange={setWhSubDistrict} />
+                      <FField label="อำเภอ/เขต" value={whDistrict} onChange={setWhDistrict} />
+                    </Box>
 
                     {/* Row 3: จังหวัด, รหัสไปรษณีย์ */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <FGroup label="จังหวัด" value={whProvince} onChange={setWhProvince} />
-                      <FGroup label="รหัสไปรษณีย์" value={whPostalCode} onChange={setWhPostalCode} />
-                    </div>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 2 }}>
+                      <FField label="จังหวัด" value={whProvince} onChange={setWhProvince} />
+                      <FField label="รหัสไปรษณีย์" value={whPostalCode} onChange={setWhPostalCode} />
+                    </Box>
 
                     {/* URL Google Map */}
-                    <div className="mb-4">
-                      <FGroup label="URL Google Map" value={whGoogleMap} onChange={setWhGoogleMap} />
-                    </div>
+                    <Box sx={{ mb: 2 }}>
+                      <FField label="URL Google Map" value={whGoogleMap} onChange={setWhGoogleMap} />
+                    </Box>
 
                     {/* หมายเหตุ */}
-                    <div className="mb-6">
-                      <div className="relative">
-                        <textarea value={whNote} onChange={(e) => setWhNote(e.target.value)}
-                          rows={4}
-                          className="w-full rounded-md text-[13px] outline-none resize-none"
-                          style={{ padding: "10px 12px", border: `1px solid ${BORDER2}`, color: TEXT }}
-                          placeholder="ระบุหมายเหตุ"
-                        />
-                        <label className="absolute top-0 left-[11px] -translate-y-1/2 bg-white px-0.5 text-[10px] pointer-events-none" style={{ color: OR }}>หมายเหตุ</label>
-                      </div>
-                    </div>
+                    <Box sx={{ mb: 3 }}>
+                      <TextField
+                        label="หมายเหตุ"
+                        value={whNote}
+                        onChange={(e) => setWhNote(e.target.value)}
+                        multiline
+                        rows={4}
+                        size="small"
+                        fullWidth
+                        placeholder="ระบุหมายเหตุ"
+                        slotProps={{
+                          inputLabel: {
+                            sx: { color: OR, "&.Mui-focused": { color: OR } },
+                          },
+                        }}
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            fontSize: 13,
+                            "& fieldset": { borderColor: BORDER2 },
+                            "&:hover fieldset": { borderColor: OR },
+                            "&.Mui-focused fieldset": { borderColor: OR },
+                          },
+                        }}
+                      />
+                    </Box>
 
                     {/* ── ปุ่ม ยกเลิก / ถัดไป ── */}
-                    <div className="flex justify-end gap-3 pt-2">
-                      <button onClick={() => go("w5")}
-                        className="px-6 py-2.5 rounded-md text-[13px] cursor-pointer"
-                        style={{ border: `1px solid ${BORDER2}`, background: "white", color: TEXT }}
-                      >ยกเลิก</button>
-                      <button onClick={() => go("w7")}
-                        className="px-6 py-2.5 rounded-md text-[13px] font-bold cursor-pointer border-none text-white"
-                        style={{ background: OR }}
-                      >ถัดไป →</button>
-                    </div>
+                    <Stack direction="row" justifyContent="flex-end" gap={1.5} sx={{ pt: 1 }}>
+                      <Button variant="outlined" onClick={() => go("w5")} sx={{ fontSize: 13, textTransform: "none", color: TEXT, borderColor: BORDER2 }}>ยกเลิก</Button>
+                      <Button variant="contained" onClick={() => go("w7")} sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, fontSize: 13, fontWeight: 700, textTransform: "none" }}>ถัดไป →</Button>
+                    </Stack>
 
-                  </div>
-                </div>
-              </div>
-            </div>
+                  </Paper>
+                </Box>
+              </Box>
+            </Box>
           </>
         )}
 
@@ -1106,99 +1007,99 @@ function SetupWizardInner() {
               { label: "ยืนยัน → เข้าสู่ระบบ", target: "w7", hi: true },
             ]} />
             <TopBar />
-            <div className="flex flex-1 min-h-0">
+            <Box sx={{ display: "flex", flex: 1, minHeight: 0 }}>
               <WizSidebar currentScreen="w7" />
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-5">
+              <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <Box sx={{ flex: 1, overflowY: "auto", p: 2.5 }}>
                   <WizContentHdr num="✓" numColor={GREEN} title="สรุปการตั้งค่าก่อนยืนยัน" badge={{ label: "✅ Critical ครบ 4/4", bg: GREEN_L, color: GREEN }} />
                   <Notice variant="warn" icon="⚠">กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนกด <strong>&quot;ยืนยันและเปิดใช้ระบบ&quot;</strong> — เมื่อยืนยันแล้วข้อมูลจะ<strong>มีผลทันที</strong>และถูกบันทึกแยกไปยังส่วนต่างๆ ที่เกี่ยวข้อง</Notice>
 
                   {/* ── Step 1 สรุป ── */}
-                  <div className="bg-white rounded-lg mb-3.5" style={{ border: `1px solid ${BORDER}`, padding: "18px 22px" }}>
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: GREEN }}>✓</div>
-                      <div className="text-[14px] font-bold" style={{ color: GREEN }}>Step 1 — ข้อมูลธุรกิจ</div>
-                      <div className="flex-1" />
-                      <button onClick={() => go("w2a")} className="text-[11px] px-2.5 py-1 rounded-md cursor-pointer" style={{ border: `1px solid ${BORDER2}`, background: "white", color: OR }}>แก้ไข</button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[12px]" style={{ color: TEXT }}>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ประเภท</span><span>{personType === "juristic" ? "นิติบุคคล" : "บุคคลธรรมดา"}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>เลขผู้เสียภาษี</span><span>{taxId}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ชื่อบริษัท (TH)</span><span>{prefix} {companyName || "สยามเทรด"} {suffix}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ประเภทกิจการ</span><span>{bizCategory}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ประเภทธุรกิจ</span><span>{bizType}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>เบอร์โทร</span><span>{phone || "-"}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>อีเมล</span><span>{email || "-"}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ที่อยู่</span><span>{address || "-"} {subDistrict} {district} {province} {postalCode}</span></div>
-                    </div>
-                  </div>
+                  <Paper variant="outlined" sx={{ borderRadius: 2, mb: 1.75, border: `1px solid ${BORDER}`, p: "18px 22px" }}>
+                    <Stack direction="row" alignItems="center" gap={1.25} sx={{ mb: 1.5 }}>
+                      <Box sx={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "white", flexShrink: 0, bgcolor: GREEN }}>✓</Box>
+                      <Typography sx={{ fontSize: 14, fontWeight: 700, color: GREEN }}>Step 1 — ข้อมูลธุรกิจ</Typography>
+                      <Box sx={{ flex: 1 }} />
+                      <Button variant="outlined" size="small" onClick={() => go("w2a")} sx={{ fontSize: 11, textTransform: "none", color: OR, borderColor: BORDER2 }}>แก้ไข</Button>
+                    </Stack>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 24px", fontSize: 12, color: TEXT }}>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ประเภท</Typography><Typography sx={{ fontSize: 12 }}>{personType === "juristic" ? "นิติบุคคล" : "บุคคลธรรมดา"}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>เลขผู้เสียภาษี</Typography><Typography sx={{ fontSize: 12 }}>{taxId}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ชื่อบริษัท (TH)</Typography><Typography sx={{ fontSize: 12 }}>{prefix} {companyName || "สยามเทรด"} {suffix}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ประเภทกิจการ</Typography><Typography sx={{ fontSize: 12 }}>{bizCategory}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ประเภทธุรกิจ</Typography><Typography sx={{ fontSize: 12 }}>{bizType}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>เบอร์โทร</Typography><Typography sx={{ fontSize: 12 }}>{phone || "-"}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>อีเมล</Typography><Typography sx={{ fontSize: 12 }}>{email || "-"}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ที่อยู่</Typography><Typography sx={{ fontSize: 12 }}>{address || "-"} {subDistrict} {district} {province} {postalCode}</Typography></Box>
+                    </Box>
+                  </Paper>
 
                   {/* ── Step 2 สรุป ── */}
-                  <div className="bg-white rounded-lg mb-3.5" style={{ border: `1px solid ${BORDER}`, padding: "18px 22px" }}>
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: GREEN }}>✓</div>
-                      <div className="text-[14px] font-bold" style={{ color: GREEN }}>Step 2 — สาขาแรก</div>
-                      <div className="flex-1" />
-                      <button onClick={() => go("w4")} className="text-[11px] px-2.5 py-1 rounded-md cursor-pointer" style={{ border: `1px solid ${BORDER2}`, background: "white", color: OR }}>แก้ไข</button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[12px]" style={{ color: TEXT }}>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>รหัสสาขา</span><span>{branchCode}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ประเภท</span><span>{branchType === "hq" ? "สำนักงานใหญ่" : branchType === "branch" ? "สาขา" : "ไม่ระบุ"}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>VAT CODE</span><span>{vatCode}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ชื่อสาขา (TH)</span><span>{branchNameTH || "-"}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ชื่อสาขา (EN)</span><span>{branchNameEN || "-"}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ที่อยู่ (TH)</span><span>{branchAddress || "-"} {branchSubDistrict} {branchDistrict} {branchProvince}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ที่อยู่ (EN)</span><span>{enAddr1 || "-"}</span></div>
-                    </div>
-                  </div>
+                  <Paper variant="outlined" sx={{ borderRadius: 2, mb: 1.75, border: `1px solid ${BORDER}`, p: "18px 22px" }}>
+                    <Stack direction="row" alignItems="center" gap={1.25} sx={{ mb: 1.5 }}>
+                      <Box sx={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "white", flexShrink: 0, bgcolor: GREEN }}>✓</Box>
+                      <Typography sx={{ fontSize: 14, fontWeight: 700, color: GREEN }}>Step 2 — สาขาแรก</Typography>
+                      <Box sx={{ flex: 1 }} />
+                      <Button variant="outlined" size="small" onClick={() => go("w4")} sx={{ fontSize: 11, textTransform: "none", color: OR, borderColor: BORDER2 }}>แก้ไข</Button>
+                    </Stack>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 24px", fontSize: 12, color: TEXT }}>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>รหัสสาขา</Typography><Typography sx={{ fontSize: 12 }}>{branchCode}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ประเภท</Typography><Typography sx={{ fontSize: 12 }}>{branchType === "hq" ? "สำนักงานใหญ่" : branchType === "branch" ? "สาขา" : "ไม่ระบุ"}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>VAT CODE</Typography><Typography sx={{ fontSize: 12 }}>{vatCode}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ชื่อสาขา (TH)</Typography><Typography sx={{ fontSize: 12 }}>{branchNameTH || "-"}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ชื่อสาขา (EN)</Typography><Typography sx={{ fontSize: 12 }}>{branchNameEN || "-"}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ที่อยู่ (TH)</Typography><Typography sx={{ fontSize: 12 }}>{branchAddress || "-"} {branchSubDistrict} {branchDistrict} {branchProvince}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ที่อยู่ (EN)</Typography><Typography sx={{ fontSize: 12 }}>{enAddr1 || "-"}</Typography></Box>
+                    </Box>
+                  </Paper>
 
                   {/* ── Step 3 สรุป ── */}
-                  <div className="bg-white rounded-lg mb-3.5" style={{ border: `1px solid ${BORDER}`, padding: "18px 22px" }}>
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: GREEN }}>✓</div>
-                      <div className="text-[14px] font-bold" style={{ color: GREEN }}>Step 3 — การเงินพื้นฐาน</div>
-                      <div className="flex-1" />
-                      <button onClick={() => go("w5")} className="text-[11px] px-2.5 py-1 rounded-md cursor-pointer" style={{ border: `1px solid ${BORDER2}`, background: "white", color: OR }}>แก้ไข</button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[12px]" style={{ color: TEXT }}>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>สกุลเงิน</span><span>{currency}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>VAT</span><span>{vatEnabled ? `เปิด (${vatRate}%)` : "ปิด"}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>วันจดทะเบียน VAT</span><span>{vatRegDate}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>วิธีคิด VAT</span><span>{vatCalcMethod}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>วิธีคิดต้นทุน</span><span className="font-semibold">{costingMethod === "fifo" ? "FIFO" : "Average Cost"}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>เครดิตลูกค้า</span><span>30 วัน</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>เครดิต Supplier</span><span>30 วัน</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>หัก ณ ที่จ่าย</span><span>3%</span></div>
-                    </div>
-                  </div>
+                  <Paper variant="outlined" sx={{ borderRadius: 2, mb: 1.75, border: `1px solid ${BORDER}`, p: "18px 22px" }}>
+                    <Stack direction="row" alignItems="center" gap={1.25} sx={{ mb: 1.5 }}>
+                      <Box sx={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "white", flexShrink: 0, bgcolor: GREEN }}>✓</Box>
+                      <Typography sx={{ fontSize: 14, fontWeight: 700, color: GREEN }}>Step 3 — การเงินพื้นฐาน</Typography>
+                      <Box sx={{ flex: 1 }} />
+                      <Button variant="outlined" size="small" onClick={() => go("w5")} sx={{ fontSize: 11, textTransform: "none", color: OR, borderColor: BORDER2 }}>แก้ไข</Button>
+                    </Stack>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 24px", fontSize: 12, color: TEXT }}>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>สกุลเงิน</Typography><Typography sx={{ fontSize: 12 }}>{currency}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>VAT</Typography><Typography sx={{ fontSize: 12 }}>{vatEnabled ? `เปิด (${vatRate}%)` : "ปิด"}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>วันจดทะเบียน VAT</Typography><Typography sx={{ fontSize: 12 }}>{vatRegDate}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>วิธีคิด VAT</Typography><Typography sx={{ fontSize: 12 }}>{vatCalcMethod}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>วิธีคิดต้นทุน</Typography><Typography sx={{ fontSize: 12, fontWeight: 600 }}>{costingMethod === "fifo" ? "FIFO" : "Average Cost"}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>เครดิตลูกค้า</Typography><Typography sx={{ fontSize: 12 }}>30 วัน</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>เครดิต Supplier</Typography><Typography sx={{ fontSize: 12 }}>30 วัน</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>หัก ณ ที่จ่าย</Typography><Typography sx={{ fontSize: 12 }}>3%</Typography></Box>
+                    </Box>
+                  </Paper>
 
                   {/* ── Step 4 สรุป ── */}
-                  <div className="bg-white rounded-lg mb-3.5" style={{ border: `1px solid ${BORDER}`, padding: "18px 22px" }}>
-                    <div className="flex items-center gap-2.5 mb-3">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: GREEN }}>✓</div>
-                      <div className="text-[14px] font-bold" style={{ color: GREEN }}>Step 4 — คลังสินค้าแรก</div>
-                      <div className="flex-1" />
-                      <button onClick={() => go("w6")} className="text-[11px] px-2.5 py-1 rounded-md cursor-pointer" style={{ border: `1px solid ${BORDER2}`, background: "white", color: OR }}>แก้ไข</button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[12px]" style={{ color: TEXT }}>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>รหัสคลัง</span><span>{whCode || "-"}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ชื่อคลัง</span><span>{whName || "-"}</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ประเภท</span><span>คลังสินค้าสาขา</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>สาขา</span><span>สำนักงานใหญ่</span></div>
-                      <div className="flex"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>ที่อยู่</span><span>{whAddress || "-"} {whSubDistrict} {whDistrict} {whProvince} {whPostalCode}</span></div>
-                      {whGoogleMap && <div className="flex col-span-2"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>Google Map</span><span className="truncate">{whGoogleMap}</span></div>}
-                      {whNote && <div className="flex col-span-2"><span className="w-[140px] shrink-0" style={{ color: MUTED }}>หมายเหตุ</span><span>{whNote}</span></div>}
-                    </div>
-                  </div>
+                  <Paper variant="outlined" sx={{ borderRadius: 2, mb: 1.75, border: `1px solid ${BORDER}`, p: "18px 22px" }}>
+                    <Stack direction="row" alignItems="center" gap={1.25} sx={{ mb: 1.5 }}>
+                      <Box sx={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "white", flexShrink: 0, bgcolor: GREEN }}>✓</Box>
+                      <Typography sx={{ fontSize: 14, fontWeight: 700, color: GREEN }}>Step 4 — คลังสินค้าแรก</Typography>
+                      <Box sx={{ flex: 1 }} />
+                      <Button variant="outlined" size="small" onClick={() => go("w6")} sx={{ fontSize: 11, textTransform: "none", color: OR, borderColor: BORDER2 }}>แก้ไข</Button>
+                    </Stack>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 24px", fontSize: 12, color: TEXT }}>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>รหัสคลัง</Typography><Typography sx={{ fontSize: 12 }}>{whCode || "-"}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ชื่อคลัง</Typography><Typography sx={{ fontSize: 12 }}>{whName || "-"}</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ประเภท</Typography><Typography sx={{ fontSize: 12 }}>คลังสินค้าสาขา</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>สาขา</Typography><Typography sx={{ fontSize: 12 }}>สำนักงานใหญ่</Typography></Box>
+                      <Box sx={{ display: "flex" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>ที่อยู่</Typography><Typography sx={{ fontSize: 12 }}>{whAddress || "-"} {whSubDistrict} {whDistrict} {whProvince} {whPostalCode}</Typography></Box>
+                      {whGoogleMap && <Box sx={{ display: "flex", gridColumn: "span 2" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>Google Map</Typography><Typography sx={{ fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{whGoogleMap}</Typography></Box>}
+                      {whNote && <Box sx={{ display: "flex", gridColumn: "span 2" }}><Typography sx={{ width: 140, flexShrink: 0, color: MUTED, fontSize: 12 }}>หมายเหตุ</Typography><Typography sx={{ fontSize: 12 }}>{whNote}</Typography></Box>}
+                    </Box>
+                  </Paper>
 
                   <Notice variant="orange" icon="➡️">ขั้นตอนถัดไปที่แนะนำ: <strong>F-03 สร้าง Role</strong> → <strong>F-04 สร้าง User</strong> ก่อนเปิดให้ทีมใช้งาน</Notice>
-                </div>
+                </Box>
                 <WizAction left="Critical ครบ · ข้อมูลจะมีผลทันทีเมื่อยืนยัน">
-                  <BtnGhost onClick={() => go("w6")}>← แก้ไข</BtnGhost>
-                  <BtnGreen onClick={() => router.push(`/${slug}`)}>ยืนยันและเปิดใช้ระบบ →</BtnGreen>
+                  <Button variant="outlined" onClick={() => go("w6")} sx={{ fontSize: 12, textTransform: "none", color: TEXT, borderColor: BORDER2 }}>← แก้ไข</Button>
+                  <Button variant="contained" onClick={() => router.push(`/${slug}`)} sx={{ bgcolor: GREEN, "&:hover": { bgcolor: GREEN }, fontSize: 12, fontWeight: 700, textTransform: "none" }}>ยืนยันและเปิดใช้ระบบ →</Button>
                 </WizAction>
-              </div>
-            </div>
+              </Box>
+            </Box>
           </>
         )}
 
@@ -1209,43 +1110,43 @@ function SetupWizardInner() {
               { label: "← กลับ Wizard", target: "w2a" },
             ]} />
             <TopBar />
-            <div className="relative flex-1 min-h-0">
+            <Box sx={{ position: "relative", flex: 1, minHeight: 0 }}>
               {/* Blurred background */}
-              <div className="p-5" style={{ filter: "blur(2px)", opacity: 0.4, pointerEvents: "none", background: BG, height: "100%" }}>
-                <div className="bg-white rounded-lg p-5" style={{ border: `1px solid ${BORDER}` }}>
-                  <div className="text-base font-bold mb-3">ข้อมูลนิติบุคคล</div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-md p-2.5 text-xs" style={{ border: `1px solid ${BORDER2}` }}>ชื่อบริษัท...</div>
-                    <div className="rounded-md p-2.5 text-xs" style={{ border: `1px solid ${BORDER2}` }}>เลขนิติบุคคล...</div>
-                  </div>
-                </div>
-              </div>
+              <Box sx={{ p: 2.5, filter: "blur(2px)", opacity: 0.4, pointerEvents: "none", bgcolor: BG, height: "100%" }}>
+                <Paper variant="outlined" sx={{ borderRadius: 2, p: 2.5, border: `1px solid ${BORDER}` }}>
+                  <Typography sx={{ fontSize: 16, fontWeight: 700, mb: 1.5 }}>ข้อมูลนิติบุคคล</Typography>
+                  <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5 }}>
+                    <Box sx={{ borderRadius: 1, p: 1.25, fontSize: 12, border: `1px solid ${BORDER2}` }}>ชื่อบริษัท...</Box>
+                    <Box sx={{ borderRadius: 1, p: 1.25, fontSize: 12, border: `1px solid ${BORDER2}` }}>เลขนิติบุคคล...</Box>
+                  </Box>
+                </Paper>
+              </Box>
               {/* Modal overlay */}
-              <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,.45)" }}>
-                <div className="bg-white rounded-xl shadow-2xl" style={{ padding: "26px 28px", width: 400 }}>
-                  <div className="text-[28px] text-center mb-2.5">⚠️</div>
-                  <div className="text-base font-bold text-center mb-2" style={{ color: RED }}>ยังตั้งค่าไม่ครบ</div>
-                  <div className="text-xs leading-relaxed mb-1.5" style={{ color: "#444" }}>ไม่สามารถออกจาก Wizard ได้จนกว่าจะตั้งค่า Critical step ครบทุกขั้น</div>
-                  <div className="text-xs mb-4">
-                    <div className="mb-1" style={{ color: RED }}>● Step 2 — สาขาแรก (ยังไม่ได้ตั้งค่า)</div>
-                    <div className="mb-1" style={{ color: RED }}>● Step 3 — การเงินพื้นฐาน (ยังไม่ได้ตั้งค่า)</div>
-                    <div style={{ color: RED }}>● Step 4 — คลังสินค้าแรก (ยังไม่ได้ตั้งค่า)</div>
-                  </div>
-                  <button onClick={() => go("w2a")} className="w-full py-2.5 rounded-[7px] text-[13px] font-bold text-white border-none cursor-pointer" style={{ background: OR }}>กลับไปตั้งค่า</button>
-                </div>
-              </div>
-            </div>
+              <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "rgba(0,0,0,.45)" }}>
+                <Paper elevation={8} sx={{ p: "26px 28px", width: 400, borderRadius: 3 }}>
+                  <Typography sx={{ fontSize: 28, textAlign: "center", mb: 1.25 }}>⚠️</Typography>
+                  <Typography sx={{ fontSize: 16, fontWeight: 700, textAlign: "center", mb: 1, color: RED }}>ยังตั้งค่าไม่ครบ</Typography>
+                  <Typography sx={{ fontSize: 12, lineHeight: 1.6, mb: 0.75, color: "#444" }}>ไม่สามารถออกจาก Wizard ได้จนกว่าจะตั้งค่า Critical step ครบทุกขั้น</Typography>
+                  <Box sx={{ fontSize: 12, mb: 2 }}>
+                    <Typography sx={{ mb: 0.5, color: RED, fontSize: 12 }}>● Step 2 — สาขาแรก (ยังไม่ได้ตั้งค่า)</Typography>
+                    <Typography sx={{ mb: 0.5, color: RED, fontSize: 12 }}>● Step 3 — การเงินพื้นฐาน (ยังไม่ได้ตั้งค่า)</Typography>
+                    <Typography sx={{ color: RED, fontSize: 12 }}>● Step 4 — คลังสินค้าแรก (ยังไม่ได้ตั้งค่า)</Typography>
+                  </Box>
+                  <Button fullWidth variant="contained" onClick={() => go("w2a")} sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, fontSize: 13, fontWeight: 700, textTransform: "none", borderRadius: "7px", py: 1.25 }}>กลับไปตั้งค่า</Button>
+                </Paper>
+              </Box>
+            </Box>
           </>
         )}
 
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
 
 export default function SetupWizardPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading...</Box>}>
       <SetupWizardInner />
     </Suspense>
   );

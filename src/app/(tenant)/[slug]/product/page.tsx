@@ -3,6 +3,40 @@
 import { useState, Suspense, useRef } from "react";
 import TenantShell from "@/components/layout/TenantShell";
 import {
+  Box,
+  Typography,
+  TextField,
+  MenuItem,
+  Button,
+  IconButton,
+  Tabs,
+  Tab,
+  Stack,
+  Paper,
+
+  Checkbox,
+  FormControlLabel,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Avatar,
+  Switch,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
+import InputAdornment from "@mui/material/InputAdornment";
+import DownloadIcon from "@mui/icons-material/Download";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import CloseIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
+import ImageIcon from "@mui/icons-material/Image";
+
+import {
   TENANT_PRIMARY as OR,
   TENANT_HOVER as OR_D,
   GREEN,
@@ -102,47 +136,21 @@ const mockProducts: Product[] = [
 /* ── REUSABLE COMPONENTS ── */
 /* ══════════════════════════════════════════════════ */
 
-const SubTabs = ({ active, tabs, onTab }: { active: string; tabs: { id: string; label: string }[]; onTab: (id: string) => void }) => (
-  <div className="flex items-center gap-6 mb-5">
-    {tabs.map((t) => (
-      <button key={t.id} onClick={() => onTab(t.id)}
-        className="px-4 py-2.5 rounded-lg text-base font-semibold transition-colors"
-        style={{ background: active === t.id ? OR : "transparent", color: active === t.id ? "white" : MUTED }}>
-        {t.label}
-      </button>
-    ))}
-  </div>
-);
-
-const Field = ({ label, value, onChange, required, disabled, type = "text", placeholder, className }: {
-  label: string; value: string; onChange?: (v: string) => void; required?: boolean; disabled?: boolean; type?: string; placeholder?: string; className?: string;
-}) => (
-  <div className={`field-group ${className || ""}`}>
-    <input type={type} value={value} onChange={(e) => onChange?.(e.target.value)} disabled={disabled} placeholder={placeholder || " "} />
-    <label>{label}{required && <span className="text-[#E53935] ml-0.5">*</span>}</label>
-  </div>
-);
-
-const Select = ({ label, value, onChange, options, required, disabled }: {
-  label: string; value: string; onChange?: (v: string) => void; options: string[]; required?: boolean; disabled?: boolean;
-}) => (
-  <div className="field-group">
-    <select value={value} onChange={(e) => onChange?.(e.target.value)} disabled={disabled} style={{ appearance: "none", background: "transparent" }}>
-      <option value="">เลือก...</option>
-      {options.map((o) => <option key={o} value={o}>{o}</option>)}
-    </select>
-    <label>{label}{required && <span className="text-[#E53935] ml-0.5">*</span>}</label>
-  </div>
-);
-
 const Section = ({ title, open, onToggle, children }: { title: string; open: boolean; onToggle: () => void; children: React.ReactNode }) => (
-  <div className="bg-white rounded-lg border mb-4" style={{ borderColor: BORDER }}>
-    <button onClick={onToggle} className="w-full flex items-center justify-between px-5 py-3 text-left">
-      <span className="font-bold text-base" style={{ color: OR }}>{title}</span>
-      <span className="text-lg" style={{ color: MUTED }}>{open ? "\u25B2" : "\u25BC"}</span>
-    </button>
-    {open && <div className="px-5 pb-5 border-t" style={{ borderColor: BORDER }}>{children}</div>}
-  </div>
+  <Paper variant="outlined" sx={{ borderColor: BORDER, borderRadius: 2, mb: 2 }}>
+    <Box
+      onClick={onToggle}
+      sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 2.5, py: 1.5, cursor: "pointer" }}
+    >
+      <Typography fontWeight={700} fontSize={15} sx={{ color: OR }}>{title}</Typography>
+      {open ? <ExpandLessIcon sx={{ color: MUTED }} /> : <ExpandMoreIcon sx={{ color: MUTED }} />}
+    </Box>
+    {open && (
+      <Box sx={{ px: 2.5, pb: 2.5, borderTop: `1px solid ${BORDER}` }}>
+        {children}
+      </Box>
+    )}
+  </Paper>
 );
 
 /* ── Product Type Modal ── */
@@ -155,30 +163,37 @@ const ProductTypeModal = ({ open, onClose, onSelect }: { open: boolean; onClose:
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.4)" }}>
-      <div className="bg-white rounded-xl shadow-2xl w-[700px] max-w-[95vw] overflow-hidden">
+    <Box sx={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "rgba(0,0,0,0.4)" }}>
+      <Paper sx={{ borderRadius: 3, width: 700, maxWidth: "95vw", overflow: "hidden", boxShadow: 24 }}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: BORDER }}>
-          <h2 className="text-lg font-bold" style={{ color: TEXT }}>เลือกรูปแบบสินค้า</h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 text-lg" style={{ color: MUTED }}>&times;</button>
-        </div>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 3, py: 2, borderBottom: `1px solid ${BORDER}` }}>
+          <Typography fontSize={18} fontWeight={700} sx={{ color: TEXT }}>เลือกรูปแบบสินค้า</Typography>
+          <IconButton onClick={onClose} size="small" sx={{ color: MUTED }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
         {/* Body */}
-        <div className="p-6 flex gap-4">
+        <Stack direction="row" spacing={2} sx={{ p: 3 }}>
           {types.map((t) => (
-            <button key={t.id} onClick={() => onSelect(t.id)}
-              className="flex-1 rounded-xl border-2 p-5 flex flex-col items-center text-center transition-all hover:shadow-lg hover:scale-[1.02]"
-              style={{ borderColor: t.color + "40" }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = t.color; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = t.color + "40"; }}>
-              <div className="text-4xl mb-3">{t.icon}</div>
-              <div className="font-bold text-base mb-1" style={{ color: t.color }}>{t.title}</div>
-              {t.example && <div className="text-xs mb-2" style={{ color: t.color }}>{t.example}</div>}
-              <div className="text-xs whitespace-pre-line" style={{ color: t.color }}>{t.desc}</div>
-            </button>
+            <Box
+              key={t.id}
+              onClick={() => onSelect(t.id)}
+              sx={{
+                flex: 1, borderRadius: 3, border: `2px solid ${t.color}40`, p: 2.5,
+                display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+                cursor: "pointer", transition: "all 0.2s",
+                "&:hover": { boxShadow: 6, transform: "scale(1.02)", borderColor: t.color },
+              }}
+            >
+              <Typography fontSize={36} sx={{ mb: 1.5 }}>{t.icon}</Typography>
+              <Typography fontWeight={700} fontSize={15} sx={{ color: t.color, mb: 0.5 }}>{t.title}</Typography>
+              {t.example && <Typography fontSize={12} sx={{ color: t.color, mb: 1 }}>{t.example}</Typography>}
+              <Typography fontSize={12} sx={{ color: t.color, whiteSpace: "pre-line" }}>{t.desc}</Typography>
+            </Box>
           ))}
-        </div>
-      </div>
-    </div>
+        </Stack>
+      </Paper>
+    </Box>
   );
 };
 
@@ -301,170 +316,211 @@ function ProductInner() {
     return (
       <TenantShell breadcrumb={breadcrumb} activeModule="products">
         {toast && (
-          <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium"
-            style={{ background: toast.type === "ok" ? GREEN_L : RED_L, color: toast.type === "ok" ? GREEN : RED, border: `1px solid ${toast.type === "ok" ? GREEN : RED}33` }}>
+          <Box sx={{
+            position: "fixed", top: 16, right: 16, zIndex: 50, px: 2.5, py: 1.5, borderRadius: 2,
+            boxShadow: 3, fontSize: 14, fontWeight: 500,
+            bgcolor: toast.type === "ok" ? GREEN_L : RED_L,
+            color: toast.type === "ok" ? GREEN : RED,
+            border: `1px solid ${toast.type === "ok" ? GREEN : RED}33`,
+          }}>
             {toast.msg}
-          </div>
+          </Box>
         )}
 
         <ProductTypeModal open={showTypeModal} onClose={() => setShowTypeModal(false)}
           onSelect={(type) => { setShowTypeModal(false); if (type === "general") setScreen("add"); }} />
 
-        <div className="flex justify-center items-start w-full min-h-full" style={{ background: BG }}>
-          <div className="w-full max-w-[1920px] px-6 py-6">
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "flex-start", width: "100%", minHeight: "100%", bgcolor: BG }}>
+          <Box sx={{ width: "100%", maxWidth: 1920, px: 3, py: 3 }}>
 
-            <h1 className="text-xl font-bold mb-1" style={{ color: TEXT }}>จัดการสินค้า</h1>
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5, color: TEXT }}>จัดการสินค้า</Typography>
 
             {/* Sub-tabs */}
-            <SubTabs active={tab} tabs={[
-              { id: "all", label: "สินค้าทั้งหมด" },
-              { id: "cancelled", label: "สินค้ายกเลิกขาย" },
-            ]} onTab={setTab} />
+            <Tabs
+              value={tab}
+              onChange={(_, v) => setTab(v)}
+              sx={{
+                mb: 2.5,
+                minHeight: 40,
+                "& .MuiTab-root": {
+                  textTransform: "none", fontWeight: 600, fontSize: 15, minHeight: 40, px: 2, borderRadius: 2,
+                },
+                "& .Mui-selected": { color: "white !important", bgcolor: OR, borderRadius: 2 },
+                "& .MuiTabs-indicator": { display: "none" },
+              }}
+            >
+              <Tab value="all" label="สินค้าทั้งหมด" />
+              <Tab value="cancelled" label="สินค้ายกเลิกขาย" />
+            </Tabs>
 
             {/* Content Card */}
-            <div className="bg-white rounded-xl overflow-hidden" style={{ boxShadow: "0 2px 10px 0 rgba(76,78,100,0.22)" }}>
+            <Paper sx={{ borderRadius: 3, overflow: "hidden", boxShadow: "0 2px 10px 0 rgba(76,78,100,0.22)" }}>
 
               {/* Toolbar / Filter */}
-              <div className="flex flex-wrap items-center gap-4 p-5">
+              <Stack direction="row" flexWrap="wrap" alignItems="center" spacing={2} sx={{ p: 2.5 }}>
                 {/* Export */}
-                <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors"
-                  style={{ background: OR }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = OR)}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <Button variant="contained" startIcon={<DownloadIcon />} size="small"
+                  sx={{ bgcolor: OR, "&:hover": { bgcolor: OR_D }, textTransform: "none", fontWeight: 500 }}>
                   EXPORT
-                </button>
+                </Button>
 
                 {/* Filter: ประเภทสินค้า */}
-                <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
-                  className="px-3 py-2 rounded-lg text-sm border" style={{ borderColor: "#B8B8C2", color: TEXT, minWidth: 160 }}>
-                  <option value="">ประเภทสินค้า</option>
-                  {PRODUCT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <TextField
+                  select size="small" value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  sx={{ minWidth: 160 }}
+                  SelectProps={{ displayEmpty: true }}
+                >
+                  <MenuItem value="">ประเภทสินค้า</MenuItem>
+                  {PRODUCT_TYPES.map((t) => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+                </TextField>
 
                 {/* Filter: ทั้งหมด */}
-                <select value={filterAll} onChange={(e) => setFilterAll(e.target.value)}
-                  className="px-3 py-2 rounded-lg text-sm border" style={{ borderColor: "#B8B8C2", color: TEXT, minWidth: 120 }}>
-                  <option value="">ทั้งหมด</option>
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <TextField
+                  select size="small" value={filterAll}
+                  onChange={(e) => setFilterAll(e.target.value)}
+                  sx={{ minWidth: 120 }}
+                  SelectProps={{ displayEmpty: true }}
+                >
+                  <MenuItem value="">ทั้งหมด</MenuItem>
+                  {CATEGORIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                </TextField>
 
-                <div className="flex-1" />
+                <Box sx={{ flex: 1 }} />
 
                 {/* Search */}
-                <div className="relative">
-                  <input value={search} onChange={(e) => setSearch(e.target.value)}
-                    placeholder="ค้นหาชื่อสินค้า / รหัสสินค้า / บาร์โค้ด"
-                    className="pl-3 pr-3 py-2 rounded-lg text-sm border" style={{ borderColor: "rgba(76,78,100,0.22)", width: 300 }} />
-                </div>
+                <TextField
+                  size="small" value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="ค้นหาชื่อสินค้า / รหัสสินค้า / บาร์โค้ด"
+                  sx={{ width: 300 }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: MUTED, fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
                 {/* Add button */}
-                <button onClick={() => setShowTypeModal(true)}
-                  className="px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors shadow"
-                  style={{ background: OR, boxShadow: "0 4px 8px -4px rgba(76,78,100,0.42)" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = OR)}>
+                <Button variant="contained" size="small"
+                  onClick={() => setShowTypeModal(true)}
+                  sx={{
+                    bgcolor: OR, "&:hover": { bgcolor: OR_D },
+                    textTransform: "none", fontWeight: 600, px: 2.5,
+                    boxShadow: "0 4px 8px -4px rgba(76,78,100,0.42)",
+                  }}>
                   เพิ่มสินค้า
-                </button>
-              </div>
+                </Button>
+              </Stack>
 
               {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm" style={{ color: TEXT }}>
-                  <thead>
-                    <tr style={{ background: "#F5F5F7" }}>
-                      {["รหัสสินค้า", "รูปภาพ", "ชื่อรายการ", "ประเภทสินค้า", "หมวดหมู่", "แบรนด์", "ขนาดบรรจุ", "ราคาขาย", "จัดการ"].map((h, i) => (
-                        <th key={h} className="px-5 py-3.5 text-left font-medium text-[15px] whitespace-nowrap" style={{ color: "#374151", borderBottom: `1px solid #F5F5F7`, borderTop: `1px solid #F5F5F7` }}>
-                          <div className="flex items-center gap-2">
-                            {h}
-                            {i < 8 && <div className="w-[2px] h-[14px] ml-auto" style={{ background: "rgba(76,78,100,0.12)" }} />}
-                          </div>
-                        </th>
+              <Box sx={{ overflowX: "auto" }}>
+                <Table size="small" sx={{ "& td, & th": { color: TEXT } }}>
+                  <TableHead>
+                    <TableRow sx={{ bgcolor: "#F5F5F7" }}>
+                      {["รหัสสินค้า", "รูปภาพ", "ชื่อรายการ", "ประเภทสินค้า", "หมวดหมู่", "แบรนด์", "ขนาดบรรจุ", "ราคาขาย", "จัดการ"].map((h) => (
+                        <TableCell key={h} sx={{ fontWeight: 500, fontSize: 14, whiteSpace: "nowrap", color: "#374151", borderBottom: "1px solid #F5F5F7", borderTop: "1px solid #F5F5F7", px: 2.5, py: 1.5 }}>
+                          {h}
+                        </TableCell>
                       ))}
-                    </tr>
-                  </thead>
-                  <tbody>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
                     {filtered.length === 0 ? (
-                      <tr><td colSpan={9} className="text-center py-10" style={{ color: MUTED }}>ไม่พบข้อมูลสินค้า</td></tr>
+                      <TableRow>
+                        <TableCell colSpan={9} align="center" sx={{ py: 5, color: MUTED }}>ไม่พบข้อมูลสินค้า</TableCell>
+                      </TableRow>
                     ) : filtered.map((prod) => (
-                      <tr key={prod.id} className="hover:bg-indigo-50/50 transition-colors" style={{ borderBottom: `1px solid rgba(76,78,100,0.12)` }}>
+                      <TableRow key={prod.id} hover sx={{ "& td": { borderBottom: "1px solid rgba(76,78,100,0.12)" } }}>
                         {/* รหัสสินค้า with color tag */}
-                        <td className="px-5 py-3 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <div className="w-[4px] h-[40px] rounded-full" style={{ background: prod.colorTag }} />
-                            <span className="text-sm cursor-pointer flex items-center gap-1" style={{ color: OR }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill={OR} stroke="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16" stroke="white" strokeWidth="2"/><line x1="8" y1="12" x2="16" y2="12" stroke="white" strokeWidth="2"/></svg>
+                        <TableCell sx={{ px: 2.5, py: 1.5, whiteSpace: "nowrap" }}>
+                          <Stack direction="row" alignItems="center" spacing={1}>
+                            <Box sx={{ width: 4, height: 40, borderRadius: 2, bgcolor: prod.colorTag }} />
+                            <Typography fontSize={14} sx={{ color: OR, cursor: "pointer", display: "flex", alignItems: "center", gap: 0.5 }}>
+                              <AddIcon sx={{ fontSize: 14, color: OR }} />
                               {prod.code}
-                            </span>
-                          </div>
-                        </td>
+                            </Typography>
+                          </Stack>
+                        </TableCell>
                         {/* รูปภาพ */}
-                        <td className="px-5 py-3">
-                          <div className="w-[50px] h-[50px] rounded-md bg-gray-100 flex items-center justify-center text-xs" style={{ color: MUTED }}>
-                            {prod.image ? <img src={prod.image} alt="" className="w-full h-full object-cover rounded-md" /> : "No img"}
-                          </div>
-                        </td>
+                        <TableCell sx={{ px: 2.5, py: 1.5 }}>
+                          <Avatar variant="rounded" sx={{ width: 50, height: 50, bgcolor: "#f5f5f5", color: MUTED, fontSize: 12 }}>
+                            {prod.image ? <Box component="img" src={prod.image} alt="" sx={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "No img"}
+                          </Avatar>
+                        </TableCell>
                         {/* ชื่อรายการ */}
-                        <td className="px-5 py-3 max-w-[300px]">
-                          <div className="text-sm font-normal" style={{ color: "#374151" }}>{prod.name}</div>
-                          <div className="text-xs mt-0.5 flex items-center gap-1" style={{ color: MUTED }}>
-                            Barcode : {prod.barcode}
-                            <button className="ml-1 opacity-50 hover:opacity-100">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            </button>
-                          </div>
-                        </td>
+                        <TableCell sx={{ px: 2.5, py: 1.5, maxWidth: 300 }}>
+                          <Typography fontSize={14} sx={{ color: "#374151" }}>{prod.name}</Typography>
+                          <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.25 }}>
+                            <Typography fontSize={12} sx={{ color: MUTED }}>
+                              Barcode : {prod.barcode}
+                            </Typography>
+                            <IconButton size="small" sx={{ opacity: 0.5, "&:hover": { opacity: 1 } }}>
+                              <ContentCopyIcon sx={{ fontSize: 12 }} />
+                            </IconButton>
+                          </Stack>
+                        </TableCell>
                         {/* ประเภทสินค้า */}
-                        <td className="px-5 py-3 text-sm" style={{ color: "#374151" }}>{prod.type}</td>
+                        <TableCell sx={{ px: 2.5, py: 1.5, fontSize: 14, color: "#374151" }}>{prod.type}</TableCell>
                         {/* หมวดหมู่ */}
-                        <td className="px-5 py-3">
-                          <div className="text-xs" style={{ color: "#374151" }}>{prod.category}</div>
-                          <div className="text-sm font-medium" style={{ color: "#374151" }}>{prod.subCategory}</div>
-                        </td>
+                        <TableCell sx={{ px: 2.5, py: 1.5 }}>
+                          <Typography fontSize={12} sx={{ color: "#374151" }}>{prod.category}</Typography>
+                          <Typography fontSize={14} fontWeight={500} sx={{ color: "#374151" }}>{prod.subCategory}</Typography>
+                        </TableCell>
                         {/* แบรนด์ */}
-                        <td className="px-5 py-3 text-sm" style={{ color: "#374151" }}>{prod.brand}</td>
+                        <TableCell sx={{ px: 2.5, py: 1.5, fontSize: 14, color: "#374151" }}>{prod.brand}</TableCell>
                         {/* ขนาดบรรจุ */}
-                        <td className="px-5 py-3 text-sm text-center" style={{ color: "#374151" }}>{prod.packSize}</td>
+                        <TableCell align="center" sx={{ px: 2.5, py: 1.5, fontSize: 14, color: "#374151" }}>{prod.packSize}</TableCell>
                         {/* ราคาขาย */}
-                        <td className="px-5 py-3 text-right">
-                          <div className="font-semibold" style={{ color: OR }}>{prod.sellPrice.toFixed(2)} / {prod.sellUnit}</div>
+                        <TableCell align="right" sx={{ px: 2.5, py: 1.5 }}>
+                          <Typography fontWeight={600} sx={{ color: OR }}>{prod.sellPrice.toFixed(2)} / {prod.sellUnit}</Typography>
                           {prod.bulkPrice > 0 && (
-                            <div className="text-xs" style={{ color: MUTED }}>{prod.bulkPrice.toFixed(2)} / {prod.bulkUnit}</div>
+                            <Typography fontSize={12} sx={{ color: MUTED }}>{prod.bulkPrice.toFixed(2)} / {prod.bulkUnit}</Typography>
                           )}
-                        </td>
+                        </TableCell>
                         {/* จัดการ */}
-                        <td className="px-5 py-3">
-                          <button className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-indigo-50"
-                            style={{ border: `1px solid ${BORDER}` }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={OR} strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                          </button>
-                        </td>
-                      </tr>
+                        <TableCell sx={{ px: 2.5, py: 1.5 }}>
+                          <IconButton size="small" sx={{ border: `1px solid ${BORDER}`, "&:hover": { bgcolor: "rgba(86,93,255,0.04)" } }}>
+                            <EditIcon sx={{ fontSize: 16, color: OR }} />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </TableBody>
+                </Table>
+              </Box>
 
               {/* Pagination */}
-              <div className="flex items-center justify-end px-5 py-3" style={{ borderTop: `1px solid ${BORDER}` }}>
-                <div className="flex items-center gap-4 text-sm">
-                  <span style={{ color: "#9294A1" }}>จำนวนรายการต่อหน้า</span>
-                  <select className="border-0 text-sm font-medium" style={{ color: "#4C4E63" }}>
-                    <option>6</option><option>25</option><option>50</option>
-                  </select>
-                  <span style={{ color: "#9294A1" }}>1-{filtered.length} of {filtered.length}</span>
-                  <div className="flex items-center gap-1.5">
-                    <button className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-xs opacity-40">&lt;</button>
-                    <button className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-xs text-white" style={{ background: OR }}>1</button>
-                    <button className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-xs" style={{ color: "#4C4E63" }}>2</button>
-                    <button className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-xs" style={{ color: MUTED }}>&gt;</button>
-                  </div>
-                </div>
-              </div>
+              <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={2} sx={{ px: 2.5, py: 1.5, borderTop: `1px solid ${BORDER}` }}>
+                <Typography fontSize={14} sx={{ color: "#9294A1" }}>จำนวนรายการต่อหน้า</Typography>
+                <TextField select size="small" defaultValue="6" variant="standard"
+                  sx={{ width: 50, "& .MuiInput-underline:before": { display: "none" }, "& .MuiInput-underline:after": { display: "none" } }}>
+                  <MenuItem value="6">6</MenuItem>
+                  <MenuItem value="25">25</MenuItem>
+                  <MenuItem value="50">50</MenuItem>
+                </TextField>
+                <Typography fontSize={14} sx={{ color: "#9294A1" }}>1-{filtered.length} of {filtered.length}</Typography>
+                <Stack direction="row" alignItems="center" spacing={0.75}>
+                  <IconButton size="small" disabled sx={{ opacity: 0.4 }}>
+                    <Typography fontSize={12}>&lt;</Typography>
+                  </IconButton>
+                  <Box sx={{ width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: OR, color: "white", fontSize: 12 }}>
+                    1
+                  </Box>
+                  <Box sx={{ width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#4C4E63", fontSize: 12, cursor: "pointer" }}>
+                    2
+                  </Box>
+                  <IconButton size="small" sx={{ color: MUTED }}>
+                    <Typography fontSize={12}>&gt;</Typography>
+                  </IconButton>
+                </Stack>
+              </Stack>
 
-            </div>{/* end card */}
-          </div>
-        </div>
+            </Paper>{/* end card */}
+          </Box>
+        </Box>
       </TenantShell>
     );
   }
@@ -484,272 +540,342 @@ function ProductInner() {
   return (
     <TenantShell breadcrumb={breadcrumb} activeModule="products">
       {toast && (
-        <div className="fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium"
-          style={{ background: toast.type === "ok" ? GREEN_L : RED_L, color: toast.type === "ok" ? GREEN : RED, border: `1px solid ${toast.type === "ok" ? GREEN : RED}33` }}>
+        <Box sx={{
+          position: "fixed", top: 16, right: 16, zIndex: 50, px: 2.5, py: 1.5, borderRadius: 2,
+          boxShadow: 3, fontSize: 14, fontWeight: 500,
+          bgcolor: toast.type === "ok" ? GREEN_L : RED_L,
+          color: toast.type === "ok" ? GREEN : RED,
+          border: `1px solid ${toast.type === "ok" ? GREEN : RED}33`,
+        }}>
           {toast.msg}
-        </div>
+        </Box>
       )}
 
-      <div className="flex justify-center items-start w-full min-h-full" style={{ background: BG }}>
-        <div className="w-full max-w-[1920px] px-6 py-6">
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "flex-start", width: "100%", minHeight: "100%", bgcolor: BG }}>
+        <Box sx={{ width: "100%", maxWidth: 1920, px: 3, py: 3 }}>
 
-          <h1 className="text-xl font-bold mb-5" style={{ color: TEXT }}>สินค้า</h1>
+          <Typography variant="h6" fontWeight={700} sx={{ mb: 2.5, color: TEXT }}>สินค้า</Typography>
 
-          <div className="flex gap-6 items-start">
+          <Stack direction="row" spacing={3} alignItems="flex-start">
             {/* ── Main Content ── */}
-            <div className="flex-1 min-w-0">
+            <Box sx={{ flex: 1, minWidth: 0 }}>
 
               {/* Section 1: ข้อมูลทั่วไป */}
               <Section title="ข้อมูลทั่วไป" open={sections.general} onToggle={() => toggleSection("general")}>
-                <div className="flex items-center justify-end mb-3">
-                  <button className="text-xs underline" style={{ color: OR }}>ระบบสร้างรหัสสินค้าอัตโนมัติ</button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                  <Field label="รหัสสินค้า (SKU)" value={sku} onChange={setSku} required />
-                  <div className="flex gap-2 items-end">
-                    <div className="flex-1">
-                      <Field label="Barcode" value={barcode} onChange={setBarcode} required />
-                    </div>
-                    <button className="w-10 h-10 rounded-lg border flex items-center justify-center mb-0.5" style={{ borderColor: BORDER }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={MUTED} strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="7" x2="7" y2="17"/><line x1="11" y1="7" x2="11" y2="17"/><line x1="15" y1="7" x2="15" y2="13"/></svg>
-                    </button>
-                  </div>
-                  <Field label="ชื่อสินค้าภาษาไทย (TH)" value={nameTH} onChange={setNameTH} required />
-                  <Field label="ชื่อสินค้าภาษาอังกฤษ (EN)" value={nameEN} onChange={setNameEN} />
-                </div>
-                <div className="grid grid-cols-1 gap-4 mt-4">
-                  <Select label="ชื่อผู้จำหน่าย (Supplier Name)" value={supplier} onChange={setSupplier} options={SUPPLIERS} />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Field label="รหัสสินค้าจากผู้จำหน่าย (Supplier Code)" value={supplierCode} onChange={setSupplierCode} />
-                    <Field label="ชื่อสินค้าจากผู้จำหน่าย (Supplier Product Name)" value={supplierProductName} onChange={setSupplierProductName} />
-                  </div>
-                </div>
+                <Stack direction="row" justifyContent="flex-end" sx={{ mb: 1.5 }}>
+                  <Typography fontSize={12} sx={{ color: OR, textDecoration: "underline", cursor: "pointer" }}>ระบบสร้างรหัสสินค้าอัตโนมัติ</Typography>
+                </Stack>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2, mt: 1 }}>
+                  <TextField size="small" label="รหัสสินค้า (SKU)" value={sku} onChange={(e) => setSku(e.target.value)} required />
+                  <Stack direction="row" spacing={1} alignItems="flex-end">
+                    <TextField size="small" label="Barcode" value={barcode} onChange={(e) => setBarcode(e.target.value)} required fullWidth />
+                    <IconButton sx={{ border: `1px solid ${BORDER}`, borderRadius: 2, width: 40, height: 40, mb: 0.25 }}>
+                      <QrCodeScannerIcon sx={{ color: MUTED, fontSize: 18 }} />
+                    </IconButton>
+                  </Stack>
+                  <TextField size="small" label="ชื่อสินค้าภาษาไทย (TH)" value={nameTH} onChange={(e) => setNameTH(e.target.value)} required />
+                  <TextField size="small" label="ชื่อสินค้าภาษาอังกฤษ (EN)" value={nameEN} onChange={(e) => setNameEN(e.target.value)} />
+                </Box>
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr", gap: 2, mt: 2 }}>
+                  <TextField size="small" select label="ชื่อผู้จำหน่าย (Supplier Name)" value={supplier} onChange={(e) => setSupplier(e.target.value)}>
+                    <MenuItem value="">เลือก...</MenuItem>
+                    {SUPPLIERS.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                  </TextField>
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
+                    <TextField size="small" label="รหัสสินค้าจากผู้จำหน่าย (Supplier Code)" value={supplierCode} onChange={(e) => setSupplierCode(e.target.value)} />
+                    <TextField size="small" label="ชื่อสินค้าจากผู้จำหน่าย (Supplier Product Name)" value={supplierProductName} onChange={(e) => setSupplierProductName(e.target.value)} />
+                  </Box>
+                </Box>
               </Section>
 
               {/* Section 2: ข้อมูลสินค้า */}
               <Section title="ข้อมูลสินค้า" open={sections.product} onToggle={() => toggleSection("product")}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-                  <Select label="ประเภทสินค้า" value={prodType} onChange={setProdType} options={PRODUCT_TYPES} required />
-                  <Select label="หมวดหมู่หลัก" value={mainCategory} onChange={setMainCategory} options={CATEGORIES} />
-                  <Select label="หมวดหมู่ย่อย" value={subCategory} onChange={setSubCategory} options={SUB_CATEGORIES} />
-                  <Select label="ยี่ห้อ (แบรนด์)" value={brand} onChange={setBrand} options={BRANDS} />
-                </div>
-                <div className="mt-4">
-                  <label className="text-xs font-medium mb-1 block" style={{ color: MUTED }}>รายละเอียดสินค้า</label>
-                  <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none"
-                    style={{ borderColor: BORDER, color: TEXT }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = OR; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = BORDER; }}
-                    placeholder="ระบุรายละเอียดสินค้า..." />
-                </div>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2, mt: 1.5 }}>
+                  <TextField size="small" select label="ประเภทสินค้า" value={prodType} onChange={(e) => setProdType(e.target.value)} required>
+                    <MenuItem value="">เลือก...</MenuItem>
+                    {PRODUCT_TYPES.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                  </TextField>
+                  <TextField size="small" select label="หมวดหมู่หลัก" value={mainCategory} onChange={(e) => setMainCategory(e.target.value)}>
+                    <MenuItem value="">เลือก...</MenuItem>
+                    {CATEGORIES.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                  </TextField>
+                  <TextField size="small" select label="หมวดหมู่ย่อย" value={subCategory} onChange={(e) => setSubCategory(e.target.value)}>
+                    <MenuItem value="">เลือก...</MenuItem>
+                    {SUB_CATEGORIES.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                  </TextField>
+                  <TextField size="small" select label="ยี่ห้อ (แบรนด์)" value={brand} onChange={(e) => setBrand(e.target.value)}>
+                    <MenuItem value="">เลือก...</MenuItem>
+                    {BRANDS.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                  </TextField>
+                </Box>
+                <Box sx={{ mt: 2 }}>
+                  <TextField
+                    size="small" fullWidth multiline rows={3}
+                    label="รายละเอียดสินค้า"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="ระบุรายละเอียดสินค้า..."
+                  />
+                </Box>
               </Section>
 
               {/* Section 3: กำหนดราคาน่าเสนอ */}
               <Section title="กำหนดราคาน่าเสนอ" open={sections.pricing} onToggle={() => toggleSection("pricing")}>
-                <div className="flex items-center gap-3 mt-3 mb-3">
-                  <button className="px-4 py-1.5 rounded-lg text-xs font-medium" style={{ color: MUTED, border: `1px solid ${BORDER}` }}>กำหนดราคาขาย</button>
-                  <button className="px-4 py-1.5 rounded-lg text-xs font-medium text-white" style={{ background: OR }}>ตั้งค่าเพิ่มเติม</button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field label="ราคาทุน" value={costPrice} onChange={setCostPrice} type="number" />
-                  <Field label="ราคาขาย" value={sellPriceVal} onChange={setSellPriceVal} type="number" required />
-                </div>
+                <Stack direction="row" spacing={1.5} sx={{ mt: 1.5, mb: 1.5 }}>
+                  <Button size="small" variant="outlined"
+                    sx={{ textTransform: "none", color: MUTED, borderColor: BORDER, fontSize: 12 }}>
+                    กำหนดราคาขาย
+                  </Button>
+                  <Button size="small" variant="contained"
+                    sx={{ textTransform: "none", bgcolor: OR, "&:hover": { bgcolor: OR_D }, fontSize: 12 }}>
+                    ตั้งค่าเพิ่มเติม
+                  </Button>
+                </Stack>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
+                  <TextField size="small" label="ราคาทุน" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} type="number" />
+                  <TextField size="small" label="ราคาขาย" value={sellPriceVal} onChange={(e) => setSellPriceVal(e.target.value)} type="number" required />
+                </Box>
               </Section>
 
               {/* Section 4: ตั้งค่าเพิ่มเติม — Multi-unit */}
               <Section title="ตั้งค่าเพิ่มเติม" open={sections.units} onToggle={() => toggleSection("units")}>
-                <div className="mt-3 mb-3 p-3 rounded-lg" style={{ background: "#FFF3E6", border: "1px solid #E8913A33" }}>
-                  <p className="text-xs font-medium" style={{ color: "#E8913A" }}>แพ็คไซส์</p>
-                  <p className="text-sm font-semibold" style={{ color: RED }}>1 กล่อง เท่ากับ 10 แผง</p>
-                </div>
+                <Paper variant="outlined" sx={{ mt: 1.5, mb: 1.5, p: 1.5, borderRadius: 2, bgcolor: "#FFF3E6", borderColor: "#E8913A33" }}>
+                  <Typography fontSize={12} fontWeight={500} sx={{ color: "#E8913A" }}>แพ็คไซส์</Typography>
+                  <Typography fontSize={14} fontWeight={600} sx={{ color: RED }}>1 กล่อง เท่ากับ 10 แผง</Typography>
+                </Paper>
 
                 {units.map((u, idx) => (
-                  <div key={idx} className="mb-4 pb-4" style={{ borderBottom: idx < units.length - 1 ? `1px solid ${BORDER}` : "none" }}>
-                    <div className="grid grid-cols-4 gap-3 mb-3">
-                      <div className="flex gap-2 items-end">
-                        <div className="flex-1">
-                          <Field label="Barcode" value={u.barcode} onChange={(v) => updateUnit(idx, "barcode", v)} />
-                        </div>
-                        <button className="w-8 h-8 rounded border flex items-center justify-center mb-0.5" style={{ borderColor: BORDER }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MUTED} strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="7" x2="7" y2="17"/><line x1="11" y1="7" x2="11" y2="17"/><line x1="15" y1="7" x2="15" y2="13"/></svg>
-                        </button>
-                      </div>
-                      <Select label="หน่วย" value={u.unitName} onChange={(v) => updateUnit(idx, "unitName", v)} options={UNITS} />
-                      <Field label="อัตราส่วน" value={String(u.ratio)} onChange={(v) => updateUnit(idx, "ratio", Number(v))} type="number" />
-                      <Field label="Container" value={u.container} onChange={(v) => updateUnit(idx, "container", v)} />
-                    </div>
-                    <div className="flex items-center gap-6 text-xs" style={{ color: TEXT }}>
+                  <Box key={idx} sx={{ mb: 2, pb: 2, borderBottom: idx < units.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1.5, mb: 1.5 }}>
+                      <Stack direction="row" spacing={1} alignItems="flex-end">
+                        <TextField size="small" label="Barcode" value={u.barcode} onChange={(e) => updateUnit(idx, "barcode", e.target.value)} fullWidth />
+                        <IconButton sx={{ border: `1px solid ${BORDER}`, borderRadius: 1, width: 32, height: 32, mb: 0.25 }}>
+                          <QrCodeScannerIcon sx={{ fontSize: 14, color: MUTED }} />
+                        </IconButton>
+                      </Stack>
+                      <TextField size="small" select label="หน่วย" value={u.unitName} onChange={(e) => updateUnit(idx, "unitName", e.target.value)}>
+                        <MenuItem value="">เลือก...</MenuItem>
+                        {UNITS.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                      </TextField>
+                      <TextField size="small" label="อัตราส่วน" value={String(u.ratio)} onChange={(e) => updateUnit(idx, "ratio", Number(e.target.value))} type="number" />
+                      <TextField size="small" label="Container" value={u.container} onChange={(e) => updateUnit(idx, "container", e.target.value)} />
+                    </Box>
+                    <Stack direction="row" spacing={3} alignItems="center">
                       {[
                         { key: "isBuy" as const, label: "หน่วยซื้อ" },
                         { key: "isSell" as const, label: "หน่วยขาย" },
                         { key: "isTransfer" as const, label: "หน่วยโอน" },
                         { key: "isUMS" as const, label: "หน่วย UMS" },
-                        { key: "isUML" as const, label: "หน่วยแปลงผล\n(UML)" },
+                        { key: "isUML" as const, label: "หน่วยแปลงผล (UML)" },
                       ].map(({ key, label }) => (
-                        <label key={key} className="flex flex-col items-center gap-1 cursor-pointer">
-                          <span className="text-center whitespace-pre-line">{label}</span>
-                          <input type="checkbox" checked={u[key] as boolean} onChange={(e) => updateUnit(idx, key, e.target.checked)}
-                            className="w-4 h-4 rounded" style={{ accentColor: OR }} />
-                        </label>
+                        <FormControlLabel
+                          key={key}
+                          control={
+                            <Checkbox
+                              checked={u[key] as boolean}
+                              onChange={(e) => updateUnit(idx, key, e.target.checked)}
+                              size="small"
+                              sx={{ color: BORDER, "&.Mui-checked": { color: OR } }}
+                            />
+                          }
+                          label={<Typography fontSize={12} sx={{ color: TEXT }}>{label}</Typography>}
+                          sx={{ mr: 0 }}
+                        />
                       ))}
-                    </div>
-                  </div>
+                    </Stack>
+                  </Box>
                 ))}
               </Section>
 
               {/* Section 5: ข้อมูลจำเพาะสินค้า */}
               <Section title="ข้อมูลจำเพาะสินค้า" open={sections.spec} onToggle={() => toggleSection("spec")}>
-                <div className="grid grid-cols-2 gap-4 mt-3 mb-4">
-                  <Field label="ขนาดบรรจุสินค้า" value={packWeight} onChange={setPackWeight} />
-                  <Select label="หน่วยบรรจุ" value={packWeightUnit} onChange={setPackWeightUnit} options={WEIGHT_UNITS} />
-                </div>
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mt: 1.5, mb: 2 }}>
+                  <TextField size="small" label="ขนาดบรรจุสินค้า" value={packWeight} onChange={(e) => setPackWeight(e.target.value)} />
+                  <TextField size="small" select label="หน่วยบรรจุ" value={packWeightUnit} onChange={(e) => setPackWeightUnit(e.target.value)}>
+                    <MenuItem value="">เลือก...</MenuItem>
+                    {WEIGHT_UNITS.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                  </TextField>
+                </Box>
 
                 {specs.map((s, idx) => (
-                  <div key={idx} className="mb-4 pb-4" style={{ borderBottom: idx < specs.length - 1 ? `1px solid ${BORDER}` : "none" }}>
-                    <div className="grid grid-cols-4 gap-3 mb-2">
-                      <div className="flex gap-2 items-end">
-                        <div className="flex-1">
-                          <Field label="Barcode" value={s.barcode} onChange={(v) => updateSpec(idx, "barcode", v)} />
-                        </div>
-                        <button className="w-8 h-8 rounded border flex items-center justify-center mb-0.5" style={{ borderColor: BORDER }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={MUTED} strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-                        </button>
-                      </div>
-                      <Select label="หน่วย" value={s.unitName} onChange={(v) => updateSpec(idx, "unitName", v)} options={UNITS} />
-                      <Field label="น้ำหนักสินค้า" value={s.weight} onChange={(v) => updateSpec(idx, "weight", v)} />
-                      <Select label="หน่วยน้ำหนัก" value={s.weightUnit} onChange={(v) => updateSpec(idx, "weightUnit", v)} options={WEIGHT_UNITS} />
-                    </div>
-                    <div className="grid grid-cols-4 gap-3">
-                      <Field label="ความกว้าง" value={s.width} onChange={(v) => updateSpec(idx, "width", v)} />
-                      <Field label="ความยาว" value={s.length} onChange={(v) => updateSpec(idx, "length", v)} />
-                      <Field label="ความสูง" value={s.height} onChange={(v) => updateSpec(idx, "height", v)} />
-                      <Select label="หน่วย Dimension" value={s.dimUnit} onChange={(v) => updateSpec(idx, "dimUnit", v)} options={DIM_UNITS} />
-                    </div>
-                  </div>
+                  <Box key={idx} sx={{ mb: 2, pb: 2, borderBottom: idx < specs.length - 1 ? `1px solid ${BORDER}` : "none" }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1.5, mb: 1 }}>
+                      <Stack direction="row" spacing={1} alignItems="flex-end">
+                        <TextField size="small" label="Barcode" value={s.barcode} onChange={(e) => updateSpec(idx, "barcode", e.target.value)} fullWidth />
+                        <IconButton sx={{ border: `1px solid ${BORDER}`, borderRadius: 1, width: 32, height: 32, mb: 0.25 }}>
+                          <QrCodeScannerIcon sx={{ fontSize: 14, color: MUTED }} />
+                        </IconButton>
+                      </Stack>
+                      <TextField size="small" select label="หน่วย" value={s.unitName} onChange={(e) => updateSpec(idx, "unitName", e.target.value)}>
+                        <MenuItem value="">เลือก...</MenuItem>
+                        {UNITS.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                      </TextField>
+                      <TextField size="small" label="น้ำหนักสินค้า" value={s.weight} onChange={(e) => updateSpec(idx, "weight", e.target.value)} />
+                      <TextField size="small" select label="หน่วยน้ำหนัก" value={s.weightUnit} onChange={(e) => updateSpec(idx, "weightUnit", e.target.value)}>
+                        <MenuItem value="">เลือก...</MenuItem>
+                        {WEIGHT_UNITS.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                      </TextField>
+                    </Box>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1.5 }}>
+                      <TextField size="small" label="ความกว้าง" value={s.width} onChange={(e) => updateSpec(idx, "width", e.target.value)} />
+                      <TextField size="small" label="ความยาว" value={s.length} onChange={(e) => updateSpec(idx, "length", e.target.value)} />
+                      <TextField size="small" label="ความสูง" value={s.height} onChange={(e) => updateSpec(idx, "height", e.target.value)} />
+                      <TextField size="small" select label="หน่วย Dimension" value={s.dimUnit} onChange={(e) => updateSpec(idx, "dimUnit", e.target.value)}>
+                        <MenuItem value="">เลือก...</MenuItem>
+                        {DIM_UNITS.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+                      </TextField>
+                    </Box>
+                  </Box>
                 ))}
               </Section>
 
               {/* Section 6: รูปภาพสินค้า */}
               <Section title="รูปภาพสินค้า" open={sections.images} onToggle={() => toggleSection("images")}>
-                <div className="mt-3">
-                  <p className="text-sm font-medium mb-3" style={{ color: TEXT }}>ภาพสินค้ามาตรฐาน</p>
-                  <div className="w-24 h-24 rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:border-indigo-300 transition-colors mb-2"
-                    style={{ borderColor: BORDER, background: "#FAFAFA" }}
-                    onClick={() => fileRef.current?.click()}>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={MUTED} strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-                    <span className="text-[10px] mt-1" style={{ color: MUTED }}>อัพโหลด</span>
-                  </div>
-                  <input ref={fileRef} type="file" accept="image/*" className="hidden" />
-                  <ul className="text-xs space-y-0.5" style={{ color: MUTED }}>
-                    <li>- อัปโหลดรูปภาพความละเอียดไม่เกิน 2 MB</li>
-                    <li>- รูปสินค้าจะแสดงหน้าสินค้า และหน้าสั่งสินค้า</li>
-                  </ul>
+                <Box sx={{ mt: 1.5 }}>
+                  <Typography fontSize={14} fontWeight={500} sx={{ mb: 1.5, color: TEXT }}>ภาพสินค้ามาตรฐาน</Typography>
+                  <Box
+                    onClick={() => fileRef.current?.click()}
+                    sx={{
+                      width: 96, height: 96, borderRadius: 2, border: `2px dashed ${BORDER}`,
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", bgcolor: "#FAFAFA", mb: 1,
+                      "&:hover": { borderColor: "rgba(86,93,255,0.3)" },
+                      transition: "border-color 0.2s",
+                    }}
+                  >
+                    <ImageIcon sx={{ fontSize: 28, color: MUTED }} />
+                    <Typography fontSize={10} sx={{ mt: 0.5, color: MUTED }}>อัพโหลด</Typography>
+                  </Box>
+                  <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} />
+                  <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0 }}>
+                    <Typography component="li" fontSize={12} sx={{ color: MUTED }}>- อัปโหลดรูปภาพความละเอียดไม่เกิน 2 MB</Typography>
+                    <Typography component="li" fontSize={12} sx={{ color: MUTED }}>- รูปสินค้าจะแสดงหน้าสินค้า และหน้าสั่งสินค้า</Typography>
+                  </Box>
 
-                  <p className="text-sm font-medium mt-5 mb-3" style={{ color: TEXT }}>แกลเลอรี่</p>
-                  <div className="w-24 h-24 rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:border-indigo-300 transition-colors"
-                    style={{ borderColor: BORDER, background: "#FAFAFA" }}>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={MUTED} strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-                    <span className="text-[10px] mt-1" style={{ color: MUTED }}>เพิ่มรูปภาพ<br/>0/6</span>
-                  </div>
-                  <ul className="text-xs space-y-0.5 mt-2" style={{ color: MUTED }}>
-                    <li>- อัปโหลดรูปภาพความละเอียดไม่เกิน 2 MB</li>
-                    <li>- รูปเป็นเพิ่มแสดงสินค้าได้เป็นสินค้าต่างๆ และหน้าสินค้าหลายๆ</li>
-                  </ul>
-                </div>
+                  <Typography fontSize={14} fontWeight={500} sx={{ mt: 2.5, mb: 1.5, color: TEXT }}>แกลเลอรี่</Typography>
+                  <Box
+                    sx={{
+                      width: 96, height: 96, borderRadius: 2, border: `2px dashed ${BORDER}`,
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", bgcolor: "#FAFAFA",
+                      "&:hover": { borderColor: "rgba(86,93,255,0.3)" },
+                      transition: "border-color 0.2s",
+                    }}
+                  >
+                    <ImageIcon sx={{ fontSize: 28, color: MUTED }} />
+                    <Typography fontSize={10} sx={{ mt: 0.5, color: MUTED, textAlign: "center" }}>เพิ่มรูปภาพ<br/>0/6</Typography>
+                  </Box>
+                  <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0, mt: 1 }}>
+                    <Typography component="li" fontSize={12} sx={{ color: MUTED }}>- อัปโหลดรูปภาพความละเอียดไม่เกิน 2 MB</Typography>
+                    <Typography component="li" fontSize={12} sx={{ color: MUTED }}>- รูปเป็นเพิ่มแสดงสินค้าได้เป็นสินค้าต่างๆ และหน้าสินค้าหลายๆ</Typography>
+                  </Box>
+                </Box>
               </Section>
 
               {/* Section 7: ประวัติการแก้ไข */}
               <Section title="ประวัติการแก้ไข" open={sections.history} onToggle={() => toggleSection("history")}>
-                <div className="flex items-center gap-3 mt-3 mb-3">
-                  <span className="text-xs" style={{ color: MUTED }}>เลือกดูตามประเภท</span>
-                  <select className="px-3 py-1.5 rounded-lg text-xs border" style={{ borderColor: BORDER, color: TEXT }}>
-                    <option>ทั้งหมด</option>
-                  </select>
-                </div>
-                <table className="w-full text-xs" style={{ color: TEXT }}>
-                  <thead>
-                    <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
+                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: 1.5, mb: 1.5 }}>
+                  <Typography fontSize={12} sx={{ color: MUTED }}>เลือกดูตามประเภท</Typography>
+                  <TextField size="small" select defaultValue="" sx={{ minWidth: 100 }}>
+                    <MenuItem value="">ทั้งหมด</MenuItem>
+                  </TextField>
+                </Stack>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ borderBottom: `1px solid ${BORDER}` }}>
                       {["วัน-เวลา", "ประเภท", "รายละเอียด", "ผู้ดำเนินการ"].map((h) => (
-                        <th key={h} className="text-left py-2 px-3 font-medium" style={{ color: MUTED }}>{h}</th>
+                        <TableCell key={h} sx={{ fontWeight: 500, color: MUTED, fontSize: 12, py: 1, px: 1.5 }}>{h}</TableCell>
                       ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td colSpan={4} className="text-center py-6" style={{ color: MUTED }}>ยังไม่มีประวัติการแก้ไข</td></tr>
-                  </tbody>
-                </table>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={4} align="center" sx={{ py: 3, color: MUTED, fontSize: 12 }}>ยังไม่มีประวัติการแก้ไข</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </Section>
 
               {/* Footer Buttons */}
-              <div className="flex items-center justify-end gap-3 mt-4 pb-6">
-                <button onClick={() => setScreen("list")}
-                  className="px-6 py-2.5 rounded-lg text-sm font-medium border transition-colors"
-                  style={{ borderColor: BORDER, color: MUTED }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = OR; e.currentTarget.style.color = OR; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = MUTED; }}>
+              <Stack direction="row" justifyContent="flex-end" spacing={1.5} sx={{ mt: 2, pb: 3 }}>
+                <Button variant="outlined" onClick={() => setScreen("list")}
+                  sx={{
+                    textTransform: "none", px: 3, py: 1, fontWeight: 500, fontSize: 14,
+                    borderColor: BORDER, color: MUTED,
+                    "&:hover": { borderColor: OR, color: OR },
+                  }}>
                   ยกเลิก
-                </button>
-                <button onClick={handleSave}
-                  className="px-8 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors"
-                  style={{ background: OR }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = OR_D)}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = OR)}>
+                </Button>
+                <Button variant="contained" onClick={handleSave}
+                  sx={{
+                    textTransform: "none", px: 4, py: 1, fontWeight: 600, fontSize: 14,
+                    bgcolor: OR, "&:hover": { bgcolor: OR_D },
+                  }}>
                   บันทึก
-                </button>
-              </div>
-            </div>
+                </Button>
+              </Stack>
+            </Box>
 
             {/* ── Right Sidebar ── */}
-            <div className="w-[240px] shrink-0 sticky top-4">
+            <Box sx={{ width: 240, flexShrink: 0, position: "sticky", top: 16 }}>
               {/* Section Navigator */}
-              <div className="bg-white rounded-lg border p-4 mb-4" style={{ borderColor: BORDER }}>
+              <Paper variant="outlined" sx={{ borderColor: BORDER, borderRadius: 2, p: 2, mb: 2 }}>
                 {sidebarSections.map((s) => (
-                  <div key={s.key} className="flex items-center gap-2 py-1.5 cursor-pointer hover:opacity-80"
-                    onClick={() => { setSections((prev) => ({ ...prev, [s.key]: true })); document.getElementById(`section-${s.key}`)?.scrollIntoView({ behavior: "smooth" }); }}>
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]"
-                      style={{ background: s.done ? GREEN : RED }}>
+                  <Stack
+                    key={s.key} direction="row" alignItems="center" spacing={1} sx={{ py: 0.75, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                    onClick={() => { setSections((prev) => ({ ...prev, [s.key]: true })); document.getElementById(`section-${s.key}`)?.scrollIntoView({ behavior: "smooth" }); }}
+                  >
+                    <Box sx={{
+                      width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                      bgcolor: s.done ? GREEN : RED, color: "white", fontSize: 10,
+                    }}>
                       {s.done ? "\u2713" : "!"}
-                    </div>
-                    <span className="text-sm" style={{ color: TEXT }}>{s.label}</span>
-                  </div>
+                    </Box>
+                    <Typography fontSize={14} sx={{ color: TEXT }}>{s.label}</Typography>
+                  </Stack>
                 ))}
-              </div>
+              </Paper>
 
               {/* Info panel */}
-              <div className="bg-white rounded-lg border p-4" style={{ borderColor: BORDER }}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs" style={{ color: MUTED }}>วันสร้าง</span>
-                  <span className="text-xs font-medium" style={{ color: TEXT }}>2025-04-17 15:38:42</span>
-                </div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs" style={{ color: MUTED }}>ผู้สร้าง</span>
-                  <span className="text-xs font-medium" style={{ color: TEXT }}>wachirawit chanchlaw</span>
-                </div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs" style={{ color: TEXT }}>สถานะรายการหน้าร้าน</span>
-                  <button className="relative w-10 h-5 rounded-full transition-colors"
-                    style={{ background: showOnShelf ? OR : "#ccc" }}
-                    onClick={() => setShowOnShelf(!showOnShelf)}>
-                    <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform"
-                      style={{ left: showOnShelf ? 22 : 2 }} />
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs" style={{ color: TEXT }}>สถานะรับสินค้า</span>
-                  <button className="relative w-10 h-5 rounded-full transition-colors"
-                    style={{ background: showInStock ? OR : "#ccc" }}
-                    onClick={() => setShowInStock(!showInStock)}>
-                    <div className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform"
-                      style={{ left: showInStock ? 22 : 2 }} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+              <Paper variant="outlined" sx={{ borderColor: BORDER, borderRadius: 2, p: 2 }}>
+                <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
+                  <Typography fontSize={12} sx={{ color: MUTED }}>วันสร้าง</Typography>
+                  <Typography fontSize={12} fontWeight={500} sx={{ color: TEXT }}>2025-04-17 15:38:42</Typography>
+                </Stack>
+                <Stack direction="row" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                  <Typography fontSize={12} sx={{ color: MUTED }}>ผู้สร้าง</Typography>
+                  <Typography fontSize={12} fontWeight={500} sx={{ color: TEXT }}>wachirawit chanchlaw</Typography>
+                </Stack>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                  <Typography fontSize={12} sx={{ color: TEXT }}>สถานะรายการหน้าร้าน</Typography>
+                  <Switch
+                    checked={showOnShelf}
+                    onChange={() => setShowOnShelf(!showOnShelf)}
+                    size="small"
+                    sx={{
+                      "& .MuiSwitch-switchBase.Mui-checked": { color: OR },
+                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: OR },
+                    }}
+                  />
+                </Stack>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Typography fontSize={12} sx={{ color: TEXT }}>สถานะรับสินค้า</Typography>
+                  <Switch
+                    checked={showInStock}
+                    onChange={() => setShowInStock(!showInStock)}
+                    size="small"
+                    sx={{
+                      "& .MuiSwitch-switchBase.Mui-checked": { color: OR },
+                      "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: OR },
+                    }}
+                  />
+                </Stack>
+              </Paper>
+            </Box>
+          </Stack>
 
-        </div>
-      </div>
+        </Box>
+      </Box>
     </TenantShell>
   );
 }
@@ -760,7 +886,7 @@ function ProductInner() {
 
 export default function ProductPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm" style={{ color: "#777" }}>กำลังโหลด...</div>}>
+    <Suspense fallback={<Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#777" }}>กำลังโหลด...</Box>}>
       <ProductInner />
     </Suspense>
   );
