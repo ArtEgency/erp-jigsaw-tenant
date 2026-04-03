@@ -170,6 +170,17 @@ const th: Record<string, string> = {
   "product.cancelledProducts": "สินค้ายกเลิกขาย",
   "product.searchPlaceholder": "ค้นหาชื่อสินค้า / รหัสสินค้า / บาร์โค้ด",
   "product.saveSuccess": "บันทึกข้อมูลสินค้าเรียบร้อย",
+  "product.addProduct": "เพิ่มสินค้า",
+  "product.noData": "ไม่พบข้อมูลสินค้า",
+  "product.col.code": "รหัสสินค้า",
+  "product.col.image": "รูปภาพ",
+  "product.col.name": "ชื่อรายการ",
+  "product.col.type": "ประเภทสินค้า",
+  "product.col.category": "หมวดหมู่",
+  "product.col.brand": "แบรนด์",
+  "product.col.packSize": "ขนาดบรรจุ",
+  "product.col.sellPrice": "ราคาขาย",
+  "product.filterType": "ประเภทสินค้า",
 
   // ── Assign Permission ──
   "assignPermission.title": "กำหนดสิทธิ์ผู้ใช้งาน",

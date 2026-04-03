@@ -81,6 +81,7 @@ interface Product {
   id: string;
   code: string;
   name: string;
+  nameEn: string;
   barcode: string;
   image: string;
   type: string;
@@ -114,19 +115,19 @@ const SUPPLIERS = [
 
 const mockProducts: Product[] = [
   {
-    id: "1", code: "SK12653", name: "ศรีจันทร์ เดย์ ทู ไกลว์ ไฮเดรติ้ง ลิป 2.5ก. 01 พริตตี้", barcode: "8854815084858, 8854815084859",
+    id: "1", code: "SK12653", name: "ศรีจันทร์ เดย์ ทู ไกลว์ ไฮเดรติ้ง ลิป 2.5ก. 01 พริตตี้", nameEn: "Srichand Day to Glow Hydrating Lip 2.5g 01 Pretty", barcode: "8854815084858, 8854815084859",
     image: "", type: "เครื่องสำอาง", category: "เมคอัพปาก", subCategory: "ลิปบาล์ม", brand: "Srichand",
     packSize: "40 กรัม", sellPrice: 40.00, sellUnit: "ชิ้น", bulkPrice: 3500.00, bulkUnit: "ลัง",
     active: true, colorTag: "#E8913A",
   },
   {
-    id: "2", code: "SK12653", name: "ฟลูโอคารีล สเปร์ระงับกลิ่นปาก เฟรชมิ้นท์ 15 มล.", barcode: "8854815084858, 8854815084859",
+    id: "2", code: "SK12653", name: "ฟลูโอคารีล สเปร์ระงับกลิ่นปาก เฟรชมิ้นท์ 15 มล.", nameEn: "Fluocaril Mouth Spray Fresh Mint 15ml", barcode: "8854815084858, 8854815084859",
     image: "", type: "ของใช้ส่วนตัว", category: "ดูแลช่องปาก", subCategory: "", brand: "ฟลูโอคารีล",
     packSize: "-", sellPrice: 149.00, sellUnit: "ชิ้น", bulkPrice: 0, bulkUnit: "",
     active: true, colorTag: "#3B82F6",
   },
   {
-    id: "3", code: "1086584", name: "บู๊ทส์ อโลเวร่า ซูทติ้ง แอนด์ มอยเจอร์ไรซิ่ง เจล 300 กรัม", barcode: "5000167386646",
+    id: "3", code: "1086584", name: "บู๊ทส์ อโลเวร่า ซูทติ้ง แอนด์ มอยเจอร์ไรซิ่ง เจล 300 กรัม", nameEn: "Boots Aloe Vera Soothing & Moisturizing Gel 300g", barcode: "5000167386646",
     image: "", type: "อาหารเสริม", category: "ป้องกันแดด", subCategory: "เจล", brand: "บู๊ทส์",
     packSize: "300 กรัม", sellPrice: 159.00, sellUnit: "ชิ้น", bulkPrice: 0, bulkUnit: "",
     active: true, colorTag: "#10B981",
@@ -203,7 +204,7 @@ const ProductTypeModal = ({ open, onClose, onSelect }: { open: boolean; onClose:
 /* ══════════════════════════════════════════════════ */
 
 function ProductInner() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   /* ── screen state ── */
   const [screen, setScreen] = useState<"list" | "add">("list");
   const [tab, setTab] = useState("all");
@@ -422,7 +423,7 @@ function ProductInner() {
                 <Table size="small" sx={{ "& td, & th": { color: TEXT } }}>
                   <TableHead>
                     <TableRow sx={{ bgcolor: "#F5F5F7" }}>
-                      {["รหัสสินค้า", "รูปภาพ", "ชื่อรายการ", "ประเภทสินค้า", "หมวดหมู่", "แบรนด์", "ขนาดบรรจุ", "ราคาขาย", "จัดการ"].map((h) => (
+                      {[t("product.col.code"), t("product.col.image"), t("product.col.name"), t("product.col.type"), t("product.col.category"), t("product.col.brand"), t("product.col.packSize"), t("product.col.sellPrice"), t("common.manage")].map((h) => (
                         <TableCell key={h} sx={{ fontWeight: 500, fontSize: 14, whiteSpace: "nowrap", color: "#374151", borderBottom: "1px solid #F5F5F7", borderTop: "1px solid #F5F5F7", px: 2.5, py: 1.5 }}>
                           {h}
                         </TableCell>
@@ -432,7 +433,7 @@ function ProductInner() {
                   <TableBody>
                     {filtered.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} align="center" sx={{ py: 5, color: MUTED }}>ไม่พบข้อมูลสินค้า</TableCell>
+                        <TableCell colSpan={9} align="center" sx={{ py: 5, color: MUTED }}>{t("product.noData")}</TableCell>
                       </TableRow>
                     ) : filtered.map((prod) => (
                       <TableRow key={prod.id} hover sx={{ "& td": { borderBottom: "1px solid rgba(76,78,100,0.12)" } }}>
@@ -454,7 +455,7 @@ function ProductInner() {
                         </TableCell>
                         {/* ชื่อรายการ */}
                         <TableCell sx={{ px: 2.5, py: 1.5, maxWidth: 300 }}>
-                          <Typography fontSize={14} sx={{ color: "#374151" }}>{prod.name}</Typography>
+                          <Typography fontSize={14} sx={{ color: "#374151" }}>{locale === "en" && prod.nameEn ? prod.nameEn : prod.name}</Typography>
                           <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.25 }}>
                             <Typography fontSize={12} sx={{ color: MUTED }}>
                               Barcode : {prod.barcode}

@@ -170,6 +170,17 @@ const en: Record<string, string> = {
   "product.cancelledProducts": "Cancelled Products",
   "product.searchPlaceholder": "Search product name / code / barcode",
   "product.saveSuccess": "Product saved successfully",
+  "product.addProduct": "Add Product",
+  "product.noData": "No product data found",
+  "product.col.code": "Product Code",
+  "product.col.image": "Image",
+  "product.col.name": "Product Name",
+  "product.col.type": "Product Type",
+  "product.col.category": "Category",
+  "product.col.brand": "Brand",
+  "product.col.packSize": "Pack Size",
+  "product.col.sellPrice": "Sell Price",
+  "product.filterType": "Product Type",
 
   // ── Assign Permission ──
   "assignPermission.title": "Assign Permission",
