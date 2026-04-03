@@ -30,10 +30,10 @@ export default function TenantLoginPage() {
     return (
       <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#F4F4F4" }}>
         <Box sx={{ textAlign: "center" }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>ไม่พบบริษัท</Typography>
-          <Typography variant="body2" sx={{ color: "#999", mb: 2 }}>ไม่พบ tenant &quot;{slug}&quot; ในระบบ</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>{t("auth.companyNotFound")}</Typography>
+          <Typography variant="body2" sx={{ color: "#999", mb: 2 }}>{t("auth.tenantNotFound")} &quot;{slug}&quot;</Typography>
           <Button variant="contained" onClick={() => router.push("/")} sx={{ bgcolor: "#565DFF", textTransform: "none" }}>
-            กลับหน้าหลัก
+            {t("nav.backToHome")}
           </Button>
         </Box>
       </Box>
@@ -124,7 +124,7 @@ export default function TenantLoginPage() {
           <Box sx={{ textAlign: "center", mt: 3 }}>
             <Button startIcon={<ArrowBackIcon />} size="small" onClick={() => router.push("/")}
               sx={{ color: "#999", textTransform: "none", fontSize: 12, "&:hover": { color: PC } }}>
-              กลับหน้าหลัก
+              {t("nav.backToHome")}
             </Button>
           </Box>
         </Box>

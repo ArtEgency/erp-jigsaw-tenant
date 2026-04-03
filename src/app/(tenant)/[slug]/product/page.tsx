@@ -2,6 +2,7 @@
 
 import { useState, Suspense, useRef } from "react";
 import TenantShell from "@/components/layout/TenantShell";
+import { useLocale } from "@/lib/locale";
 import {
   Box,
   Typography,
@@ -202,6 +203,7 @@ const ProductTypeModal = ({ open, onClose, onSelect }: { open: boolean; onClose:
 /* ══════════════════════════════════════════════════ */
 
 function ProductInner() {
+  const { t } = useLocale();
   /* ── screen state ── */
   const [screen, setScreen] = useState<"list" | "add">("list");
   const [tab, setTab] = useState("all");
@@ -286,16 +288,16 @@ function ProductInner() {
 
   /* ── breadcrumb ── */
   const breadcrumb = screen === "list"
-    ? ["สินค้า", "จัดการสินค้า"]
-    : ["สินค้า", "จัดการสินค้า", "สินค้า"];
+    ? [t("product.product"), t("product.manage")]
+    : [t("product.product"), t("product.manage"), t("product.product")];
 
   /* ── handle save ── */
   const handleSave = () => {
     if (!sku || !barcode || !nameTH || !prodType) {
-      showToast("กรุณากรอกข้อมูลที่จำเป็นให้ครบ", "err");
+      showToast(t("common.fillRequired"), "err");
       return;
     }
-    showToast("บันทึกข้อมูลสินค้าเรียบร้อย");
+    showToast(t("product.saveSuccess"));
     setScreen("list");
   };
 
@@ -349,8 +351,8 @@ function ProductInner() {
                 "& .MuiTabs-indicator": { display: "none" },
               }}
             >
-              <Tab value="all" label="สินค้าทั้งหมด" />
-              <Tab value="cancelled" label="สินค้ายกเลิกขาย" />
+              <Tab value="all" label={t("product.allProducts")} />
+              <Tab value="cancelled" label={t("product.cancelledProducts")} />
             </Tabs>
 
             {/* Content Card */}
@@ -392,7 +394,7 @@ function ProductInner() {
                 <TextField
                   size="small" value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="ค้นหาชื่อสินค้า / รหัสสินค้า / บาร์โค้ด"
+                  placeholder={t("product.searchPlaceholder")}
                   sx={{ width: 300 }}
                   InputProps={{
                     startAdornment: (

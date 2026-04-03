@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import TenantShell from "@/components/layout/TenantShell";
 import { useToast } from "@/components/ui/Toast";
 import FormDialog from "@/components/ui/FormDialog";
+import { useLocale } from "@/lib/locale";
 
 /* ── MUI ── */
 import Box from "@mui/material/Box";
@@ -41,20 +42,20 @@ type Screen = "s1" | "s2" | "s3" | "s3e" | "s4" | "s5" | "s5e" | "s6";
 
 /* ── mock data ── */
 const systemRoles = [
-  { code: "TEST_REDIRECT", name: "TEST_REDIRECT", users: 1, status: "เปิดใช้งาน" as const, editable: true },
-  { code: "MASTER2", name: "MASTER2", users: 1, status: "เปิดใช้งาน" as const, editable: true },
-  { code: "SALE", name: "SALE", users: 1, status: "เปิดใช้งาน" as const, editable: true },
-  { code: "ADMIN", name: "ผู้ดูแลระบบ", users: 2, status: "เปิดใช้งาน" as const, editable: false },
+  { code: "TEST_REDIRECT", name: "TEST_REDIRECT", users: 1, status: "active" as const, editable: true },
+  { code: "MASTER2", name: "MASTER2", users: 1, status: "active" as const, editable: true },
+  { code: "SALE", name: "SALE", users: 1, status: "active" as const, editable: true },
+  { code: "ADMIN", name: "ผู้ดูแลระบบ", users: 2, status: "active" as const, editable: false },
 ];
 
 const erpRoles = [
-  { code: "SaleP", name: "SaleP", users: 2, status: "เปิดใช้งาน" as const, editable: true },
-  { code: "Admin", name: "Admin", users: 2, status: "เปิดใช้งาน" as const, editable: true },
-  { code: "test", name: "test", users: 0, status: "ปิดใช้งาน" as const, editable: true },
-  { code: "1", name: "1", users: 0, status: "ปิดใช้งาน" as const, editable: true },
-  { code: "เ", name: "เ", users: 0, status: "ปิดใช้งาน" as const, editable: true },
-  { code: "test edit", name: "test", users: 1, status: "ปิดใช้งาน" as const, editable: true },
-  { code: "EMP001", name: "Employee", users: 0, status: "ปิดใช้งาน" as const, editable: false },
+  { code: "SaleP", name: "SaleP", users: 2, status: "active" as const, editable: true },
+  { code: "Admin", name: "Admin", users: 2, status: "active" as const, editable: true },
+  { code: "test", name: "test", users: 0, status: "inactive" as const, editable: true },
+  { code: "1", name: "1", users: 0, status: "inactive" as const, editable: true },
+  { code: "เ", name: "เ", users: 0, status: "inactive" as const, editable: true },
+  { code: "test edit", name: "test", users: 1, status: "inactive" as const, editable: true },
+  { code: "EMP001", name: "Employee", users: 0, status: "inactive" as const, editable: false },
 ];
 
 const menuItems = [
@@ -101,6 +102,7 @@ function useResizableColumns(initialWidths: number[]) {
 function RolePermissionInner() {
   const searchParams = useSearchParams();
   const { showSuccess, showError } = useToast();
+  const { t } = useLocale();
   const initialScreen = (searchParams.get("screen") as Screen) || "s1";
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const [search, setSearch] = useState("");
@@ -186,23 +188,23 @@ function RolePermissionInner() {
   /* ── Status badge ── */
   const StatusBadge = ({ status }: { status: string }) => (
     <Chip
-      label={status}
+      label={status === "active" ? t("common.active") : t("common.inactive")}
       size="small"
       sx={{
         fontSize: 11, fontWeight: 500, height: 24,
-        bgcolor: status === "เปิดใช้งาน" ? GREEN_L : RED_L,
-        color: status === "เปิดใช้งาน" ? GREEN : RED,
+        bgcolor: status === "active" ? GREEN_L : RED_L,
+        color: status === "active" ? GREEN : RED,
       }}
     />
   );
 
   const breadcrumbForScreen = (): string[] => {
     switch (screen) {
-      case "s1": case "s2": return ["บุคคล", "สร้างสิทธิ์ผู้ใช้งาน"];
-      case "s3": case "s3e": return ["บุคคล", "สร้างสิทธิ์ผู้ใช้งาน", "สร้างสิทธิ์ SYSTEM"];
-      case "s4": return ["บุคคล", "สร้างสิทธิ์ผู้ใช้งาน", "สร้างสิทธิ์ SYSTEM"];
-      case "s5": case "s5e": return ["บุคคล", "สร้างสิทธิ์ผู้ใช้งาน", "สร้างสิทธิ์ ERP"];
-      case "s6": return ["บุคคล", "สร้างสิทธิ์ผู้ใช้งาน"];
+      case "s1": case "s2": return [t("employee.hr"), t("rolePermission.title")];
+      case "s3": case "s3e": return [t("employee.hr"), t("rolePermission.title"), t("rolePermission.createSystemRole")];
+      case "s4": return [t("employee.hr"), t("rolePermission.title"), t("rolePermission.createSystemRole")];
+      case "s5": case "s5e": return [t("employee.hr"), t("rolePermission.title"), t("rolePermission.createErpRole")];
+      case "s6": return [t("employee.hr"), t("rolePermission.title")];
       default: return [];
     }
   };
@@ -210,7 +212,7 @@ function RolePermissionInner() {
   /* ── Pagination row ── */
   const PaginationRow = ({ total }: { total: number }) => (
     <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="flex-end" sx={{ px: 2, py: 1.5, borderTop: `1px solid ${BORDER}` }}>
-      <Typography variant="caption" color="text.secondary">จำนวนรายการต่อหน้า</Typography>
+      <Typography variant="caption" color="text.secondary">{t("common.perPage")}</Typography>
       <TextField select size="small" defaultValue="25" sx={{ width: 70, "& .MuiInputBase-input": { fontSize: 12, py: 0.5 } }}>
         <MenuItem value="25">25</MenuItem>
         <MenuItem value="50">50</MenuItem>
@@ -234,12 +236,12 @@ function RolePermissionInner() {
       {/* Toolbar */}
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2, borderBottom: `1px solid ${BORDER}` }}>
         <Button variant="outlined" startIcon={<FileUploadIcon />} sx={{ textTransform: "none", color: TEXT, borderColor: BORDER }}>
-          ส่งออกรายงาน
+          {t("common.export")}
         </Button>
         <Stack direction="row" spacing={1.5} alignItems="center">
           <TextField
             size="small"
-            label="ค้นหาข้อมูลตามสิทธิ์"
+            label={t("rolePermission.searchByPermission")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             sx={{ width: 260 }}
@@ -255,11 +257,11 @@ function RolePermissionInner() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TH width={cols.widths[0]} onResize={(e) => cols.onMouseDown(0, e)}>รหัสสิทธิ์</TH>
-              <TH width={cols.widths[1]} onResize={(e) => cols.onMouseDown(1, e)}>ชื่อสิทธิ์การใช้งาน</TH>
-              <TH width={cols.widths[2]} onResize={(e) => cols.onMouseDown(2, e)}>จำนวนคนที่ใช้งานสิทธิ์</TH>
-              <TH width={cols.widths[3]} onResize={(e) => cols.onMouseDown(3, e)}>สถานะ</TH>
-              <TH width={cols.widths[4]} isLast>จัดการ</TH>
+              <TH width={cols.widths[0]} onResize={(e) => cols.onMouseDown(0, e)}>{t("rolePermission.roleCode")}</TH>
+              <TH width={cols.widths[1]} onResize={(e) => cols.onMouseDown(1, e)}>{t("rolePermission.roleName")}</TH>
+              <TH width={cols.widths[2]} onResize={(e) => cols.onMouseDown(2, e)}>{t("rolePermission.userCount")}</TH>
+              <TH width={cols.widths[3]} onResize={(e) => cols.onMouseDown(3, e)}>{t("employee.status")}</TH>
+              <TH width={cols.widths[4]} isLast>{t("common.manage")}</TH>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -295,24 +297,24 @@ function RolePermissionInner() {
       {/* ═══════ S1 — Role List (สิทธิ์จัดการเมนู) ═══════ */}
       {screen === "s1" && (
         <Box sx={{ px: 2.5, pt: 2.5 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: TEXT }}>สร้างสิทธิ์ผู้ใช้งาน</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: TEXT }}>{t("rolePermission.title")}</Typography>
           <SubTabs active="system" tabs={[
-            { id: "system", label: "สิทธิ์จัดการเมนู" },
-            { id: "erp", label: "สิทธิ์จัดการส่วนงาน" },
+            { id: "system", label: t("rolePermission.menuPermission") },
+            { id: "erp", label: t("rolePermission.erpPermission") },
           ]} onTab={(id) => id === "erp" && go("s2")} />
-          <RoleTable roles={systemRoles} cols={s1Cols} onAdd={() => go("s3")} addLabel="เพิ่มสิทธิ์ SYSTEM" />
+          <RoleTable roles={systemRoles} cols={s1Cols} onAdd={() => go("s3")} addLabel={t("rolePermission.addSystemRole")} />
         </Box>
       )}
 
       {/* ═══════ S2 — Role List (สิทธิ์จัดการส่วนงาน) ═══════ */}
       {screen === "s2" && (
         <Box sx={{ px: 2.5, pt: 2.5 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: TEXT }}>สร้างสิทธิ์ผู้ใช้งาน</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: TEXT }}>{t("rolePermission.title")}</Typography>
           <SubTabs active="erp" tabs={[
-            { id: "system", label: "สิทธิ์จัดการเมนู" },
-            { id: "erp", label: "สิทธิ์จัดการส่วนงาน" },
+            { id: "system", label: t("rolePermission.menuPermission") },
+            { id: "erp", label: t("rolePermission.erpPermission") },
           ]} onTab={(id) => id === "system" && go("s1")} />
-          <RoleTable roles={erpRoles} cols={s2Cols} onAdd={() => go("s5")} addLabel="สิทธิ์จัดการส่วนงาน" />
+          <RoleTable roles={erpRoles} cols={s2Cols} onAdd={() => go("s5")} addLabel={t("rolePermission.erpPermission")} />
         </Box>
       )}
 
@@ -335,25 +337,25 @@ function RolePermissionInner() {
       {/* ═══════ S3 — สร้างสิทธิ์ SYSTEM ═══════ */}
       {(screen === "s3" || screen === "s3e" || screen === "s4") && (
         <Box sx={{ px: 2.5, pt: 2.5 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: TEXT }}>สร้างสิทธิ์ผู้ใช้งาน</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: TEXT }}>{t("rolePermission.title")}</Typography>
 
           {/* Form card */}
           <Paper variant="outlined" sx={{ borderRadius: 2, mb: 2, p: 2.5 }}>
-            <Typography variant="subtitle2" sx={{ mb: 2, color: TEXT }}>สร้างสิทธิ์การใช้งาน SYSTEM</Typography>
+            <Typography variant="subtitle2" sx={{ mb: 2, color: TEXT }}>{t("rolePermission.createSystemPermission")}</Typography>
             <Stack direction="row" spacing={2} alignItems="flex-start">
               <TextField
                 size="small"
-                label="รหัสสิทธิ์การใช้งาน"
+                label={t("rolePermission.roleCode")}
                 value={roleCode}
                 onChange={(e) => setRoleCode(e.target.value)}
                 required
                 error={screen === "s3e"}
-                helperText={screen === "s3e" ? "รหัสสิทธิ์นี้มีอยู่แล้วในระบบ" : ""}
+                helperText={screen === "s3e" ? t("rolePermission.duplicateCode") : ""}
                 sx={{ flex: 1 }}
               />
               <TextField
                 size="small"
-                label="ชื่อสิทธิ์ใช้งาน"
+                label={t("rolePermission.roleName")}
                 value={roleName}
                 onChange={(e) => setRoleName(e.target.value)}
                 required
@@ -365,7 +367,7 @@ function RolePermissionInner() {
                   onChange={() => setRoleActive(!roleActive)}
                   sx={{ "& .MuiSwitch-switchBase.Mui-checked": { color: OR }, "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: OR } }}
                 />
-                <Typography variant="body2">เปิดใช้งาน</Typography>
+                <Typography variant="body2">{t("common.active")}</Typography>
               </Stack>
             </Stack>
           </Paper>
@@ -425,15 +427,15 @@ function RolePermissionInner() {
           {/* Action buttons */}
           <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 2.5, mb: 2.5 }}>
             <Button variant="outlined" onClick={() => go("s1")} sx={{ textTransform: "none", color: TEXT, borderColor: BORDER }}>
-              ยกเลิก
+              {t("common.cancel")}
             </Button>
             <Button
               variant="contained"
-              onClick={() => { showSuccess("บันทึกสิทธิ์สำเร็จ"); go("s1"); }}
+              onClick={() => { showSuccess(t("rolePermission.saveSuccess")); go("s1"); }}
               disabled={screen === "s3e"}
               sx={{ bgcolor: screen === "s3e" ? "#ccc" : OR, "&:hover": { bgcolor: OR }, textTransform: "none", fontWeight: 700 }}
             >
-              บันทึก
+              {t("common.save")}
             </Button>
           </Stack>
         </Box>
@@ -448,16 +450,16 @@ function RolePermissionInner() {
         footer={
           <Stack direction="row" spacing={1.5} justifyContent="center" sx={{ width: "100%", pb: 1 }}>
             <Button variant="outlined" onClick={() => go("s3")} sx={{ textTransform: "none", color: TEXT, borderColor: BORDER }}>
-              ยกเลิก
+              {t("common.cancel")}
             </Button>
             <Button variant="contained" onClick={() => go("s3")} sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, textTransform: "none", fontWeight: 700 }}>
-              บันทึก
+              {t("common.save")}
             </Button>
           </Stack>
         }
       >
         <Typography variant="subtitle2" sx={{ mb: 2, color: TEXT }}>Action ที่อนุญาต</Typography>
-        {["สร้าง", "แก้ไข", "อนุมัติ", "ยกเลิก"].map((action) => (
+        {["สร้าง", "แก้ไข", "อนุมัติ", t("common.cancel")].map((action) => (
           <FormControlLabel
             key={action}
             control={<Checkbox defaultChecked sx={{ color: OR, "&.Mui-checked": { color: OR } }} />}
@@ -470,15 +472,15 @@ function RolePermissionInner() {
       {/* ═══════ S5 — สร้างสิทธิ์ ERP Permission ═══════ */}
       {(screen === "s5" || screen === "s5e") && (
         <Box sx={{ px: 2.5, pt: 2.5 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: TEXT }}>สร้างสิทธิ์ผู้ใช้งาน</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: TEXT }}>{t("rolePermission.title")}</Typography>
 
           <Paper variant="outlined" sx={{ borderRadius: 2, mb: 2, p: 3 }}>
-            <Typography variant="subtitle2" sx={{ mb: 2.5, color: TEXT }}>สร้างสิทธิ์การใช้งาน ERP</Typography>
+            <Typography variant="subtitle2" sx={{ mb: 2.5, color: TEXT }}>{t("rolePermission.createErpPermission")}</Typography>
 
             <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ mb: 3 }}>
               <TextField
                 size="small"
-                label="รหัสสิทธิ์การใช้งาน"
+                label={t("rolePermission.roleCode")}
                 value={erpCode}
                 onChange={(e) => setErpCode(e.target.value)}
                 required
@@ -486,7 +488,7 @@ function RolePermissionInner() {
               />
               <TextField
                 size="small"
-                label="ชื่อสิทธิ์ผู้ใช้งาน"
+                label={t("rolePermission.roleName")}
                 value={erpName}
                 onChange={(e) => setErpName(e.target.value)}
                 required
@@ -498,7 +500,7 @@ function RolePermissionInner() {
                   onChange={() => setErpActive(!erpActive)}
                   sx={{ "& .MuiSwitch-switchBase.Mui-checked": { color: OR }, "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { bgcolor: OR } }}
                 />
-                <Typography variant="body2">{erpActive ? "เปิดใช้งาน" : "ปิดใช้งาน"}</Typography>
+                <Typography variant="body2">{erpActive ? t("common.active") : t("common.inactive")}</Typography>
               </Stack>
             </Stack>
 
@@ -509,12 +511,12 @@ function RolePermissionInner() {
                   select
                   size="small"
                   fullWidth
-                  label="ส่วนงานที่เข้าถึง"
+                  label={t("rolePermission.accessibleBranch")}
                   value={selectedBranches[0] || ""}
                   onChange={(e) => setSelectedBranches(e.target.value ? [e.target.value] : [])}
                   required
                   error={screen === "s5e"}
-                  helperText={screen === "s5e" ? "ต้องเลือกอย่างน้อย 1" : ""}
+                  helperText={screen === "s5e" ? t("rolePermission.selectAtLeastOne") : ""}
                 >
                   <MenuItem value="" disabled>กรอกส่วนงานที่เข้าถึง</MenuItem>
                   {branchOptions.map((b) => <MenuItem key={b.code} value={b.code}>{b.code}</MenuItem>)}
@@ -525,12 +527,12 @@ function RolePermissionInner() {
                   select
                   size="small"
                   fullWidth
-                  label="คลังสินค้าที่เข้าถึง"
+                  label={t("rolePermission.accessibleWarehouse")}
                   value={selectedWarehouses[0] || ""}
                   onChange={(e) => setSelectedWarehouses(e.target.value ? [e.target.value] : [])}
                   required
                   error={screen === "s5e"}
-                  helperText={screen === "s5e" ? "ต้องเลือกอย่างน้อย 1" : ""}
+                  helperText={screen === "s5e" ? t("rolePermission.selectAtLeastOne") : ""}
                 >
                   <MenuItem value="" disabled>กรอกคลังที่เข้าถึง</MenuItem>
                   {warehouseOptions.map((w) => <MenuItem key={w.code} value={w.code}>{w.code}</MenuItem>)}
@@ -541,15 +543,15 @@ function RolePermissionInner() {
 
           <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 2.5, mb: 2.5 }}>
             <Button variant="outlined" onClick={() => go("s2")} sx={{ textTransform: "none", color: TEXT, borderColor: BORDER }}>
-              ยกเลิก
+              {t("common.cancel")}
             </Button>
             <Button
               variant="contained"
-              onClick={() => { showSuccess("บันทึกสิทธิ์ ERP สำเร็จ"); go("s2"); }}
+              onClick={() => { showSuccess(t("rolePermission.saveErpSuccess")); go("s2"); }}
               disabled={screen === "s5e"}
               sx={{ bgcolor: screen === "s5e" ? "#ccc" : OR, "&:hover": { bgcolor: OR }, textTransform: "none", fontWeight: 700 }}
             >
-              บันทึก
+              {t("common.save")}
             </Button>
           </Stack>
         </Box>
@@ -564,7 +566,7 @@ function RolePermissionInner() {
             {/* Error 1 */}
             <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
               <Typography variant="subtitle2" sx={{ color: RED, mb: 0.5 }}>Error 1 — รหัสสิทธิ์ซ้ำ</Typography>
-              <Typography variant="caption" color="text.secondary">error inline ทันที - ปุ่มบันทึก disabled</Typography>
+              <Typography variant="caption" color="text.secondary">error inline ทันที - ปุ่ม{t("common.save")} disabled</Typography>
               <Box sx={{ mt: 1.5 }}>
                 <Button variant="contained" size="small" onClick={() => go("s3e")} sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, textTransform: "none", fontWeight: 700 }}>
                   ดูหน้าจอ
@@ -596,7 +598,7 @@ function RolePermissionInner() {
               <Typography variant="subtitle2" sx={{ color: RED, mb: 0.5 }}>Error 4 — DB Error</Typography>
               <Typography variant="caption" color="text.secondary">แสดง toast error - ข้อมูลไม่หาย</Typography>
               <Box sx={{ mt: 1.5 }}>
-                <Button variant="contained" size="small" onClick={() => showError("บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง")} sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, textTransform: "none", fontWeight: 700 }}>
+                <Button variant="contained" size="small" onClick={() => showError(t("rolePermission.saveFailed"))} sx={{ bgcolor: OR, "&:hover": { bgcolor: OR }, textTransform: "none", fontWeight: 700 }}>
                   ดู Toast
                 </Button>
               </Box>

@@ -22,11 +22,13 @@ import {
   Grid,
 } from "@mui/material";
 import { TENANT_PRIMARY as OR } from "@/lib/theme";
+import { useLocale } from "@/lib/locale";
 
 /* ═══════════════════════════════════════════════════════════════
    Page Component
    ═══════════════════════════════════════════════════════════════ */
 export default function SettingsBusinessPage() {
+  const { t } = useLocale();
   const [activeTab, setActiveTab] = useState(0);
 
   /* ── Mock data from Onboarding (locked) ── */
@@ -57,7 +59,7 @@ export default function SettingsBusinessPage() {
   };
 
   return (
-    <TenantShell breadcrumb={["ตั้งค่าธุรกิจ", "ข้อมูลธุรกิจ"]} activeModule="settings">
+    <TenantShell breadcrumb={[t("settings.businessSettings"), t("settings.business.title")]} activeModule="settings">
       <Box sx={{ p: "24px 32px" }}>
         <Paper variant="outlined" sx={{ borderRadius: 3, overflow: "hidden" }}>
           {/* ── Tab bar ── */}
@@ -72,9 +74,9 @@ export default function SettingsBusinessPage() {
               "& .MuiTabs-indicator": { backgroundColor: OR },
             }}
           >
-            <Tab label="ข้อมูลทั่วไป" />
-            <Tab label="ข้อมูลการติดต่อ" />
-            <Tab label="ตั้งค่าการขาย" />
+            <Tab label={t("settings.business.general")} />
+            <Tab label={t("settings.business.contact")} />
+            <Tab label={t("settings.business.sales")} />
           </Tabs>
 
           {/* ── Tab content ── */}
@@ -93,12 +95,13 @@ export default function SettingsBusinessPage() {
    Tab 1 — ข้อมูลทั่วไป
    ═══════════════════════════════════════════════════════════════ */
 function TabGeneral({ data }: { data: Record<string, unknown> }) {
+  const { t } = useLocale();
   const d = data as Record<string, string | boolean>;
 
   return (
     <Box>
       <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 3, color: OR }}>
-        ข้อมูลทั่วไป
+        {t("settings.business.general")}
       </Typography>
 
       {/* Profile image placeholder */}
@@ -243,7 +246,7 @@ function TabGeneral({ data }: { data: Record<string, unknown> }) {
             px: 4,
           }}
         >
-          แก้ไข
+          {t("common.edit")}
         </Button>
       </Stack>
     </Box>
@@ -254,6 +257,7 @@ function TabGeneral({ data }: { data: Record<string, unknown> }) {
    Tab 2 — ข้อมูลการติดต่อ
    ═══════════════════════════════════════════════════════════════ */
 function TabContact() {
+  const { t } = useLocale();
   return (
     <Box>
       {/* Row 1 */}
@@ -303,7 +307,7 @@ function TabContact() {
             px: 4,
           }}
         >
-          แก้ไข
+          {t("common.edit")}
         </Button>
       </Stack>
     </Box>
@@ -314,6 +318,7 @@ function TabContact() {
    Tab 3 — ตั้งค่าการขาย
    ═══════════════════════════════════════════════════════════════ */
 function TabSales({ data }: { data: Record<string, unknown> }) {
+  const { t } = useLocale();
   const d = data as Record<string, string | boolean>;
 
   return (
@@ -383,7 +388,7 @@ function TabSales({ data }: { data: Record<string, unknown> }) {
             py: 1.2,
           }}
         >
-          แก้ไข
+          {t("common.edit")}
         </Button>
       </Stack>
     </Box>

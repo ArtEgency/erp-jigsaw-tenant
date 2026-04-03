@@ -30,6 +30,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { TENANT_PRIMARY as OR, RED } from "@/lib/theme";
+import { useLocale } from "@/lib/locale";
 
 /* ── Mock warehouse data (from onboarding + SA quota) ── */
 interface Warehouse {
@@ -88,6 +89,7 @@ const WAREHOUSE_QUOTA = 2;
    Warehouse Settings Page
    ═══════════════════════════════════════════════════════════════ */
 export default function SettingsWarehousePage() {
+  const { t } = useLocale();
   const [warehouses, setWarehouses] = useState<Warehouse[]>(initialWarehouses);
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -154,11 +156,11 @@ export default function SettingsWarehousePage() {
   };
 
   return (
-    <TenantShell breadcrumb={["ตั้งค่า", "คลังสินค้าทั้งหมด"]} activeModule="settings">
+    <TenantShell breadcrumb={[t("nav.settings"), t("settings.warehouse.title")]} activeModule="settings">
       <Box sx={{ p: "24px 32px" }}>
         {/* Title */}
         <Typography variant="h6" sx={{ fontWeight: 600, mb: 3, color: OR }}>
-          คลังสินค้าทั้งหมด
+          {t("settings.warehouse.title")}
         </Typography>
 
         {/* Card */}
@@ -172,7 +174,7 @@ export default function SettingsWarehousePage() {
             <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1, justifyContent: "flex-end" }}>
               <TextField
                 size="small"
-                placeholder="ค้นหาเลขที่, ชื่อคลังสินค้า"
+                placeholder={t("settings.warehouse.searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 sx={{ width: 300 }}
@@ -189,7 +191,7 @@ export default function SettingsWarehousePage() {
                   fontWeight: 600,
                 }}
               >
-                เพิ่มคลังสินค้า
+                {t("settings.warehouse.addWarehouse")}
                 <Box
                   component="span"
                   sx={{
@@ -212,10 +214,10 @@ export default function SettingsWarehousePage() {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: "#FAFAFA" }}>
-                <TableCell sx={{ fontWeight: 500, color: "text.secondary", width: "20%" }}>รหัสคลังสินค้า</TableCell>
-                <TableCell sx={{ fontWeight: 500, color: "text.secondary" }}>ชื่อคลังสินค้า</TableCell>
-                <TableCell sx={{ fontWeight: 500, color: "text.secondary", width: "18%" }}>ประเภทคลังสินค้า</TableCell>
-                <TableCell sx={{ fontWeight: 500, color: "text.secondary", width: "12%" }} align="center">จัดการ</TableCell>
+                <TableCell sx={{ fontWeight: 500, color: "text.secondary", width: "20%" }}>{t("settings.warehouse.code")}</TableCell>
+                <TableCell sx={{ fontWeight: 500, color: "text.secondary" }}>{t("settings.warehouse.name")}</TableCell>
+                <TableCell sx={{ fontWeight: 500, color: "text.secondary", width: "18%" }}>{t("settings.warehouse.type")}</TableCell>
+                <TableCell sx={{ fontWeight: 500, color: "text.secondary", width: "12%" }} align="center">{t("common.manage")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -248,7 +250,7 @@ export default function SettingsWarehousePage() {
               {filtered.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} align="center" sx={{ py: 5, color: "text.secondary" }}>
-                    ไม่พบข้อมูลคลังสินค้า
+                    {t("settings.warehouse.noData")}
                   </TableCell>
                 </TableRow>
               )}
@@ -257,7 +259,7 @@ export default function SettingsWarehousePage() {
 
           {/* Pagination */}
           <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={1} sx={{ px: 2, py: 1.5, borderTop: 1, borderColor: "divider" }}>
-            <Typography variant="caption" color="text.secondary">จำนวนรายการต่อหน้า</Typography>
+            <Typography variant="caption" color="text.secondary">{t("common.perPage")}</Typography>
             <TextField size="small" select defaultValue="25" sx={{ width: 70, "& .MuiInputBase-root": { fontSize: 12 } }}>
               <MenuItem value="25">25</MenuItem>
             </TextField>
@@ -287,7 +289,7 @@ export default function SettingsWarehousePage() {
             {/* Header */}
             <Box sx={{ bgcolor: OR, px: 2.5, py: 1.5, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <Typography sx={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>
-                {editingId === "new" ? "เพิ่มคลังสินค้า" : "แก้ไขคลังสินค้า"}
+                {editingId === "new" ? t("settings.warehouse.addWarehouse") : t("settings.warehouse.editWarehouse")}
               </Typography>
               <IconButton size="small" onClick={closeDrawer} sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "#fff" } }}>
                 <CloseIcon fontSize="small" />
@@ -460,7 +462,7 @@ export default function SettingsWarehousePage() {
                   onClick={handleDelete}
                   sx={{ textTransform: "none", fontWeight: 600, color: RED, borderColor: RED, "&:hover": { borderColor: RED, bgcolor: "#FFF5F5" } }}
                 >
-                  ลบ
+                  {t("common.delete")}
                 </Button>
               ) : <Box />}
               <Stack direction="row" spacing={1.5}>
@@ -469,7 +471,7 @@ export default function SettingsWarehousePage() {
                   onClick={closeDrawer}
                   sx={{ textTransform: "none", color: "text.primary", borderColor: "divider" }}
                 >
-                  ยกเลิก
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   variant="contained"
@@ -482,7 +484,7 @@ export default function SettingsWarehousePage() {
                     px: 4,
                   }}
                 >
-                  ยืนยัน
+                  {t("common.confirm")}
                 </Button>
               </Stack>
             </Stack>

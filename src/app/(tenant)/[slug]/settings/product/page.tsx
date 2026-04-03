@@ -37,6 +37,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { TENANT_PRIMARY as OR, GREEN, RED } from "@/lib/theme";
+import { useLocale } from "@/lib/locale";
 
 /* ── Side nav items ── */
 const SIDE_ITEMS = [
@@ -165,6 +166,7 @@ function SimplePagination({ total }: { total: number }) {
 /* ── MAIN COMPONENT ── */
 /* ══════════════════════════════════════════ */
 function SettingsProductInner() {
+  const { t } = useLocale();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "product-type");
   const [search, setSearch] = useState("");
@@ -222,8 +224,8 @@ function SettingsProductInner() {
   const now = new Date().toLocaleString("th-TH", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
   /* ── breadcrumb ── */
-  const currentLabel = SIDE_ITEMS.find((s) => s.id === activeTab)?.label || "ประเภทสินค้า";
-  const breadcrumb = ["ตั้งค่า", "สินค้า", currentLabel];
+  const currentLabel = SIDE_ITEMS.find((s) => s.id === activeTab)?.label || t("settings.product.productType");
+  const breadcrumb = [t("nav.settings"), t("product.product"), currentLabel];
 
   /* ── filter ── */
   const filteredPT = mockProductTypes.filter((p) => {

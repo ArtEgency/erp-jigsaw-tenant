@@ -10,6 +10,7 @@ import {
   createActions,
   useToast,
 } from "@/components/ui";
+import { useLocale } from "@/lib/locale";
 
 /* ── MUI ── */
 import Box from "@mui/material/Box";
@@ -157,6 +158,7 @@ interface EmployeeForm {
 
 function EmployeeInner() {
   const { showSuccess, showError } = useToast();
+  const { t } = useLocale();
 
   /* ── state ── */
   const [screen, setScreen] = useState<"list" | "add">("list");
@@ -220,7 +222,7 @@ function EmployeeInner() {
     () => [
       {
         field: "code",
-        headerName: "รหัสพนักงาน",
+        headerName: t("employee.code"),
         width: 150,
         renderCell: (params) => (
           <Typography variant="body2" sx={{ color: OR, fontWeight: 500, cursor: "pointer" }}>
@@ -230,7 +232,7 @@ function EmployeeInner() {
       },
       {
         field: "name",
-        headerName: "ชื่อ-นามสกุล (ชื่อเล่น)",
+        headerName: t("employee.fullName"),
         flex: 1,
         minWidth: 280,
         renderCell: (params) => (
@@ -250,14 +252,14 @@ function EmployeeInner() {
           </Stack>
         ),
       },
-      { field: "division", headerName: "ส่วนงาน", width: 160 },
-      { field: "department", headerName: "แผนก", width: 180 },
-      { field: "position", headerName: "ตำแหน่ง", width: 140 },
-      { field: "phone", headerName: "เบอร์โทรศัพท์", width: 150 },
+      { field: "division", headerName: t("employee.division"), width: 160 },
+      { field: "department", headerName: t("employee.department"), width: 180 },
+      { field: "position", headerName: t("employee.position"), width: 140 },
+      { field: "phone", headerName: t("employee.phone"), width: 150 },
       { field: "email", headerName: "E-mail", width: 200 },
       {
         field: "type",
-        headerName: "สถานะ",
+        headerName: t("employee.status"),
         width: 160,
         renderCell: (params) => {
           const row = params.row as Employee;
@@ -277,7 +279,7 @@ function EmployeeInner() {
       },
       {
         field: "actions",
-        headerName: "จัดการ",
+        headerName: t("common.manage"),
         width: 120,
         sortable: false,
         filterable: false,
@@ -295,20 +297,20 @@ function EmployeeInner() {
         ),
       },
     ],
-    []
+    [t]
   );
 
   /* ── breadcrumb ── */
   const breadcrumb =
-    screen === "list" ? ["บุคคล", "พนักงาน"] : ["บุคคล", "พนักงาน", "เพิ่มพนักงาน"];
+    screen === "list" ? [t("employee.hr"), t("employee.employee")] : [t("employee.hr"), t("employee.employee"), t("employee.addEmployee")];
 
   /* ── handle save ── */
   const onSubmit = (data: EmployeeForm) => {
     if (!data.empCode || !data.prefix || !data.firstNameTH || !data.lastNameTH) {
-      showError("กรุณากรอกข้อมูลที่จำเป็นให้ครบ");
+      showError(t("common.fillRequired"));
       return;
     }
-    showSuccess("บันทึกข้อมูลพนักงานเรียบร้อย");
+    showSuccess(t("employee.saveSuccess"));
     reset();
     setScreen("list");
   };
@@ -323,7 +325,7 @@ function EmployeeInner() {
           <Box sx={{ width: "100%", maxWidth: 1920, px: 3, py: 3 }}>
             {/* Page Title */}
             <Typography variant="h5" sx={{ fontWeight: 500, py: 2.5, color: "#374151" }}>
-              รายชื่อพนักงาน
+              {t("employee.title")}
             </Typography>
 
             {/* Sub-tabs */}
@@ -348,9 +350,9 @@ function EmployeeInner() {
                 "& .MuiTabs-indicator": { display: "none" },
               }}
             >
-              <Tab label="พนักงานปัจจุบัน" />
-              <Tab label="พนักงานที่ยกเลิก" />
-              <Tab label="พนักงานที่ลาออก" />
+              <Tab label={t("employee.currentEmployees")} />
+              <Tab label={t("employee.cancelledEmployees")} />
+              <Tab label={t("employee.resignedEmployees")} />
             </Tabs>
 
             {/* Content Card */}
@@ -362,19 +364,19 @@ function EmployeeInner() {
                   startIcon={<FileUploadOutlinedIcon />}
                   sx={{ whiteSpace: "nowrap" }}
                 >
-                  ส่งออกรายงาน
+                  {t("common.export")}
                 </Button>
 
                 <TextField
                   select
                   value={filterDept}
                   onChange={(e) => setFilterDept(e.target.value)}
-                  label="เลือกแผนก"
+                  label={t("employee.selectDepartment")}
                   size="small"
                   sx={{ minWidth: 180 }}
                   InputLabelProps={{ shrink: true }}
                 >
-                  <MenuItem value="">ทั้งหมด</MenuItem>
+                  <MenuItem value="">{t("common.all")}</MenuItem>
                   {DEPARTMENTS.map((d) => (
                     <MenuItem key={d} value={d}>{d}</MenuItem>
                   ))}
@@ -384,12 +386,12 @@ function EmployeeInner() {
                   select
                   value={filterPos}
                   onChange={(e) => setFilterPos(e.target.value)}
-                  label="เลือกตำแหน่ง"
+                  label={t("employee.selectPosition")}
                   size="small"
                   sx={{ minWidth: 180 }}
                   InputLabelProps={{ shrink: true }}
                 >
-                  <MenuItem value="">ทั้งหมด</MenuItem>
+                  <MenuItem value="">{t("common.all")}</MenuItem>
                   {POSITIONS.map((p) => (
                     <MenuItem key={p} value={p}>{p}</MenuItem>
                   ))}
@@ -400,7 +402,7 @@ function EmployeeInner() {
                 <TextField
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="ค้นหารหัส, ชื่อพนักงาน"
+                  placeholder={t("employee.searchPlaceholder")}
                   size="small"
                   sx={{ minWidth: 280 }}
                 />
@@ -411,7 +413,7 @@ function EmployeeInner() {
                   onClick={() => { reset(); setScreen("add"); }}
                   sx={{ whiteSpace: "nowrap" }}
                 >
-                  เพิ่มพนักงาน
+                  {t("employee.addEmployee")}
                 </Button>
               </Stack>
 
@@ -452,8 +454,8 @@ function EmployeeInner() {
                   },
                 }}
                 localeText={{
-                  noRowsLabel: "ไม่พบข้อมูลพนักงาน",
-                  footerRowSelected: (count) => `${count} รายการที่เลือก`,
+                  noRowsLabel: t("employee.noData"),
+                  footerRowSelected: (count) => `${count} ${t("employee.selectedItems")}`,
                 }}
               />
             </Paper>
@@ -470,7 +472,7 @@ function EmployeeInner() {
     <TenantShell breadcrumb={breadcrumb} activeModule="hr">
       <Box sx={{ p: 3 }}>
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2.5, color: "#333" }}>
-          เพิ่มพนักงาน
+          {t("employee.addEmployee")}
         </Typography>
 
         {/* ── Section 1: ข้อมูลทั่วไป ── */}
@@ -480,7 +482,7 @@ function EmployeeInner() {
           sx={{ mb: 2, borderRadius: "8px !important", "&:before": { display: "none" } }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>ข้อมูลทั่วไป</Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>{t("employee.generalInfo")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             {/* Photo upload */}
@@ -500,22 +502,22 @@ function EmployeeInner() {
               }}
             >
               <Typography sx={{ fontSize: "1.5rem", mb: 0.5 }}>📷</Typography>
-              <Typography variant="caption" color="text.secondary">อัพโหลดรูป</Typography>
+              <Typography variant="caption" color="text.secondary">{t("employee.uploadPhoto")}</Typography>
             </Box>
 
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr", lg: "1fr 1fr 1fr 1fr" }, gap: 2 }}>
-              <FormTextField name="empCode" control={control} label="รหัสพนักงาน" required />
-              <FormAutocomplete name="prefix" control={control} label="คำนำหน้า" options={PREFIXES} required />
-              <FormTextField name="firstNameTH" control={control} label="ชื่อ (TH)" required />
-              <FormTextField name="lastNameTH" control={control} label="นามสกุล (TH)" required />
-              <FormTextField name="firstNameEN" control={control} label="ชื่อ (ENG)" />
-              <FormTextField name="lastNameEN" control={control} label="นามสกุล (ENG)" />
+              <FormTextField name="empCode" control={control} label={t("employee.code")} required />
+              <FormAutocomplete name="prefix" control={control} label={t("employee.prefix")} options={PREFIXES} required />
+              <FormTextField name="firstNameTH" control={control} label={t("employee.firstNameTH")} required />
+              <FormTextField name="lastNameTH" control={control} label={t("employee.lastNameTH")} required />
+              <FormTextField name="firstNameEN" control={control} label={t("employee.firstNameEN")} />
+              <FormTextField name="lastNameEN" control={control} label={t("employee.lastNameEN")} />
             </Box>
 
             {/* ID Card */}
             <Box sx={{ mt: 2, mb: 2 }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block" }}>
-                หมายเลขบัตรประชาชน (13 หลัก)
+                {t("employee.idCard")}
               </Typography>
               <Stack direction="row" spacing={0.5}>
                 {Array.from({ length: 13 }).map((_, i) => (
@@ -541,12 +543,12 @@ function EmployeeInner() {
             </Box>
 
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr", lg: "1fr 1fr 1fr 1fr" }, gap: 2 }}>
-              <FormTextField name="nickname" control={control} label="ชื่อเล่น" />
-              <FormAutocomplete name="gender" control={control} label="เพศ" options={GENDER_OPTIONS} />
-              <FormTextField name="birthDate" control={control} label="วันเกิด" type="date" />
-              <FormTextField name="nationality" control={control} label="สัญชาติ" required />
-              <FormAutocomplete name="marital" control={control} label="สถานะสมรส" options={MARITAL_OPTIONS} />
-              <FormAutocomplete name="military" control={control} label="สถานะทางทหาร" options={MILITARY_OPTIONS} />
+              <FormTextField name="nickname" control={control} label={t("employee.nickname")} />
+              <FormAutocomplete name="gender" control={control} label={t("employee.gender")} options={GENDER_OPTIONS} />
+              <FormTextField name="birthDate" control={control} label={t("employee.birthDate")} type="date" />
+              <FormTextField name="nationality" control={control} label={t("employee.nationality")} required />
+              <FormAutocomplete name="marital" control={control} label={t("employee.maritalStatus")} options={MARITAL_OPTIONS} />
+              <FormAutocomplete name="military" control={control} label={t("employee.militaryStatus")} options={MILITARY_OPTIONS} />
             </Box>
           </AccordionDetails>
         </Accordion>
@@ -558,19 +560,19 @@ function EmployeeInner() {
           sx={{ mb: 2, borderRadius: "8px !important", "&:before": { display: "none" } }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>ข้อมูลการติดต่อ</Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>{t("employee.contactInfo")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr", lg: "1fr 1fr 1fr 1fr" }, gap: 2 }}>
               <Box sx={{ gridColumn: { lg: "1 / -1" } }}>
-                <FormTextField name="address" control={control} label="ที่อยู่" required />
+                <FormTextField name="address" control={control} label={t("employee.address")} required />
               </Box>
-              <FormTextField name="subDistrict" control={control} label="แขวง/ตำบล" />
-              <FormTextField name="district" control={control} label="อำเภอ/เขต" />
-              <FormTextField name="province" control={control} label="จังหวัด" />
-              <FormTextField name="zipcode" control={control} label="รหัสไปรษณีย์" />
+              <FormTextField name="subDistrict" control={control} label={t("employee.subDistrict")} />
+              <FormTextField name="district" control={control} label={t("employee.district")} />
+              <FormTextField name="province" control={control} label={t("employee.province")} />
+              <FormTextField name="zipcode" control={control} label={t("employee.zipcode")} />
               <FormTextField name="email" control={control} label="E-mail" type="email" />
-              <FormTextField name="phone" control={control} label="เบอร์โทรศัพท์" />
+              <FormTextField name="phone" control={control} label={t("employee.phone")} />
               <FormTextField name="lineId" control={control} label="Line ID" />
               <FormTextField name="facebook" control={control} label="Facebook" />
             </Box>
@@ -578,12 +580,12 @@ function EmployeeInner() {
             <Divider sx={{ my: 2.5 }} />
 
             <Typography variant="body2" sx={{ fontWeight: 600, mb: 2, color: "#333" }}>
-              บุคคลติดต่อในกรณีฉุกเฉิน
+              {t("employee.emergencyContact")}
             </Typography>
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" }, gap: 2 }}>
-              <FormTextField name="emergencyName" control={control} label="ชื่อ-นามสกุล" />
-              <FormTextField name="emergencyPhone" control={control} label="เบอร์โทรศัพท์" />
-              <FormAutocomplete name="emergencyRelation" control={control} label="ความสัมพันธ์" options={RELATIONSHIPS} />
+              <FormTextField name="emergencyName" control={control} label={t("employee.emergencyName")} />
+              <FormTextField name="emergencyPhone" control={control} label={t("employee.phone")} />
+              <FormAutocomplete name="emergencyRelation" control={control} label={t("employee.relationship")} options={RELATIONSHIPS} />
             </Box>
           </AccordionDetails>
         </Accordion>
@@ -595,20 +597,20 @@ function EmployeeInner() {
           sx={{ mb: 2, borderRadius: "8px !important", "&:before": { display: "none" } }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>ข้อมูลการทำงาน</Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>{t("employee.workInfo")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr", lg: "1fr 1fr 1fr 1fr" }, gap: 2 }}>
-              <FormTextField name="startDate" control={control} label="วันที่เริ่มทำงาน" type="date" />
-              <FormTextField name="endDate" control={control} label="วันที่สิ้นสุด" type="date" />
-              <FormAutocomplete name="empType" control={control} label="ประเภทพนักงาน" options={EMP_TYPES} />
-              <FormAutocomplete name="workStatus" control={control} label="สถานะ" options={STATUSES_WORK} />
-              <FormAutocomplete name="dept" control={control} label="แผนก" options={DEPT_OPTIONS} />
-              <FormAutocomplete name="position" control={control} label="ตำแหน่ง" options={POS_OPTIONS} />
+              <FormTextField name="startDate" control={control} label={t("employee.startDate")} type="date" />
+              <FormTextField name="endDate" control={control} label={t("employee.endDate")} type="date" />
+              <FormAutocomplete name="empType" control={control} label={t("employee.empType")} options={EMP_TYPES} />
+              <FormAutocomplete name="workStatus" control={control} label={t("employee.status")} options={STATUSES_WORK} />
+              <FormAutocomplete name="dept" control={control} label={t("employee.department")} options={DEPT_OPTIONS} />
+              <FormAutocomplete name="position" control={control} label={t("employee.position")} options={POS_OPTIONS} />
             </Box>
             <FormControlLabel
               control={<Checkbox sx={{ "&.Mui-checked": { color: OR } }} />}
-              label="ขึ้นทะเบียนประกันสังคม"
+              label={t("employee.socialSecurity")}
               sx={{ mt: 2 }}
             />
           </AccordionDetails>
@@ -621,7 +623,7 @@ function EmployeeInner() {
           sx={{ mb: 2, borderRadius: "8px !important", "&:before": { display: "none" } }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>ช่องทางการรับเงินเดือน</Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>{t("employee.salaryChannel")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <RadioGroup
@@ -630,8 +632,8 @@ function EmployeeInner() {
               onChange={(e) => setPayMethod(e.target.value as "bank" | "cash")}
               sx={{ mb: 2 }}
             >
-              <FormControlLabel value="bank" control={<Radio sx={{ "&.Mui-checked": { color: OR } }} />} label="บัญชีธนาคาร" />
-              <FormControlLabel value="cash" control={<Radio sx={{ "&.Mui-checked": { color: OR } }} />} label="เงินสด" />
+              <FormControlLabel value="bank" control={<Radio sx={{ "&.Mui-checked": { color: OR } }} />} label={t("employee.bankAccount")} />
+              <FormControlLabel value="cash" control={<Radio sx={{ "&.Mui-checked": { color: OR } }} />} label={t("employee.cash")} />
             </RadioGroup>
 
             {payMethod === "bank" && (
@@ -639,19 +641,19 @@ function EmployeeInner() {
                 <FormAutocomplete
                   name="bank"
                   control={control}
-                  label="ธนาคาร"
+                  label={t("employee.bank")}
                   options={BANKS.map((b) => ({ id: b, name: b }))}
                 />
                 <FormAutocomplete
                   name="accountType"
                   control={control}
-                  label="ประเภทบัญชี"
+                  label={t("employee.accountType")}
                   options={ACCOUNT_TYPES.map((t) => ({ id: t, name: t }))}
                 />
-                <FormTextField name="accountName" control={control} label="ชื่อบัญชี" />
-                <FormTextField name="accountNo" control={control} label="เลขบัญชี" />
-                <FormTextField name="branchName" control={control} label="ชื่อสาขา (ถ้ามี)" />
-                <FormTextField name="branchNo" control={control} label="เลขที่สาขา (ถ้ามี)" />
+                <FormTextField name="accountName" control={control} label={t("employee.accountName")} />
+                <FormTextField name="accountNo" control={control} label={t("employee.accountNo")} />
+                <FormTextField name="branchName" control={control} label={t("employee.branchName")} />
+                <FormTextField name="branchNo" control={control} label={t("employee.branchNo")} />
               </Box>
             )}
           </AccordionDetails>
@@ -664,14 +666,14 @@ function EmployeeInner() {
           sx={{ mb: 2, borderRadius: "8px !important", "&:before": { display: "none" } }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>เอกสารแนบ</Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9rem" }}>{t("employee.attachments")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Button variant="contained" startIcon={<AddIcon />} size="small">
-              เพิ่มเอกสาร
+              {t("employee.addDocument")}
             </Button>
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-              รองรับไฟล์ PDF, JPG, PNG ขนาดไม่เกิน 5MB
+              {t("employee.fileSupport")}
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -683,14 +685,14 @@ function EmployeeInner() {
             onClick={() => { reset(); setScreen("list"); }}
             sx={{ px: 4 }}
           >
-            ยกเลิก
+            {t("common.cancel")}
           </Button>
           <Button
             variant="contained"
             onClick={handleSubmit(onSubmit)}
             sx={{ px: 5 }}
           >
-            บันทึก
+            {t("common.save")}
           </Button>
         </Stack>
       </Box>
@@ -699,8 +701,9 @@ function EmployeeInner() {
 }
 
 export default function EmployeePage() {
+  const { t } = useLocale();
   return (
-    <Suspense fallback={<Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><Typography color="text.secondary">กำลังโหลด...</Typography></Box>}>
+    <Suspense fallback={<Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><Typography color="text.secondary">{t("common.loading")}</Typography></Box>}>
       <EmployeeInner />
     </Suspense>
   );

@@ -75,6 +75,7 @@ function getStepOf(screen: Screen): string {
    MAIN COMPONENT
    ════════════════════════════════════════════════════════════ */
 function SetupWizardInner() {
+  // const { t } = useLocale(); // TODO: apply t() to wizard labels
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
