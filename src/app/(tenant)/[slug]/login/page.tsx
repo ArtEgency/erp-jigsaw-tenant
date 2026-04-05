@@ -52,17 +52,17 @@ export default function TenantLoginPage() {
   const PC = tenant.primaryColor;
 
   return (
-    <div className="min-h-screen flex">
+    <Box sx={{ minHeight: "100vh", display: "flex" }}>
       {/* Left Panel — Branding */}
       <Box
-        className="hidden lg:flex"
         sx={{
+          display: { xs: "none", lg: "flex" },
           width: 480, flexShrink: 0, flexDirection: "column", alignItems: "center", justifyContent: "center",
           position: "relative", overflow: "hidden", bgcolor: PC,
         }}
       >
-        <Box className="absolute w-[600px] h-[600px] rounded-full opacity-10 bg-white" sx={{ top: -200, left: -200 }} />
-        <Box className="absolute w-[300px] h-[300px] rounded-full opacity-10 bg-white" sx={{ bottom: -80, right: -80 }} />
+        <Box sx={{ position: "absolute", width: 600, height: 600, borderRadius: "50%", opacity: 0.1, bgcolor: "white", top: -200, left: -200 }} />
+        <Box sx={{ position: "absolute", width: 300, height: 300, borderRadius: "50%", opacity: 0.1, bgcolor: "white", bottom: -80, right: -80 }} />
         <Box sx={{ position: "relative", zIndex: 10, textAlign: "center", px: 6 }}>
           <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 80, height: 80, fontSize: 28, fontWeight: 700, mx: "auto", mb: 3, borderRadius: 3 }}>
             {tenant.initials}
@@ -129,6 +129,6 @@ export default function TenantLoginPage() {
           </Box>
         </Box>
       </Box>
-    </div>
+    </Box>
   );
 }

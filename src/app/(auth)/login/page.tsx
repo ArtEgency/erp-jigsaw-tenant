@@ -66,13 +66,17 @@ export default function BackofficeLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <Box sx={{ minHeight: "100vh", display: "flex" }}>
       {/* Left: Decorative Panel */}
       <Box
-        className="hidden lg:flex flex-1 flex-col items-center justify-center relative overflow-hidden"
-        sx={{ background: "linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)" }}
+        sx={{
+          display: { xs: "none", lg: "flex" },
+          flex: 1, flexDirection: "column", alignItems: "center", justifyContent: "center",
+          position: "relative", overflow: "hidden",
+          background: "linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+        }}
       >
-        <Box className="relative z-10 text-center">
+        <Box sx={{ position: "relative", zIndex: 10, textAlign: "center" }}>
           <Typography variant="h1" sx={{ fontSize: "5rem", fontWeight: 800, letterSpacing: "0.3em", color: "rgba(86,93,255,0.18)", mb: 2 }}>
             ERP
           </Typography>
@@ -220,6 +224,6 @@ export default function BackofficeLoginPage() {
           </Box>
         )}
       </Box>
-    </div>
+    </Box>
   );
 }

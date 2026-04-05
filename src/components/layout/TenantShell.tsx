@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { Box } from "@mui/material";
 import { useLocale } from "@/lib/locale";
 
 /* ── Types ── */
@@ -184,10 +185,9 @@ const BRANCHES: BranchOption[] = [
   { code: "B2-WH-EANG", name: "B2-WH-EANG" },
 ];
 
-/* ── Enabled modules (มีหน้าจอแล้ว) ── */
+/* ── Enabled modules ── */
 const ENABLED_MODULES = new Set([
   "hr", "settings", "products",
-  // sub-items that have real pages
   "products-list",
   "hr-employee", "hr-role-list", "hr-assign-permission", "hr-permissions",
   "settings-business", "settings-business-info", "settings-business-branch",
@@ -197,7 +197,7 @@ const ENABLED_MODULES = new Set([
   "settings-warehouse", "settings-warehouse-config",
 ]);
 
-/* ── Route map (slug-relative) ── */
+/* ── Route map ── */
 const getModuleRoutes = (slug: string): Record<string, string> => ({
   "products-list": `/${slug}/product`,
   "hr-employee": `/${slug}/employee`,
@@ -229,7 +229,7 @@ const SIDEBAR_ITEMS = [
 ];
 
 /* ═══════════════════════════════════════════════════════════════
-   Fixed Dropdown Menu — renders at viewport level, never clipped
+   Fixed Dropdown Menu
    ═══════════════════════════════════════════════════════════════ */
 function FixedDropdownMenu({ items, onSelect, anchorRect }: {
   items: ModuleChild[]; onSelect: (id: string) => void; anchorRect: DOMRect;
@@ -243,7 +243,6 @@ function FixedDropdownMenu({ items, onSelect, anchorRect }: {
     const rect = menuRef.current.getBoundingClientRect();
     const vw = window.innerWidth;
     let left = anchorRect.left;
-    // If menu overflows right edge, shift it left
     if (left + rect.width > vw - 8) {
       left = Math.max(8, vw - rect.width - 8);
     }
@@ -251,59 +250,70 @@ function FixedDropdownMenu({ items, onSelect, anchorRect }: {
   }, [anchorRect]);
 
   return (
-    <div ref={menuRef} className="fixed bg-white rounded-b-lg shadow-xl border min-w-[200px] z-[100]"
-      style={{ borderColor: BORDER, left: pos.left, top: pos.top }}>
+    <Box
+      ref={menuRef}
+      sx={{ position: "fixed", bgcolor: "white", borderBottomLeftRadius: 8, borderBottomRightRadius: 8, boxShadow: 6, border: `1px solid ${BORDER}`, minWidth: 200, zIndex: 100, left: pos.left, top: pos.top }}
+    >
       {items.map((child) => {
         const hasSub = child.children && child.children.length > 0;
         const childEnabled = ENABLED_MODULES.has(child.id);
         return (
-          <div key={child.id} className="relative"
+          <Box key={child.id} sx={{ position: "relative" }}
             onMouseEnter={() => hasSub && childEnabled && setHoveredSub(child.id)}
             onMouseLeave={() => setHoveredSub(null)}
           >
-            <button
+            <Box
+              component="button"
               disabled={!childEnabled}
               onClick={() => { if (!hasSub && childEnabled) onSelect(child.id); }}
-              className="w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between"
-              style={{
+              sx={{
+                width: "100%", textAlign: "left", px: 2, py: 1.25, fontSize: 14, transition: "all 150ms",
+                display: "flex", alignItems: "center", justifyContent: "space-between", border: "none",
                 color: !childEnabled ? "#C8C8C8" : hoveredSub === child.id ? OR : TEXT,
-                background: hoveredSub === child.id && childEnabled ? OR_L : "transparent",
-                borderBottom: `1px solid #f0f0f0`,
+                bgcolor: hoveredSub === child.id && childEnabled ? OR_L : "transparent",
+                borderBottom: "1px solid #f0f0f0",
                 cursor: !childEnabled ? "default" : "pointer",
               }}
             >
               <span>{child.label}</span>
-              {hasSub && <span className="text-xs" style={{ color: childEnabled ? "#aaa" : "#D8D8D8" }}>&#x203A;</span>}
-            </button>
+              {hasSub && <Box component="span" sx={{ fontSize: 12, color: childEnabled ? "#aaa" : "#D8D8D8" }}>&#x203A;</Box>}
+            </Box>
             {hasSub && hoveredSub === child.id && childEnabled && (
-              <div className="absolute left-full top-0 bg-white rounded-lg shadow-xl border min-w-[200px] z-[110]"
-                style={{ borderColor: BORDER, ...(pos.left + 400 > window.innerWidth ? { left: "auto", right: "100%" } : {}) }}>
+              <Box
+                sx={{
+                  position: "absolute", left: "100%", top: 0, bgcolor: "white", borderRadius: 2,
+                  boxShadow: 6, border: `1px solid ${BORDER}`, minWidth: 200, zIndex: 110,
+                  ...(pos.left + 400 > (typeof window !== "undefined" ? window.innerWidth : 1200) ? { left: "auto", right: "100%" } : {}),
+                }}
+              >
                 {child.children!.map((sub) => {
                   const subEnabled = ENABLED_MODULES.has(sub.id);
                   return (
-                  <button key={sub.id}
-                    disabled={!subEnabled}
-                    onClick={() => { if (subEnabled) onSelect(sub.id); }}
-                    className="w-full text-left px-4 py-2.5 text-sm transition-colors"
-                    style={{ color: subEnabled ? TEXT : "#C8C8C8", borderBottom: `1px solid #f0f0f0`, cursor: subEnabled ? "pointer" : "default" }}
-                    onMouseEnter={(e) => { if (subEnabled) { e.currentTarget.style.background = OR_L; e.currentTarget.style.color = OR; } }}
-                    onMouseLeave={(e) => { if (subEnabled) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = TEXT; } }}
-                  >
-                    {sub.label}
-                  </button>
+                    <Box
+                      key={sub.id} component="button" disabled={!subEnabled}
+                      onClick={() => { if (subEnabled) onSelect(sub.id); }}
+                      sx={{
+                        width: "100%", textAlign: "left", px: 2, py: 1.25, fontSize: 14, transition: "all 150ms",
+                        color: subEnabled ? TEXT : "#C8C8C8", borderBottom: "1px solid #f0f0f0",
+                        cursor: subEnabled ? "pointer" : "default", border: "none", bgcolor: "transparent",
+                        "&:hover": subEnabled ? { bgcolor: OR_L, color: OR } : {},
+                      }}
+                    >
+                      {sub.label}
+                    </Box>
                   );
                 })}
-              </div>
+              </Box>
             )}
-          </div>
+          </Box>
         );
       })}
-    </div>
+    </Box>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ModuleNavBar — horizontally scrollable with safe area + arrows
+   ModuleNavBar
    ═══════════════════════════════════════════════════════════════ */
 function ModuleNavBar({ modules, activeModule, openDropdown, onDropdownToggle, onDropdownClose, onModuleNav }: {
   modules: ModuleItem[];
@@ -335,7 +345,6 @@ function ModuleNavBar({ modules, activeModule, openDropdown, onDropdownToggle, o
     return () => { el.removeEventListener("scroll", checkScroll); window.removeEventListener("resize", checkScroll); };
   }, [checkScroll]);
 
-  // Update dropdown anchor when openDropdown changes
   useEffect(() => {
     if (openDropdown && btnRefs.current[openDropdown]) {
       setDropdownAnchor(btnRefs.current[openDropdown]!.getBoundingClientRect());
@@ -353,20 +362,18 @@ function ModuleNavBar({ modules, activeModule, openDropdown, onDropdownToggle, o
   const activeDropdownMod = modules.find((m) => m.id === openDropdown);
 
   return (
-    <div className="flex items-center shrink-0 bg-white relative z-40" style={{ borderBottom: `1px solid ${BORDER}` }}>
-      {/* Left scroll arrow */}
+    <Box sx={{ display: "flex", alignItems: "center", flexShrink: 0, bgcolor: "white", position: "relative", zIndex: 40, borderBottom: `1px solid ${BORDER}` }}>
       {showLeft && (
-        <button onClick={() => scroll("left")}
-          className="w-8 h-[48px] flex items-center justify-center shrink-0 hover:bg-gray-100 transition-colors"
-          style={{ color: OR, borderRight: `1px solid ${BORDER}` }}>
+        <Box
+          component="button" onClick={() => scroll("left")}
+          sx={{ width: 32, height: 48, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "none", cursor: "pointer", bgcolor: "transparent", color: OR, borderRight: `1px solid ${BORDER}`, "&:hover": { bgcolor: "#f5f5f5" } }}
+        >
           <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
+        </Box>
       )}
 
-      {/* Scrollable module list */}
-      <div ref={scrollRef} className="flex-1 overflow-x-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-        <style>{`[data-module-scroll]::-webkit-scrollbar{display:none}`}</style>
-        <div className="flex items-center" data-module-scroll>
+      <Box ref={scrollRef} sx={{ flex: 1, overflowX: "auto", scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
           {modules.map((mod) => {
             const isActive = activeModule === mod.id;
             const hasChildren = mod.children && mod.children.length > 0;
@@ -374,62 +381,49 @@ function ModuleNavBar({ modules, activeModule, openDropdown, onDropdownToggle, o
             const isEnabled = ENABLED_MODULES.has(mod.id);
 
             return (
-              <button
-                key={mod.id}
-                ref={(el) => { btnRefs.current[mod.id] = el; }}
+              <Box
+                key={mod.id} component="button"
+                ref={(el: HTMLButtonElement | null) => { btnRefs.current[mod.id] = el; }}
                 disabled={!isEnabled}
                 onClick={() => {
                   if (!isEnabled) return;
-                  if (hasChildren) {
-                    onDropdownToggle(mod.id);
-                  } else {
-                    onDropdownClose();
-                    onModuleNav(mod.id);
-                  }
+                  if (hasChildren) { onDropdownToggle(mod.id); }
+                  else { onDropdownClose(); onModuleNav(mod.id); }
                 }}
-                className="flex items-center gap-2 px-4 h-[48px] whitespace-nowrap transition-colors relative shrink-0"
-                style={{
+                sx={{
+                  display: "flex", alignItems: "center", gap: 1, px: 2, height: 48,
+                  whiteSpace: "nowrap", transition: "all 150ms", position: "relative", flexShrink: 0,
+                  border: "none", fontFamily: "'Sarabun', sans-serif", fontSize: 16, fontWeight: 500,
                   color: !isEnabled ? "#C8C8C8" : isActive || isDropOpen ? OR : MUTED,
-                  background: isActive ? OR_L : isDropOpen ? "#fafafa" : "transparent",
-                  fontFamily: "'Sarabun', sans-serif",
-                  fontSize: 16,
-                  fontWeight: 500,
+                  bgcolor: isActive ? OR_L : isDropOpen ? "#fafafa" : "transparent",
                   cursor: !isEnabled ? "default" : "pointer",
                   opacity: !isEnabled ? 0.6 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isEnabled) return;
-                  if (!isActive && !isDropOpen) { e.currentTarget.style.background = "#fafafa"; e.currentTarget.style.color = OR; }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isEnabled) return;
-                  if (!isActive && !isDropOpen) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = MUTED; }
+                  "&:hover": isEnabled ? { bgcolor: isActive ? OR_L : "#fafafa", color: OR } : {},
                 }}
               >
-                <span style={{ color: !isEnabled ? "#C8C8C8" : isActive || isDropOpen ? OR : MUTED, display: "flex", alignItems: "center" }}>{mod.icon}</span>
+                <Box component="span" sx={{ color: !isEnabled ? "#C8C8C8" : isActive || isDropOpen ? OR : MUTED, display: "flex", alignItems: "center" }}>{mod.icon}</Box>
                 <span>{mod.label}</span>
                 {hasChildren && (
-                  <svg width={10} height={6} viewBox="0 0 10 6" fill="none" className="ml-0.5">
+                  <svg width={10} height={6} viewBox="0 0 10 6" fill="none" style={{ marginLeft: 2 }}>
                     <path d="M1 1l4 4 4-4" stroke={!isEnabled ? "#C8C8C8" : isActive || isDropOpen ? OR : "#aaa"} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 )}
-                {isActive && <div className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-t" style={{ background: OR }} />}
-              </button>
+                {isActive && <Box sx={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2.5, borderTopLeftRadius: 4, borderTopRightRadius: 4, bgcolor: OR }} />}
+              </Box>
             );
           })}
-        </div>
-      </div>
+        </Box>
+      </Box>
 
-      {/* Right scroll arrow */}
       {showRight && (
-        <button onClick={() => scroll("right")}
-          className="w-8 h-[48px] flex items-center justify-center shrink-0 hover:bg-gray-100 transition-colors"
-          style={{ color: OR, background: OR_L, borderLeft: `1px solid ${BORDER}` }}>
+        <Box
+          component="button" onClick={() => scroll("right")}
+          sx={{ width: 32, height: 48, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "none", cursor: "pointer", color: OR, bgcolor: OR_L, borderLeft: `1px solid ${BORDER}`, "&:hover": { bgcolor: OR_L } }}
+        >
           <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
+        </Box>
       )}
 
-      {/* Fixed dropdown — rendered at viewport level */}
       {activeDropdownMod && activeDropdownMod.children && dropdownAnchor && (
         <FixedDropdownMenu
           items={activeDropdownMod.children}
@@ -437,71 +431,9 @@ function ModuleNavBar({ modules, activeModule, openDropdown, onDropdownToggle, o
           onSelect={(id) => { onDropdownClose(); onModuleNav(id); }}
         />
       )}
-    </div>
+    </Box>
   );
 }
-
-/* Screen Index removed — page list panel removed */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _screenIndex_removed = [
-  {
-    group: "F-02 \u00b7 Setup Wizard", color: OR,
-    items: [
-      { label: "W1 \u2014 Wizard Entry", path: "/_SLUG_/setup-wizard?screen=w1" },
-      { label: "W2a \u2014 \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e19\u0e34\u0e15\u0e34\u0e1a\u0e38\u0e04\u0e04\u0e25", path: "/_SLUG_/setup-wizard?screen=w2a" },
-      { label: "W2b \u2014 \u0e01\u0e23\u0e2d\u0e01\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e19\u0e34\u0e15\u0e34\u0e1a\u0e38\u0e04\u0e04\u0e25", path: "/_SLUG_/setup-wizard?screen=w2b" },
-      { label: "W2e \u2014 Error Tax ID", path: "/_SLUG_/setup-wizard?screen=w2e" },
-      { label: "W3 \u2014 Branding", path: "/_SLUG_/setup-wizard?screen=w3" },
-      { label: "W4 \u2014 \u0e2a\u0e32\u0e02\u0e32\u0e41\u0e23\u0e01 (HQ)", path: "/_SLUG_/setup-wizard?screen=w4" },
-      { label: "W5 \u2014 \u0e01\u0e32\u0e23\u0e40\u0e07\u0e34\u0e19\u0e1e\u0e37\u0e49\u0e19\u0e10\u0e32\u0e19", path: "/_SLUG_/setup-wizard?screen=w5" },
-      { label: "W6 \u2014 \u0e04\u0e25\u0e31\u0e07\u0e2a\u0e34\u0e19\u0e04\u0e49\u0e32\u0e41\u0e23\u0e01", path: "/_SLUG_/setup-wizard?screen=w6" },
-      { label: "W7 \u2014 Checklist Summary", path: "/_SLUG_/setup-wizard?screen=w7" },
-      { label: "WE1 \u2014 Block Navigation Modal", path: "/_SLUG_/setup-wizard?screen=we1" },
-    ],
-  },
-  {
-    group: "F-03 \u00b7 \u0e2a\u0e23\u0e49\u0e32\u0e07 Role & Permission", color: OR,
-    items: [
-      { label: "S1 \u2014 \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c (\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c\u0e08\u0e31\u0e14\u0e01\u0e32\u0e23\u0e40\u0e21\u0e19\u0e39)", path: "/_SLUG_/role-permission?screen=s1" },
-      { label: "S2 \u2014 \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c (\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c\u0e08\u0e31\u0e14\u0e01\u0e32\u0e23\u0e2a\u0e48\u0e27\u0e19\u0e07\u0e32\u0e19)", path: "/_SLUG_/role-permission?screen=s2" },
-      { label: "S3 \u2014 \u0e2a\u0e23\u0e49\u0e32\u0e07\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c SYSTEM", path: "/_SLUG_/role-permission?screen=s3" },
-      { label: "S4 \u2014 Popup \u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c\u0e40\u0e09\u0e1e\u0e32\u0e30\u0e01\u0e23\u0e13\u0e35", path: "/_SLUG_/role-permission?screen=s4" },
-      { label: "S5 \u2014 \u0e2a\u0e23\u0e49\u0e32\u0e07\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c ERP Permission", path: "/_SLUG_/role-permission?screen=s5" },
-      { label: "S6 \u2014 Error States", path: "/_SLUG_/role-permission?screen=s6" },
-    ],
-  },
-  {
-    group: "F-04 \u00b7 \u0e08\u0e31\u0e14\u0e01\u0e32\u0e23\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19", color: OR,
-    items: [
-      { label: "S1 \u2014 \u0e23\u0e32\u0e22\u0e0a\u0e37\u0e48\u0e2d\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19 (\u0e1b\u0e31\u0e08\u0e08\u0e38\u0e1a\u0e31\u0e19)", path: "/_SLUG_/employee" },
-      { label: "S2 \u2014 \u0e40\u0e1e\u0e34\u0e48\u0e21\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19 (\u0e1f\u0e2d\u0e23\u0e4c\u0e21)", path: "/_SLUG_/employee" },
-    ],
-  },
-  {
-    group: "F-05 \u00b7 \u0e01\u0e33\u0e2b\u0e19\u0e14\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c\u0e1c\u0e39\u0e49\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19", color: OR,
-    items: [
-      { label: "S1 \u2014 \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c", path: "/_SLUG_/assign-permission" },
-      { label: "S2 \u2014 \u0e1f\u0e2d\u0e23\u0e4c\u0e21\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e2a\u0e34\u0e17\u0e18\u0e34\u0e4c", path: "/_SLUG_/assign-permission" },
-    ],
-  },
-  {
-    group: "F-06 \u00b7 \u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e2a\u0e34\u0e19\u0e04\u0e49\u0e32", color: OR,
-    items: [
-      { label: "S1 \u2014 \u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17\u0e2a\u0e34\u0e19\u0e04\u0e49\u0e32 (List + Modal)", path: "/_SLUG_/settings/product?tab=product-type" },
-      { label: "S2 \u2014 \u0e2b\u0e19\u0e48\u0e27\u0e22\u0e19\u0e31\u0e1a (List + Modal)", path: "/_SLUG_/settings/product?tab=unit" },
-    ],
-  },
-  {
-    group: "Tenant App", color: OR,
-    items: [
-      { label: "\u0e41\u0e14\u0e0a\u0e1a\u0e2d\u0e23\u0e4c\u0e14 (My Job)", path: "/_SLUG_" },
-      { label: "\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e2a\u0e34\u0e19\u0e04\u0e49\u0e32", path: "/_SLUG_" },
-      { label: "\u0e43\u0e1a\u0e02\u0e2d\u0e0b\u0e37\u0e49\u0e2d", path: "/_SLUG_" },
-      { label: "\u0e07\u0e32\u0e19\u0e02\u0e32\u0e22", path: "/_SLUG_" },
-      { label: "\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32\u0e1a\u0e23\u0e34\u0e29\u0e31\u0e17", path: "/_SLUG_" },
-    ],
-  },
-];
 
 /* ═══════════════════════════════════════════════════════════════
    TenantShell Component
@@ -522,243 +454,245 @@ export default function TenantShell({ children, breadcrumb, activeModule, onModu
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   const handleModuleNav = (id: string) => {
-    if (MODULE_ROUTES[id]) {
-      router.push(MODULE_ROUTES[id]);
-    } else if (onModuleClick) {
-      onModuleClick(id);
-    }
+    if (MODULE_ROUTES[id]) { router.push(MODULE_ROUTES[id]); }
+    else if (onModuleClick) { onModuleClick(id); }
   };
 
-  // totalScreens removed — page list panel removed
-
   return (
-    <div className="min-h-screen flex" style={{ background: BG, fontFamily: "'Sarabun', sans-serif" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: BG, fontFamily: "'Sarabun', sans-serif" }}>
 
-      {/* ══════ LEFT SIDEBAR (expandable) ══════ */}
-      <div className={`shrink-0 flex transition-all duration-300 ${sidebarExpanded ? "w-[260px]" : "w-[68px]"}`} style={{ borderRight: `1px solid ${BORDER}` }}>
-        {/* Icon Bar (always visible) */}
-        <div className={`shrink-0 flex flex-col items-center py-3 gap-1 z-50 transition-all duration-300 ${sidebarExpanded ? "w-full" : "w-[68px]"}`} style={{ background: "#FFFFFF" }}>
+      {/* LEFT SIDEBAR */}
+      <Box sx={{ flexShrink: 0, display: "flex", transition: "width 300ms", width: sidebarExpanded ? 260 : 68, borderRight: `1px solid ${BORDER}` }}>
+        <Box sx={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", py: 1.5, gap: 0.5, zIndex: 50, transition: "width 300ms", width: sidebarExpanded ? "100%" : 68, bgcolor: "#FFFFFF" }}>
           {/* JIGSAW logo */}
-          <button onClick={() => router.push("/")} className="w-11 h-11 rounded-lg flex items-center justify-center mb-2 hover:opacity-80 transition-opacity" style={{ background: OR }}>
+          <Box
+            component="button" onClick={() => router.push("/")}
+            sx={{ width: 44, height: 44, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", mb: 1, border: "none", cursor: "pointer", bgcolor: OR, "&:hover": { opacity: 0.8 } }}
+          >
             <svg width={18} height={18} viewBox="0 0 24 24" fill="none">
               <rect x="3" y="3" width="7" height="7" rx="1.5" fill="white" />
               <rect x="14" y="3" width="7" height="7" rx="1.5" fill="white" opacity={0.7} />
               <rect x="3" y="14" width="7" height="7" rx="1.5" fill="white" opacity={0.7} />
               <rect x="14" y="14" width="7" height="7" rx="1.5" fill="white" opacity={0.5} />
             </svg>
-          </button>
+          </Box>
 
           {SIDEBAR_ITEMS.map((item, i) => {
             const hasPath = !!item.path;
             return (
-            <button
-              key={i}
-              disabled={!hasPath}
-              onClick={() => hasPath ? router.push(item.path.replace("_SLUG_", slug)) : undefined}
-              className={`rounded-lg flex items-center transition-colors group relative ${sidebarExpanded ? "w-full px-3 py-2 gap-3" : "w-9 h-9 justify-center"}`}
-              style={{ color: hasPath ? (i === 0 ? OR : MUTED) : "#D0D0D0", cursor: hasPath ? "pointer" : "default", opacity: hasPath ? 1 : 0.5 }}
-              onMouseEnter={(e) => { if (hasPath) { e.currentTarget.style.background = OR_L; e.currentTarget.style.color = OR; } }}
-              onMouseLeave={(e) => { if (hasPath) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = i === 0 ? OR : MUTED; } }}
-              title={item.label}
-            >
-              {item.icon}
-              {sidebarExpanded && <span className="text-sm font-normal whitespace-nowrap overflow-hidden">{item.label}</span>}
-            </button>
+              <Box
+                key={i} component="button" disabled={!hasPath}
+                onClick={() => hasPath ? router.push(item.path.replace("_SLUG_", slug)) : undefined}
+                sx={{
+                  borderRadius: 2, display: "flex", alignItems: "center", transition: "all 150ms",
+                  border: "none",
+                  ...(sidebarExpanded
+                    ? { width: "100%", px: 1.5, py: 1, gap: 1.5 }
+                    : { width: 36, height: 36, justifyContent: "center" }),
+                  color: hasPath ? (i === 0 ? OR : MUTED) : "#D0D0D0",
+                  cursor: hasPath ? "pointer" : "default",
+                  opacity: hasPath ? 1 : 0.5,
+                  bgcolor: "transparent",
+                  "&:hover": hasPath ? { bgcolor: OR_L, color: OR } : {},
+                }}
+                title={item.label}
+              >
+                {item.icon}
+                {sidebarExpanded && <Box component="span" sx={{ fontSize: 14, fontWeight: 400, whiteSpace: "nowrap", overflow: "hidden" }}>{item.label}</Box>}
+              </Box>
             );
           })}
-        </div>
+        </Box>
+      </Box>
 
-        {/* Page List Panel removed — sidebar is icon-only */}
-      </div>
+      {/* MAIN AREA */}
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
 
-      {/* ══════ MAIN AREA ══════ */}
-      <div className="flex-1 flex flex-col min-w-0">
-
-        {/* ══════ TOP BAR ══════ */}
-        <div className="h-[52px] flex items-center px-4 gap-3 shrink-0 relative z-50" style={{ background: OR }}>
-          {/* Hamburger — toggle sidebar */}
-          <button onClick={() => setSidebarExpanded(prev => !prev)} className="text-white hover:bg-white/20 rounded-lg p-1.5 transition-colors">
+        {/* TOP BAR */}
+        <Box sx={{ height: 52, display: "flex", alignItems: "center", px: 2, gap: 1.5, flexShrink: 0, position: "relative", zIndex: 50, bgcolor: OR }}>
+          <Box component="button" onClick={() => setSidebarExpanded(prev => !prev)} sx={{ color: "white", border: "none", cursor: "pointer", bgcolor: "transparent", borderRadius: 2, p: 0.75, "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
             <IconHamburger />
-          </button>
+          </Box>
 
           {/* Branch Selector */}
-          <div className="relative flex items-center gap-2">
-            <span className="text-white/70 text-sm font-medium" style={{ fontSize: 14 }}>{t("shell.branch")} :</span>
-            <button
+          <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 1 }}>
+            <Box component="span" sx={{ color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 500 }}>{t("shell.branch")} :</Box>
+            <Box
+              component="button"
               onClick={() => { setBranchOpen(!branchOpen); setLangOpen(false); }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all"
-              style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "white", fontSize: 14 }}
+              sx={{ display: "flex", alignItems: "center", gap: 1, px: 1.5, py: 0.75, borderRadius: 1, fontSize: 14, fontWeight: 500, bgcolor: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", color: "white", cursor: "pointer" }}
             >
               <span>{selectedBranch.name}</span>
               <svg width={10} height={6} viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="white" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
+            </Box>
             {branchOpen && (
-              <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl border min-w-[220px] z-[100] overflow-hidden" style={{ borderColor: BORDER }}>
+              <Box sx={{ position: "absolute", top: "100%", left: 0, mt: 0.5, bgcolor: "white", borderRadius: 2, boxShadow: 6, border: `1px solid ${BORDER}`, minWidth: 220, zIndex: 100, overflow: "hidden" }}>
                 {BRANCHES.map((b) => (
-                  <button key={b.code} onClick={() => { setSelectedBranch(b); setBranchOpen(false); }}
-                    className="w-full text-left px-4 py-3 text-sm hover:bg-indigo-50 transition-colors flex items-center gap-2"
-                    style={{ color: selectedBranch.code === b.code ? OR : TEXT, fontWeight: selectedBranch.code === b.code ? 600 : 400, borderBottom: `1px solid ${BORDER}` }}
+                  <Box
+                    key={b.code} component="button"
+                    onClick={() => { setSelectedBranch(b); setBranchOpen(false); }}
+                    sx={{
+                      width: "100%", textAlign: "left", px: 2, py: 1.5, fontSize: 14, border: "none", cursor: "pointer",
+                      display: "flex", alignItems: "center", gap: 1, bgcolor: "transparent",
+                      color: selectedBranch.code === b.code ? OR : TEXT,
+                      fontWeight: selectedBranch.code === b.code ? 600 : 400,
+                      borderBottom: `1px solid ${BORDER}`,
+                      "&:hover": { bgcolor: "#f0f0ff" },
+                    }}
                   >
                     {b.name}
-                  </button>
+                  </Box>
                 ))}
-              </div>
+              </Box>
             )}
-          </div>
+          </Box>
 
           {/* System name */}
-          <div className="text-white/60 text-sm flex-1" style={{ fontSize: 14 }}>
-            SYSTEM NAME HERE
-          </div>
+          <Box sx={{ color: "rgba(255,255,255,0.6)", fontSize: 14, flex: 1 }}>SYSTEM NAME HERE</Box>
 
           {/* Right icons */}
-          <div className="flex items-center gap-1">
-            {/* Onboarding - ทางเข้าชั่วคราว */}
-            <button
-              onClick={() => router.push(`/${slug}/setup-wizard`)}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-md text-[12px] font-bold transition-all hover:opacity-90"
-              style={{ background: "white", color: "#565DFF" }}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            {/* Onboarding */}
+            <Box
+              component="button" onClick={() => router.push(`/${slug}/setup-wizard`)}
+              sx={{ display: "flex", alignItems: "center", gap: 0.75, px: 1.5, py: 0.5, borderRadius: 1, fontSize: 12, fontWeight: 700, bgcolor: "white", color: "#565DFF", border: "none", cursor: "pointer", "&:hover": { opacity: 0.9 } }}
             >
               <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
               </svg>
               <span>{t("shell.onboarding")}</span>
-            </button>
+            </Box>
             {/* Mail */}
-            <button className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+            <Box component="button" sx={{ color: "white", border: "none", cursor: "pointer", bgcolor: "transparent", borderRadius: 2, p: 1, "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
               <IconMail />
-            </button>
+            </Box>
             {/* Notification */}
-            <button className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors relative">
+            <Box component="button" sx={{ color: "white", border: "none", cursor: "pointer", bgcolor: "transparent", borderRadius: 2, p: 1, position: "relative", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
               <IconBell />
-              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold" style={{ lineHeight: 1 }}>3</span>
-            </button>
+              <Box component="span" sx={{ position: "absolute", top: 4, right: 4, width: 16, height: 16, bgcolor: "#E53935", borderRadius: "50%", fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, lineHeight: 1 }}>3</Box>
+            </Box>
             {/* Refresh */}
-            <button className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+            <Box component="button" sx={{ color: "white", border: "none", cursor: "pointer", bgcolor: "transparent", borderRadius: 2, p: 1, "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
               <IconRefresh />
-            </button>
+            </Box>
             {/* Grid */}
-            <button className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+            <Box component="button" sx={{ color: "white", border: "none", cursor: "pointer", bgcolor: "transparent", borderRadius: 2, p: 1, "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}>
               <IconGrid />
-            </button>
+            </Box>
 
             {/* Language Switcher */}
-            <div className="relative">
-              <button onClick={() => { setLangOpen(!langOpen); setBranchOpen(false); }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-semibold text-white hover:bg-white/20 transition-colors"
-                style={{ fontSize: 14 }}
+            <Box sx={{ position: "relative" }}>
+              <Box
+                component="button"
+                onClick={() => { setLangOpen(!langOpen); setBranchOpen(false); }}
+                sx={{ display: "flex", alignItems: "center", gap: 0.75, px: 1.25, py: 0.75, borderRadius: 1, fontSize: 14, fontWeight: 600, color: "white", border: "none", cursor: "pointer", bgcolor: "transparent", "&:hover": { bgcolor: "rgba(255,255,255,0.2)" } }}
               >
                 {lang === "th" ? "TH" : "EN"}
                 <svg width={10} height={6} viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="white" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
+              </Box>
               {langOpen && (
-                <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-xl border min-w-[140px] z-[100] overflow-hidden" style={{ borderColor: BORDER }}>
-                  <button onClick={() => { setLang("th"); setLangOpen(false); }}
-                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 transition-colors"
-                    style={{ color: lang === "th" ? OR : TEXT, fontWeight: lang === "th" ? 600 : 400, borderBottom: `1px solid ${BORDER}` }}
-                  >
+                <Box sx={{ position: "absolute", top: "100%", right: 0, mt: 0.5, bgcolor: "white", borderRadius: 2, boxShadow: 6, border: `1px solid ${BORDER}`, minWidth: 140, zIndex: 100, overflow: "hidden" }}>
+                  <Box component="button" onClick={() => { setLang("th"); setLangOpen(false); }}
+                    sx={{ width: "100%", textAlign: "left", px: 2, py: 1.25, fontSize: 14, border: "none", cursor: "pointer", bgcolor: "transparent", color: lang === "th" ? OR : TEXT, fontWeight: lang === "th" ? 600 : 400, borderBottom: `1px solid ${BORDER}`, "&:hover": { bgcolor: "#f0f0ff" } }}>
                     TH Thai
-                  </button>
-                  <button onClick={() => { setLang("en"); setLangOpen(false); }}
-                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 transition-colors"
-                    style={{ color: lang === "en" ? OR : TEXT, fontWeight: lang === "en" ? 600 : 400 }}
-                  >
+                  </Box>
+                  <Box component="button" onClick={() => { setLang("en"); setLangOpen(false); }}
+                    sx={{ width: "100%", textAlign: "left", px: 2, py: 1.25, fontSize: 14, border: "none", cursor: "pointer", bgcolor: "transparent", color: lang === "en" ? OR : TEXT, fontWeight: lang === "en" ? 600 : 400, "&:hover": { bgcolor: "#f0f0ff" } }}>
                     EN English
-                  </button>
-                </div>
+                  </Box>
+                </Box>
               )}
-            </div>
+            </Box>
 
-            {/* User name + avatar + profile dropdown */}
-            <div className="relative">
-              <button onClick={() => { setProfileOpen(!profileOpen); setBranchOpen(false); setLangOpen(false); }}
-                className="flex items-center gap-2 ml-1 cursor-pointer hover:bg-white/10 rounded-lg px-2 py-1 transition-colors">
-                <span className="text-white text-sm font-medium hidden lg:block" style={{ fontSize: 14 }}>คลิษา จิตดี</span>
-                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/40 shrink-0">
-                  <div className="w-full h-full bg-white/30 flex items-center justify-center text-white text-xs font-bold">ค</div>
-                </div>
-                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform ${profileOpen ? "rotate-180" : ""}`}>
+            {/* User + profile dropdown */}
+            <Box sx={{ position: "relative" }}>
+              <Box
+                component="button"
+                onClick={() => { setProfileOpen(!profileOpen); setBranchOpen(false); setLangOpen(false); }}
+                sx={{ display: "flex", alignItems: "center", gap: 1, ml: 0.5, cursor: "pointer", border: "none", bgcolor: "transparent", borderRadius: 2, px: 1, py: 0.5, "&:hover": { bgcolor: "rgba(255,255,255,0.1)" } }}
+              >
+                <Box component="span" sx={{ color: "white", fontSize: 14, fontWeight: 500, display: { xs: "none", lg: "block" } }}>คลิษา จิตดี</Box>
+                <Box sx={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(255,255,255,0.4)", flexShrink: 0 }}>
+                  <Box sx={{ width: "100%", height: "100%", bgcolor: "rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 12, fontWeight: 700 }}>ค</Box>
+                </Box>
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ transition: "transform 200ms", transform: profileOpen ? "rotate(180deg)" : "none" }}>
                   <path d="M1 1L5 5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-              </button>
+              </Box>
               {profileOpen && (
-                <div className="absolute right-0 top-full mt-2 z-50 bg-white rounded-xl shadow-2xl border py-0 min-w-[280px] overflow-hidden"
-                  style={{ borderColor: "#E0E0E0" }}>
+                <Box sx={{ position: "absolute", right: 0, top: "100%", mt: 1, zIndex: 50, bgcolor: "white", borderRadius: 3, boxShadow: 6, border: "1px solid #E0E0E0", py: 0, minWidth: 280, overflow: "hidden" }}>
                   {/* Profile header */}
-                  <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: "1px solid #F0F0F0" }}>
-                    <div className="w-11 h-11 rounded-full overflow-hidden border-2 shrink-0" style={{ borderColor: OR }}>
-                      <div className="w-full h-full flex items-center justify-center text-sm font-bold" style={{ background: "#EEEEFF", color: OR }}>ค</div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[14px] font-semibold" style={{ color: TEXT }}>คลิษา จิตดี</div>
-                      <div className="text-[11px]" style={{ color: MUTED }}>ผู้ดูแลระบบ</div>
-                    </div>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, px: 2, py: 2, borderBottom: "1px solid #F0F0F0" }}>
+                    <Box sx={{ width: 44, height: 44, borderRadius: "50%", overflow: "hidden", border: `2px solid ${OR}`, flexShrink: 0 }}>
+                      <Box sx={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, bgcolor: "#EEEEFF", color: OR }}>ค</Box>
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ fontSize: 14, fontWeight: 600, color: TEXT }}>คลิษา จิตดี</Box>
+                      <Box sx={{ fontSize: 11, color: MUTED }}>ผู้ดูแลระบบ</Box>
+                    </Box>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={OR} strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-                  </div>
-                  {/* โปรไฟล์ */}
-                  <div className="py-1" style={{ borderBottom: "1px solid #F0F0F0" }}>
-                    <button onClick={() => { setProfileOpen(false); }}
-                      className="w-full text-left px-4 py-2.5 text-[13px] hover:bg-indigo-50 transition-colors flex items-center gap-3 cursor-pointer"
-                      style={{ color: TEXT }}>
+                  </Box>
+                  {/* Profile link */}
+                  <Box sx={{ py: 0.5, borderBottom: "1px solid #F0F0F0" }}>
+                    <Box component="button" onClick={() => setProfileOpen(false)}
+                      sx={{ width: "100%", textAlign: "left", px: 2, py: 1.25, fontSize: 13, border: "none", cursor: "pointer", bgcolor: "transparent", color: TEXT, display: "flex", alignItems: "center", gap: 1.5, "&:hover": { bgcolor: "#f0f0ff" } }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#777" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                       </svg>
                       {t("shell.profile")}
-                    </button>
-                  </div>
-                  {/* Company list — 2 entries */}
-                  <div className="py-1" style={{ borderBottom: "1px solid #F0F0F0" }}>
-                    <div className="px-4 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: MUTED }}>กิจการของคุณ</div>
+                    </Box>
+                  </Box>
+                  {/* Company list */}
+                  <Box sx={{ py: 0.5, borderBottom: "1px solid #F0F0F0" }}>
+                    <Box sx={{ px: 2, pt: 1, pb: 0.5, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: MUTED }}>กิจการของคุณ</Box>
                     {/* Company 1 — active */}
-                    <button onClick={() => { setProfileOpen(false); }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-indigo-50 transition-colors flex items-center gap-3 cursor-pointer">
-                      <div className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white" style={{ background: "#7C3AED" }}>PC</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium truncate" style={{ color: TEXT }}>Payo Coffee Roaster</div>
-                        <div className="text-[11px]" style={{ color: MUTED }}>กำลังใช้งาน</div>
-                      </div>
+                    <Box component="button" onClick={() => setProfileOpen(false)}
+                      sx={{ width: "100%", textAlign: "left", px: 2, py: 1.25, border: "none", cursor: "pointer", bgcolor: "transparent", display: "flex", alignItems: "center", gap: 1.5, "&:hover": { bgcolor: "#f0f0ff" } }}>
+                      <Box sx={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white", bgcolor: "#7C3AED" }}>PC</Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box sx={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: TEXT }}>Payo Coffee Roaster</Box>
+                        <Box sx={{ fontSize: 11, color: MUTED }}>กำลังใช้งาน</Box>
+                      </Box>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={OR} strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-                    </button>
+                    </Box>
                     {/* Company 2 */}
-                    <button onClick={() => { setProfileOpen(false); }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-indigo-50 transition-colors flex items-center gap-3 cursor-pointer">
-                      <div className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white" style={{ background: "#059669" }}>JB</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium truncate" style={{ color: TEXT }}>จูน เบเกอร์มาร์ท</div>
-                        <div className="text-[11px] flex items-center gap-1" style={{ color: OR }}>
-                          <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: OR }}></span>
+                    <Box component="button" onClick={() => setProfileOpen(false)}
+                      sx={{ width: "100%", textAlign: "left", px: 2, py: 1.25, border: "none", cursor: "pointer", bgcolor: "transparent", display: "flex", alignItems: "center", gap: 1.5, "&:hover": { bgcolor: "#f0f0ff" } }}>
+                      <Box sx={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white", bgcolor: "#059669" }}>JB</Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box sx={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: TEXT }}>จูน เบเกอร์มาร์ท</Box>
+                        <Box sx={{ fontSize: 11, display: "flex", alignItems: "center", gap: 0.5, color: OR }}>
+                          <Box component="span" sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: OR, display: "inline-block" }} />
                           3 การแจ้งเตือน
-                        </div>
-                      </div>
-                    </button>
-                    {/* ดูกิจการทั้งหมด */}
-                    <button onClick={() => { setProfileOpen(false); setCompanyModalOpen(true); setCompanySearch(""); }}
-                      className="w-full text-left px-4 py-2.5 text-[13px] hover:bg-indigo-50 transition-colors flex items-center gap-3 cursor-pointer"
-                      style={{ color: OR }}>
+                        </Box>
+                      </Box>
+                    </Box>
+                    {/* View all */}
+                    <Box component="button" onClick={() => { setProfileOpen(false); setCompanyModalOpen(true); setCompanySearch(""); }}
+                      sx={{ width: "100%", textAlign: "left", px: 2, py: 1.25, fontSize: 13, border: "none", cursor: "pointer", bgcolor: "transparent", color: OR, display: "flex", alignItems: "center", gap: 1.5, "&:hover": { bgcolor: "#f0f0ff" } }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={OR} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M6 9l6 6 6-6"/>
                       </svg>
                       ดูกิจการทั้งหมด
-                    </button>
-                  </div>
-                  {/* ออกจากระบบ */}
-                  <div>
-                    <button onClick={() => { setProfileOpen(false); window.location.href = "/"; }}
-                      className="w-full text-left px-4 py-2.5 text-[13px] hover:bg-red-50 transition-colors flex items-center gap-3 cursor-pointer"
-                      style={{ color: "#E53935" }}>
+                    </Box>
+                  </Box>
+                  {/* Logout */}
+                  <Box>
+                    <Box component="button" onClick={() => { setProfileOpen(false); window.location.href = "/"; }}
+                      sx={{ width: "100%", textAlign: "left", px: 2, py: 1.25, fontSize: 13, border: "none", cursor: "pointer", bgcolor: "transparent", color: "#E53935", display: "flex", alignItems: "center", gap: 1.5, "&:hover": { bgcolor: "#fff5f5" } }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E53935" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
                       </svg>
                       {t("shell.logout")}
-                    </button>
-                  </div>
-                </div>
+                    </Box>
+                  </Box>
+                </Box>
               )}
-            </div>
-          </div>
-        </div>
+            </Box>
+          </Box>
+        </Box>
 
-        {/* ══════ MODULE NAVIGATION BAR ══════ */}
+        {/* MODULE NAVIGATION BAR */}
         <ModuleNavBar
           modules={MODULES}
           activeModule={activeModule}
@@ -768,30 +702,30 @@ export default function TenantShell({ children, breadcrumb, activeModule, onModu
           onModuleNav={handleModuleNav}
         />
 
-        {/* ══════ BREADCRUMB ══════ */}
+        {/* BREADCRUMB */}
         {breadcrumb && breadcrumb.length > 0 && (
-          <div className="px-5 py-2.5 text-xs flex items-center gap-2" style={{ color: MUTED }}>
+          <Box sx={{ px: 2.5, py: 1.25, fontSize: 12, display: "flex", alignItems: "center", gap: 1, color: MUTED }}>
             {breadcrumb.map((item, i) => (
-              <span key={i} className="flex items-center gap-2">
-                {i > 0 && <span style={{ color: "#ccc" }}>&#x203A;</span>}
-                <span style={{ color: i === breadcrumb.length - 1 ? TEXT : OR, fontWeight: i === breadcrumb.length - 1 ? 500 : 400, cursor: i < breadcrumb.length - 1 ? "pointer" : "default" }}>{item}</span>
-              </span>
+              <Box key={i} component="span" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                {i > 0 && <Box component="span" sx={{ color: "#ccc" }}>&#x203A;</Box>}
+                <Box component="span" sx={{ color: i === breadcrumb.length - 1 ? TEXT : OR, fontWeight: i === breadcrumb.length - 1 ? 500 : 400, cursor: i < breadcrumb.length - 1 ? "pointer" : "default" }}>{item}</Box>
+              </Box>
             ))}
-          </div>
+          </Box>
         )}
 
-        {/* ══════ CONTENT ══════ */}
-        <div className="flex-1 overflow-auto">
+        {/* CONTENT */}
+        <Box sx={{ flex: 1, overflow: "auto" }}>
           {children}
-        </div>
-      </div>
+        </Box>
+      </Box>
 
-      {/* Click-away overlay for dropdowns */}
+      {/* Click-away overlay */}
       {(branchOpen || langOpen || openDropdown || profileOpen) && (
-        <div className="fixed inset-0 z-[35]" onClick={() => { setBranchOpen(false); setLangOpen(false); setOpenDropdown(null); setProfileOpen(false); }} />
+        <Box onClick={() => { setBranchOpen(false); setLangOpen(false); setOpenDropdown(null); setProfileOpen(false); }} sx={{ position: "fixed", inset: 0, zIndex: 35 }} />
       )}
 
-      {/* ══════ COMPANY SWITCH MODAL ══════ */}
+      {/* COMPANY SWITCH MODAL */}
       {companyModalOpen && (() => {
         const allCompanies = [
           { id: "c1", name: "Payo Coffee Roaster", initials: "PC", color: "#7C3AED", notifications: 0, active: true },
@@ -800,73 +734,56 @@ export default function TenantShell({ children, breadcrumb, activeModule, onModu
           { id: "c4", name: "SCT-Siam Coffee Trade ซื้อ-ขายสารกาแฟไทย ไปไกลทั่วโลก", initials: "SC", color: "#DC2626", notifications: 10 },
           { id: "c5", name: "สภาอุตสาหกรรมท่องเที่ยวจังหวัดพะเยา", initials: "สท", color: "#0891B2", notifications: 2 },
         ];
-        const filtered = allCompanies.filter(c => {
-          if (!companySearch) return true;
-          return c.name.toLowerCase().includes(companySearch.toLowerCase());
-        });
+        const filtered = allCompanies.filter(c => !companySearch || c.name.toLowerCase().includes(companySearch.toLowerCase()));
         return (
           <>
-            <div className="fixed inset-0 bg-black/50 z-[300]" onClick={() => setCompanyModalOpen(false)} />
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[310] bg-white rounded-2xl shadow-2xl w-[420px] max-h-[80vh] flex flex-col overflow-hidden"
-              style={{ border: "1px solid #E0E0E0" }}>
+            <Box onClick={() => setCompanyModalOpen(false)} sx={{ position: "fixed", inset: 0, bgcolor: "rgba(0,0,0,0.5)", zIndex: 300 }} />
+            <Box sx={{ position: "fixed", left: "50%", top: "50%", transform: "translate(-50%, -50%)", zIndex: 310, bgcolor: "white", borderRadius: 4, boxShadow: 6, width: 420, maxHeight: "80vh", display: "flex", flexDirection: "column", overflow: "hidden", border: "1px solid #E0E0E0" }}>
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid #F0F0F0" }}>
-                <div className="text-[16px] font-semibold" style={{ color: TEXT }}>กิจการของคุณ</div>
-                <button onClick={() => setCompanyModalOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 2.5, py: 2, borderBottom: "1px solid #F0F0F0" }}>
+                <Box sx={{ fontSize: 16, fontWeight: 600, color: TEXT }}>กิจการของคุณ</Box>
+                <Box component="button" onClick={() => setCompanyModalOpen(false)} sx={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "none", cursor: "pointer", bgcolor: "transparent", "&:hover": { bgcolor: "#f5f5f5" } }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#777" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
-              </div>
+                </Box>
+              </Box>
               {/* Search */}
-              <div className="px-5 py-3" style={{ borderBottom: "1px solid #F0F0F0" }}>
-                <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                  <input
-                    type="text"
-                    placeholder="ค้นหากิจการ..."
-                    value={companySearch}
-                    onChange={e => setCompanySearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg text-[13px] outline-none transition-colors"
-                    style={{ background: "#F4F4F4", border: "1px solid #E0E0E0", color: TEXT }}
-                    onFocus={e => { e.currentTarget.style.borderColor = OR; }}
-                    onBlur={e => { e.currentTarget.style.borderColor = "#E0E0E0"; }}
+              <Box sx={{ px: 2.5, py: 1.5, borderBottom: "1px solid #F0F0F0" }}>
+                <Box sx={{ position: "relative" }}>
+                  <svg style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                  <Box
+                    component="input" type="text" placeholder="ค้นหากิจการ..."
+                    value={companySearch} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCompanySearch(e.target.value)}
+                    sx={{ width: "100%", pl: 5, pr: 2, py: 1.25, borderRadius: 2, fontSize: 13, outline: "none", bgcolor: "#F4F4F4", border: "1px solid #E0E0E0", color: TEXT, "&:focus": { borderColor: OR } }}
                   />
-                </div>
-              </div>
+                </Box>
+              </Box>
               {/* Company list */}
-              <div className="flex-1 overflow-auto py-1">
+              <Box sx={{ flex: 1, overflow: "auto", py: 0.5 }}>
                 {filtered.length === 0 && (
-                  <div className="px-5 py-8 text-center text-[13px]" style={{ color: MUTED }}>ไม่พบกิจการที่ค้นหา</div>
+                  <Box sx={{ px: 2.5, py: 4, textAlign: "center", fontSize: 13, color: MUTED }}>ไม่พบกิจการที่ค้นหา</Box>
                 )}
                 {filtered.map(c => (
-                  <button key={c.id} onClick={() => { setCompanyModalOpen(false); }}
-                    className="w-full text-left px-5 py-3 hover:bg-indigo-50 transition-colors flex items-center gap-3 cursor-pointer"
-                    style={{ borderBottom: "1px solid #FAFAFA" }}>
-                    <div className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white" style={{ background: c.color }}>{c.initials}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-medium truncate" style={{ color: TEXT }}>{c.name}</div>
+                  <Box key={c.id} component="button" onClick={() => setCompanyModalOpen(false)}
+                    sx={{ width: "100%", textAlign: "left", px: 2.5, py: 1.5, border: "none", cursor: "pointer", bgcolor: "transparent", display: "flex", alignItems: "center", gap: 1.5, borderBottom: "1px solid #FAFAFA", "&:hover": { bgcolor: "#f0f0ff" } }}>
+                    <Box sx={{ width: 40, height: 40, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "white", bgcolor: c.color }}>{c.initials}</Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: TEXT }}>{c.name}</Box>
                       {c.notifications > 0 && (
-                        <div className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: OR }}>
-                          <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: OR }}></span>
+                        <Box sx={{ fontSize: 11, display: "flex", alignItems: "center", gap: 0.5, mt: 0.25, color: OR }}>
+                          <Box component="span" sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: OR, display: "inline-block" }} />
                           {c.notifications} การแจ้งเตือน
-                        </div>
+                        </Box>
                       )}
-                      {c.active && (
-                        <div className="text-[11px] mt-0.5" style={{ color: MUTED }}>กำลังใช้งาน</div>
-                      )}
-                    </div>
-                    {c.active && (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={OR} strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-                    )}
-                  </button>
+                      {c.active && <Box sx={{ fontSize: 11, mt: 0.25, color: MUTED }}>กำลังใช้งาน</Box>}
+                    </Box>
+                    {c.active && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={OR} strokeWidth="2.5"><path d="M20 6L9 17l-5-5"/></svg>}
+                  </Box>
                 ))}
-              </div>
-            </div>
+              </Box>
+            </Box>
           </>
         );
       })()}
-
-      {/* Old screen index panel removed — now integrated in sidebar */}
-    </div>
+    </Box>
   );
 }
